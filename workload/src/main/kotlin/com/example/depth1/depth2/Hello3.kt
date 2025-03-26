@@ -1,4 +1,4 @@
-package com.example
+package com.example.depth1.depth2
 
 class Hello3 {
     fun test() {

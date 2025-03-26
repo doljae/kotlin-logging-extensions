@@ -1,12 +1,9 @@
 package com.example
 
 class Hello {
-    fun test(){
-        log.info { "it works!!" }
+    fun test() {
+        log.info { "hello" }
+        log.error { "hello" }
+        log.warn { "hello" }
     }
-}
-
-fun main() {
-    val hello = Hello()
-    hello.test()
 }

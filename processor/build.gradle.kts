@@ -12,8 +12,8 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("com.google.devtools.ksp:symbol-processing-api:2.1.10-1.0.31")
+
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.5")
-    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     implementation("ch.qos.logback:logback-classic:1.5.18")
 }
 
