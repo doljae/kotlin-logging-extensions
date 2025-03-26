@@ -18,10 +18,10 @@ class LoggerProcessor(private val codeGenerator: CodeGenerator, private val logg
             file.declarations.filterIsInstance<KSClassDeclaration>()
         }
 
-        // 2. 각 클래스에 대해 로거 변수를 생성하는 코드 파일 생성
         classes.forEach { classDeclaration ->
             generateLogger(classDeclaration)
         }
+
         return emptyList()
     }
 
@@ -38,13 +38,17 @@ class LoggerProcessor(private val codeGenerator: CodeGenerator, private val logg
                 get() = KotlinLogging.logger {}
         """.trimIndent()
 
-        // 4. build 디렉터리에 파일 생성
-        codeGenerator.createNewFile(
-            Dependencies(false),
-            classDeclaration.packageName.asString(),
-            "${className}Logger"
-        ).bufferedWriter().use { writer ->
-            writer.write(loggerCode)
+        try {
+            // 4. build 디렉터리에 파일 생성
+            codeGenerator.createNewFile(
+                Dependencies(false),
+                classDeclaration.packageName.asString(),
+                "${className}Logger"
+            ).bufferedWriter().use { writer ->
+                writer.write(loggerCode)
+            }
+        } catch (e: FileAlreadyExistsException) {
+
         }
     }
 }
