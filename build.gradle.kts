@@ -1,0 +1,1 @@
+description = "kotlin-logging-extensions"
