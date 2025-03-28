@@ -25,6 +25,7 @@ kotlin {
     jvmToolchain(21)
 }
 
+// https://vanniktech.github.io/gradle-maven-publish-plugin/central/
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
@@ -58,6 +59,7 @@ mavenPublishing {
     }
 }
 
+// https://vanniktech.github.io/gradle-maven-publish-plugin/other/#github-packages-example
 publishing {
     repositories {
         maven {

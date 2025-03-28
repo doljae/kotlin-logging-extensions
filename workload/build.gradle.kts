@@ -1,27 +1,46 @@
 plugins {
-    kotlin("jvm") version "2.1.10"
-    id("com.google.devtools.ksp") version "2.1.10-1.0.31"
+    kotlin("jvm") version "2.1.20"
+    id("com.google.devtools.ksp") version "2.1.20-1.0.32"
 }
 
-group = "com.example"
-version = "1.0-SNAPSHOT"
+group = "io.github.doljae"
+version = "0.0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/doljae/kotlin-logging-extensions")
+        credentials {
+            username = "NEED_TO_FILL"
+            password = "NEED_TO_FILL"
+        }
+    }
+    maven {
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        content {
+            includeGroup("io.github.doljae")
+        }
+    }
 }
 
 dependencies {
     testImplementation(kotlin("test"))
-    api(project(":processor"))
-    ksp(project(":processor"))
+
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.5")
-    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-//    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
+
+    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1-SNAPSHOT") {
+        isChanging = true
+    }
+    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1-SNAPSHOT") {
+        isChanging = true
+    }
 }
 
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
 }
