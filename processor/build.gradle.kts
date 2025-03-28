@@ -1,8 +1,11 @@
 import com.vanniktech.maven.publish.SonatypeHost
+import org.gradle.kotlin.dsl.configure
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 plugins {
     kotlin("jvm") version "2.1.20"
     id("com.vanniktech.maven.publish") version "0.31.0"
+    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
 }
 
 group = "io.github.doljae"
@@ -68,4 +71,9 @@ publishing {
             credentials(PasswordCredentials::class)
         }
     }
+}
+
+// See https://github.com/JLLeitschuh/ktlint-gradle/issues/815
+configure<KtlintExtension> {
+    version.set("1.5.0")
 }
