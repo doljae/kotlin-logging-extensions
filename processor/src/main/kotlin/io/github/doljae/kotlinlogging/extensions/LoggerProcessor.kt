@@ -1,4 +1,4 @@
-package com.example
+package io.github.doljae.kotlinlogging.extensions
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies

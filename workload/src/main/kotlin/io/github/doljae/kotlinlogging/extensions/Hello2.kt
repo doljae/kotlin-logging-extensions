@@ -1,6 +1,6 @@
-package com.example.depth1
+package io.github.doljae.kotlinlogging.extensions
 
-class Hello {
+class Hello2 {
     fun test() {
         log.info { "hello" }
         log.error { "hello" }

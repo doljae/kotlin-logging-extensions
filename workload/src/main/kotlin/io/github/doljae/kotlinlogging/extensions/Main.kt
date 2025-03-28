@@ -1,4 +1,4 @@
-package com.example
+package io.github.doljae.kotlinlogging.extensions
 
 fun main() {
     val hello1 = com.example.Hello()
