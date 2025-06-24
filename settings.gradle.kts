@@ -1,4 +1,4 @@
-rootProject.name = "kotlin-logging-extentions"
+rootProject.name = "kotlin-logging-extensions"
 
 include("processor")
 include("workload")

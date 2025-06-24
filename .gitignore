@@ -297,3 +297,19 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/gradle,kotlin,java,intellij,intellij+all,intellij+iml
+
+# Security - sensitive files
+*.key
+*.keystore
+*.jks
+*.p12
+*.pem
+**/secrets/
+**/credentials/
+.env
+.env.*
+local.properties
+
+# Publishing credentials (local overrides)
+local.gradle.properties
+gradle-local.properties

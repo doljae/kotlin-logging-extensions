@@ -44,10 +44,9 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
-    // kotlin-logging-extensions
-    val extensionsCoordinates = "${project.property("project.group")}:${project.property("project.artifactId")}:${project.property("project.version")}"
-    ksp(extensionsCoordinates)
-    implementation(extensionsCoordinates)
+    // kotlin-logging-extensions (using project dependency for development)
+    ksp(project(":processor"))
+    implementation(project(":processor"))
 }
 
 tasks.test {
