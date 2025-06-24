@@ -3,8 +3,8 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-group = "io.github.doljae"
-version = "0.0.1-SNAPSHOT"
+group = project.property("project.group") as String
+version = project.property("project.version") as String
 
 repositories {
     mavenCentral()
@@ -29,10 +29,10 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
-    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1-SNAPSHOT") {
+    ksp("${project.property("project.group")}:${project.property("project.artifactId")}:${project.property("project.version")}") {
         isChanging = true
     }
-    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1-SNAPSHOT") {
+    implementation("${project.property("project.group")}:${project.property("project.artifactId")}:${project.property("project.version")}") {
         isChanging = true
     }
 }

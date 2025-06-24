@@ -6,8 +6,8 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
-group = "io.github.doljae"
-version = "0.0.1-SNAPSHOT"
+group = project.property("project.group") as String
+version = project.property("project.version") as String
 
 repositories {
     mavenCentral()
@@ -31,13 +31,17 @@ mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 
-    coordinates("io.github.doljae", "kotlin-logging-extensions", "0.0.1-SNAPSHOT")
+    coordinates(
+        groupId = group.toString(),
+        artifactId = project.property("project.artifactId") as String,
+        version = version.toString(),
+    )
 
     pom {
-        name.set("kotlin-logging-extensions")
-        description.set("Kotlin Logging Extensions")
+        name.set(project.property("project.artifactId") as String)
+        description.set(project.property("project.description") as String)
         inceptionYear.set("2025")
-        url.set("https://github.com/doljae/kotlin-logging-extensions")
+        url.set(project.property("project.url") as String)
         licenses {
             license {
                 name.set("The Apache License, Version 2.0")
@@ -53,9 +57,9 @@ mavenPublishing {
             }
         }
         scm {
-            url.set("https://github.com/doljae/kotlin-logging-extensions/")
-            connection.set("scm:git:git://github.com/doljae/kotlin-logging-extensions.git")
-            developerConnection.set("scm:git:ssh://git@github.com/doljae/kotlin-logging-extensions.git")
+            url.set(project.property("project.scm.url") as String)
+            connection.set(project.property("project.scm.connection") as String)
+            developerConnection.set(project.property("project.scm.developerConnection") as String)
         }
     }
 }
@@ -65,7 +69,7 @@ publishing {
     repositories {
         maven {
             name = "githubPackages"
-            url = uri("https://maven.pkg.github.com/doljae/kotlin-logging-extensions")
+            url = uri("https://maven.pkg.github.com/doljae/${project.property("project.artifactId")}")
             credentials(PasswordCredentials::class)
         }
     }
