@@ -32,48 +32,17 @@ class UserService {
 
 ### How to Use
 
-1. **Add dependencies** to your `build.gradle.kts`:
-   ```kotlin
-   plugins {
-       id("com.google.devtools.ksp") version "2.1.21-2.0.2"
-   }
-   
-   dependencies {
-       ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
-       implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
-       implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
-   }
-   ```
+**Step 1: Setup GitHub Packages Access**
 
-2. **Use `log` in any class**:
-   ```kotlin
-   class OrderProcessor {
-       fun processOrder(id: String) {
-           log.info { "Processing order: $id" }
-           
-           try {
-               // Business logic here
-               log.debug { "Order processed successfully" }
-           } catch (e: Exception) {
-               log.error(e) { "Failed to process order: $id" }
-           }
-       }
-   }
-   ```
+Create a [GitHub Personal Access Token](https://github.com/settings/tokens) with `read:packages` scope, then set environment variables:
+```bash
+export GITHUB_USERNAME="your-github-username"
+export GITHUB_TOKEN="your-personal-access-token"
+```
 
-That's it! The logger is automatically available with the class name (`OrderProcessor` in this example).
+**Step 2: Configure Repository**
 
-## ✨ Features
-
-- **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
-- **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead  
-- **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
-- **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
-- **🎯 Works Everywhere**: Compatible with any package depth and class structure
-
-## 📦 Installation
-
-### GitHub Packages (Current)
+Add to your `build.gradle.kts`:
 ```kotlin
 repositories {
     mavenCentral()
@@ -87,18 +56,62 @@ repositories {
 }
 ```
 
-**Authentication Setup:**
-```bash
-export GITHUB_USERNAME="your-github-username"
-export GITHUB_TOKEN="your-personal-access-token"
+**Step 3: Add Dependencies**
+```kotlin
+plugins {
+    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+}
+
+dependencies {
+    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
+    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+}
 ```
 
-[Create a GitHub Personal Access Token](https://github.com/settings/tokens) with `read:packages` scope.
+**Step 4: Use `log` in Any Class**
+```kotlin
+class OrderProcessor {
+    fun processOrder(id: String) {
+        log.info { "Processing order: $id" }
+        
+        try {
+            // Business logic here
+            log.debug { "Order processed successfully" }
+        } catch (e: Exception) {
+            log.error(e) { "Failed to process order: $id" }
+        }
+    }
+}
+```
 
-### Maven Central (Coming Soon)
+That's it! The logger is automatically available with the class name (`OrderProcessor` in this example).
+
+> **💡 Coming Soon**: Maven Central support will eliminate Steps 1-2, making setup even simpler!
+
+## ✨ Features
+
+- **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
+- **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead  
+- **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
+- **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
+- **🎯 Works Everywhere**: Compatible with any package depth and class structure
+
+## 📦 Installation
+
+### Current: GitHub Packages
+Follow the [Quick Start](#quick-start) guide above for complete setup instructions.
+
+### Coming Soon: Maven Central  
 ```kotlin
 repositories {
-    mavenCentral()  // Will be available soon!
+    mavenCentral()  // No authentication needed!
+}
+
+dependencies {
+    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
+    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
 }
 ```
 
