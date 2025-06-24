@@ -15,7 +15,16 @@ A Kotlin Symbol Processing (KSP) library that automatically generates logger ext
 
 ### The Problem with Current Kotlin Logging Approaches
 
-While Kotlin allows multiple classes in a single file, this approach has several drawbacks in practice ([detailed analysis](https://doljae.tistory.com/347)). For maintainable code, the **one class per file** principle remains preferable.
+While Kotlin allows multiple classes in a single file, this approach has several drawbacks in practice ([detailed analysis](https://doljae.tistory.com/347)):
+
+- **IDE Navigation Issues**: Harder to locate specific classes in file trees and search results
+- **Code Review Complexity**: Multiple classes in one file make pull requests harder to review
+- **Version Control Conflicts**: Higher chance of merge conflicts when multiple developers modify the same file
+- **Testing Structure Mismatch**: Inconsistency between source and test file organization
+- **Package Structure Violation**: Breaks the logical relationship between package hierarchy and file structure
+- **Readability Concerns**: Cognitive overhead when scanning through multiple class definitions
+
+For maintainable code, the **one class per file** principle remains preferable.
 
 **Java developers** migrating to Kotlin often miss **Lombok's `@Slf4j` annotation**, which seamlessly provides a `log` variable without any boilerplate. Unfortunately, **Lombok's annotation processing doesn't integrate well with Kotlin** due to differences in compilation phases.
 
