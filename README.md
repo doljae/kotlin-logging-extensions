@@ -1,6 +1,53 @@
 # Kotlin Logging Extensions
 
+[![CI](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.1.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![KSP](https://img.shields.io/badge/KSP-2.1.21--2.0.2-purple.svg)](https://github.com/google/ksp)
+
 A Kotlin Symbol Processing (KSP) library that automatically generates logger extensions for Kotlin classes using [kotlin-logging](https://github.com/oshai/kotlin-logging).
+
+> **Current Version**: 0.0.1  
+> **Status**: Initial Release - Production Ready  
+> **Compatibility**: Kotlin 2.1.21+, Java 21+
+
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Usage](#usage)
+- [How It Works](#how-it-works)
+- [Building from Source](#building-from-source)
+- [Development](#development)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
+- [Dependencies](#dependencies)
+- [Related Projects](#related-projects)
+
+## Quick Start
+
+1. **Add the dependency** to your `build.gradle.kts`:
+   ```kotlin
+   dependencies {
+       ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
+       implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
+       implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+   }
+   ```
+
+2. **Use the auto-generated logger** in any Kotlin class:
+   ```kotlin
+   class MyService {
+       fun doSomething() {
+           log.info { "Hello from auto-generated logger!" }
+       }
+   }
+   ```
+
+That's it! No manual logger declarations needed. 🎉
 
 ## Features
 
@@ -150,7 +197,7 @@ kotlin-logging-extensions/
 ### Prerequisites
 
 - Java 21 or higher
-- Kotlin 2.1.20 or higher
+- Kotlin 2.1.21 or higher
 
 ### Build Commands
 
@@ -191,6 +238,35 @@ This project uses ktlint for code formatting:
 ./gradlew ktlintFormat
 ```
 
+### Continuous Integration
+
+This project uses GitHub Actions for automated:
+- Building and testing on multiple platforms
+- Code style validation with ktlint
+- Security vulnerability scanning with Trivy
+- Automated dependency updates
+
+## Testing
+
+The project includes comprehensive testing:
+
+```bash
+# Run all tests
+./gradlew test
+
+# Run tests with coverage
+./gradlew test jacocoTestReport
+
+# Run processor-specific tests
+./gradlew :processor:test
+```
+
+### Test Structure
+
+- **Unit Tests**: Basic functionality testing for the KSP processor
+- **Integration Tests**: End-to-end testing with real Kotlin compilation
+- **Style Tests**: Automated ktlint validation
+
 ## Contributing
 
 1. Fork the repository
@@ -202,9 +278,48 @@ This project uses ktlint for code formatting:
 7. Push to the branch: `git push origin feat/new-feature`
 8. Open a Pull Request
 
+## Security
+
+We take security seriously. If you discover a security vulnerability, please follow our responsible disclosure process:
+
+- **Do NOT** report security vulnerabilities through public GitHub issues
+- Email security reports to: [seok9211@naver.com](mailto:seok9211@naver.com)
+- See our [Security Policy](SECURITY.md) for detailed guidelines
+
+### Security Features
+
+- **Compile-time only**: No runtime dependencies or security risks
+- **Minimal attack surface**: Simple code generation with minimal dependencies
+- **No network access**: Processor doesn't make external connections
+- **Automated security scanning**: Trivy vulnerability scanning in CI/CD
+
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](http://www.apache.org/licenses/LICENSE-2.0.txt) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Dependencies
+
+This project maintains minimal dependencies to reduce security risks and conflicts:
+
+### Core Dependencies
+
+| Dependency | Version | Purpose | License |
+|------------|---------|---------|---------|
+| [Kotlin Symbol Processing (KSP)](https://github.com/google/ksp) | 2.1.21-2.0.2 | Compile-time code generation | Apache 2.0 |
+| [kotlin-logging](https://github.com/oshai/kotlin-logging) | 7.0.7 | Runtime logging facade | Apache 2.0 |
+
+### Development Dependencies
+
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| ktlint | 1.5.0 | Code style enforcement |
+| logback-classic | 1.5.18 | Logging implementation (examples) |
+
+### Why These Dependencies?
+
+- **KSP**: Required for compile-time code generation, officially supported by JetBrains
+- **kotlin-logging**: Proven, lightweight logging facade with excellent Kotlin support
+- **Minimal footprint**: Only essential dependencies to minimize version conflicts
 
 ## Related Projects
 
@@ -213,4 +328,11 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](http:/
 
 ## Author
 
-**Seokjae Lee** - [@doljae](https://github.com/doljae) 
+**Seokjae Lee** - [@doljae](https://github.com/doljae)
+- Email: [seok9211@naver.com](mailto:seok9211@naver.com)  
+- GitHub: [https://github.com/doljae](https://github.com/doljae)
+- Blog: [https://doljae.tistory.com](https://doljae.tistory.com)
+
+---
+
+⭐ **If this project helps you, please consider giving it a star!** ⭐ 
