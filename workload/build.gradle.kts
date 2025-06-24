@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.1.20"
-    id("com.google.devtools.ksp") version "2.1.20-1.0.32"
+    kotlin("jvm")
+    id("com.google.devtools.ksp")
 }
 
 group = "io.github.doljae"
@@ -26,7 +26,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
 
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.5")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
 
     ksp("io.github.doljae:kotlin-logging-extensions:0.0.1-SNAPSHOT") {
