@@ -11,6 +11,65 @@ A Kotlin Symbol Processing (KSP) library that automatically generates logger ext
 > **Status**: Initial Release - Production Ready  
 > **Compatibility**: Kotlin 2.1.21+, Java 21+
 
+## 💡 Why This Project Exists
+
+### The Problem with Current Kotlin Logging Approaches
+
+While Kotlin allows multiple classes in a single file, this approach has several drawbacks in practice ([detailed analysis](https://doljae.tistory.com/347)). For maintainable code, the **one class per file** principle remains preferable.
+
+**Java developers** migrating to Kotlin often miss **Lombok's `@Slf4j` annotation**, which seamlessly provides a `log` variable without any boilerplate. Unfortunately, **Lombok's annotation processing doesn't integrate well with Kotlin** due to differences in compilation phases.
+
+### Current kotlin-logging Solutions and Their Limitations
+
+[kotlin-logging](https://github.com/oshai/kotlin-logging) is the de facto logging standard for Kotlin JVM projects. However, the official approaches have trade-offs:
+
+```kotlin
+// 🚫 Top-level declaration: breaks "one class per file" principle
+private val log = KotlinLogging.logger {}
+
+class UserService {
+    fun createUser() {
+        log.info { "Creating user" } // Works, but violates file organization
+    }
+}
+```
+
+```kotlin
+// 🚫 Traditional approach: verbose and repetitive
+class UserService {
+    private val log = KotlinLogging.logger {}  // Boilerplate in every class
+    
+    fun createUser() {
+        log.info { "Creating user" }
+    }
+}
+```
+
+### Our Solution: Lombok-Style Simplicity with KSP
+
+**Logging is cross-cutting concern** (AOP-suitable) that shouldn't clutter business logic. The **Lombok approach is elegant** - just use `log` without any declarations.
+
+This project brings that simplicity to Kotlin:
+
+```kotlin
+// ✅ kotlin-logging-extensions: Clean and simple
+class UserService {
+    fun createUser() {
+        log.info { "Creating user" } // No boilerplate needed!
+    }
+}
+```
+
+### Why KSP Over Compiler Plugins?
+
+- **Compiler plugins** are version-dependent and require vendor support for maintenance
+- **KSP** is officially supported by JetBrains and provides stable APIs
+- **Goal**: Enable `log` variable usage in **every class** without any identifiers or declarations
+
+### Philosophy
+
+**Business logic should focus on business logic.** Infrastructure concerns like logging should be invisible and effortless. This project makes logging as natural as breathing - just use `log` and focus on what matters.
+
 ## Table of Contents
 
 - [Features](#features)
@@ -56,6 +115,7 @@ Check out the [`workload/`](workload/src/main/kotlin/examples/) directory for co
 - **[UserService.kt](workload/src/main/kotlin/examples/UserService.kt)** - User management with validation and error handling
 - **[OrderProcessor.kt](workload/src/main/kotlin/examples/OrderProcessor.kt)** - Order processing with performance logging  
 - **[DataRepository.kt](workload/src/main/kotlin/examples/DataRepository.kt)** - Database operations with different log levels
+- **[PaymentServiceImpl.kt](workload/src/main/kotlin/examples/enterprise/service/impl/PaymentServiceImpl.kt)** - Deep package structure example
 - **[Main.kt](workload/src/main/kotlin/examples/Main.kt)** - Complete demonstration
 
 Run the examples:
@@ -207,6 +267,8 @@ kotlin-logging-extensions/
         ├── UserService.kt              # User management example
         ├── OrderProcessor.kt           # Order processing example
         ├── DataRepository.kt           # Database operations example
+        ├── enterprise/service/impl/    # Deep package structure
+        │   └── PaymentServiceImpl.kt   # Enterprise-style nested packages
         └── Main.kt                     # Complete demonstration
 ```
 
@@ -252,6 +314,7 @@ The `workload` module contains comprehensive real-world examples:
 - User management operations with validation logging
 - Order processing with performance metrics
 - Database operations with different log levels
+- Deep package structure compatibility (`examples.enterprise.service.impl`)
 - Error handling and exception logging patterns
 
 ### Code Style

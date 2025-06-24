@@ -1,5 +1,7 @@
 package examples
 
+import examples.enterprise.service.impl.PaymentServiceImpl
+
 /**
  * Main class demonstrating kotlin-logging-extensions usage with real-world examples.
  * 
@@ -25,6 +27,9 @@ fun main() {
     println()
     
     demonstrateDataRepository()
+    println()
+    
+    demonstrateDeepPackageStructure()
     println()
     
     println("=".repeat(60))
@@ -108,5 +113,29 @@ private fun demonstrateDataRepository() {
         
     } catch (e: Exception) {
         println("Database operation error: ${e.message}")
+    }
+}
+
+private fun demonstrateDeepPackageStructure() {
+    println("🏢 DEEP PACKAGE STRUCTURE EXAMPLE")
+    println("-".repeat(30))
+    
+    val paymentService = PaymentServiceImpl()
+    
+    try {
+        // Successful payment
+        val result1 = paymentService.processPayment(99.99, "CREDIT_CARD")
+        println("Payment result: $result1")
+        
+        // Invalid amount
+        val result2 = paymentService.processPayment(-10.0, "DEBIT_CARD")
+        println("Payment result: $result2")
+        
+        // Missing payment method
+        val result3 = paymentService.processPayment(50.0, "")
+        println("Payment result: $result3")
+        
+    } catch (e: Exception) {
+        println("Payment service error: ${e.message}")
     }
 } 
