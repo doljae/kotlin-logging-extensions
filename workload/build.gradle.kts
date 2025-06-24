@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     id("com.google.devtools.ksp")
+    application
 }
 
 group = project.property("project.group") as String
@@ -55,4 +56,8 @@ tasks.test {
 
 kotlin {
     jvmToolchain(21)
+}
+
+application {
+    mainClass.set("examples.MainKt")
 }

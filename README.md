@@ -49,6 +49,20 @@ A Kotlin Symbol Processing (KSP) library that automatically generates logger ext
 
 That's it! No manual logger declarations needed. 🎉
 
+### 📁 **Explore Real Examples**
+
+Check out the [`workload/`](workload/src/main/kotlin/examples/) directory for comprehensive usage examples:
+
+- **[UserService.kt](workload/src/main/kotlin/examples/UserService.kt)** - User management with validation and error handling
+- **[OrderProcessor.kt](workload/src/main/kotlin/examples/OrderProcessor.kt)** - Order processing with performance logging  
+- **[DataRepository.kt](workload/src/main/kotlin/examples/DataRepository.kt)** - Database operations with different log levels
+- **[Main.kt](workload/src/main/kotlin/examples/Main.kt)** - Complete demonstration
+
+Run the examples:
+```bash
+./gradlew :workload:run
+```
+
 ## Features
 
 - **Automatic Logger Generation**: Automatically generates logger extensions for all Kotlin classes during compilation
@@ -182,14 +196,18 @@ val UserService.log: KLogger
 
 ```
 kotlin-logging-extensions/
-├── processor/           # KSP processor implementation
-│   └── src/main/kotlin/
-│       └── io/github/doljae/kotlinlogging/extensions/
-│           ├── LoggerProcessor.kt         # Main KSP processor
-│           └── LoggerProcessorProvider.kt # KSP provider
-└── workload/           # Example/test module
-    └── src/main/kotlin/
-        └── [example classes demonstrating usage]
+├── processor/                          # 🔧 KSP processor implementation
+│   ├── src/main/kotlin/
+│   │   └── io/github/doljae/kotlinlogging/extensions/
+│   │       ├── LoggerProcessor.kt      # Main KSP processor
+│   │       └── LoggerProcessorProvider.kt # KSP provider
+│   └── src/test/kotlin/                # Unit tests
+└── workload/                           # 📚 Real-world examples
+    └── src/main/kotlin/examples/
+        ├── UserService.kt              # User management example
+        ├── OrderProcessor.kt           # Order processing example
+        ├── DataRepository.kt           # Database operations example
+        └── Main.kt                     # Complete demonstration
 ```
 
 ## Building from Source
@@ -218,13 +236,23 @@ cd kotlin-logging-extensions
 
 ## Development
 
-### Running the Example
+### Running the Examples
 
-The `workload` module contains example usage:
+The `workload` module contains comprehensive real-world examples:
 
 ```bash
+# Run all examples
 ./gradlew :workload:run
+
+# Build and see generated code
+./gradlew :workload:build
 ```
+
+**Example Output:**
+- User management operations with validation logging
+- Order processing with performance metrics
+- Database operations with different log levels
+- Error handling and exception logging patterns
 
 ### Code Style
 
