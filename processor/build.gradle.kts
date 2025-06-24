@@ -29,7 +29,11 @@ kotlin {
 // https://vanniktech.github.io/gradle-maven-publish-plugin/central/
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    signAllPublications()
+    
+    // Only sign when publishing to Maven Central, not for GitHub Packages
+    if (System.getenv("GITHUB_TOKEN") == null) {
+        signAllPublications()
+    }
 
     coordinates(
         groupId = group.toString(),
@@ -70,7 +74,10 @@ publishing {
         maven {
             name = "githubPackages"
             url = uri("https://maven.pkg.github.com/doljae/${project.property("project.artifactId")}")
-            credentials(PasswordCredentials::class)
+            credentials {
+                username = System.getenv("GITHUB_USERNAME") ?: project.findProperty("githubPackagesUsername") as String?
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("githubPackagesPassword") as String?
+            }
         }
     }
 }
