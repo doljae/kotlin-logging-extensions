@@ -29,7 +29,7 @@ kotlin {
 // https://vanniktech.github.io/gradle-maven-publish-plugin/central/
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    
+
     // Only sign when publishing to Maven Central, not for GitHub Packages
     if (System.getenv("GITHUB_TOKEN") == null) {
         signAllPublications()
