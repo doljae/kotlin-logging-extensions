@@ -19,29 +19,74 @@ Add the following dependencies to your `build.gradle.kts`:
 ```kotlin
 plugins {
     kotlin("jvm")
-    id("com.google.devtools.ksp") version "2.1.20-1.0.32"
+    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
 }
 
 dependencies {
     // Kotlin logging dependencies
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.5")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     
     // kotlin-logging-extensions
-    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1-SNAPSHOT")
-    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1-SNAPSHOT")
+    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
+    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
 }
+```
 
+### Repository Configuration
+
+You have multiple options for downloading the dependency:
+
+#### Option 1: Maven Central (Recommended - Coming Soon)
+```kotlin
 repositories {
     mavenCentral()
+}
+```
+
+#### Option 2: GitHub Packages
+```kotlin
+repositories {
+    mavenCentral()
+    
+    // GitHub Packages (requires authentication)
     maven {
-        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-        content {
-            includeGroup("io.github.doljae")
+        url = uri("https://maven.pkg.github.com/doljae/kotlin-logging-extensions")
+        credentials {
+            username = System.getenv("GITHUB_USERNAME") 
+                ?: project.findProperty("githubPackagesUsername") as String?
+            password = System.getenv("GITHUB_TOKEN") 
+                ?: project.findProperty("githubPackagesPassword") as String?
         }
     }
 }
 ```
+
+### GitHub Packages Authentication
+
+To use GitHub Packages, you need to configure authentication:
+
+#### Method 1: Environment Variables (Recommended)
+```bash
+export GITHUB_USERNAME="your-github-username"
+export GITHUB_TOKEN="your-personal-access-token"
+```
+
+#### Method 2: gradle.properties
+Add to your `~/.gradle/gradle.properties` or project's `gradle.properties`:
+```properties
+githubPackagesUsername=your-github-username
+githubPackagesPassword=your-personal-access-token
+```
+
+#### Creating a GitHub Personal Access Token
+
+1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Click "Generate new token"
+3. Select scopes: `read:packages`
+4. Copy the generated token
+
+**Note:** Keep your token secure and never commit it to version control!
 
 ## Usage
 
