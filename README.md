@@ -227,6 +227,4 @@ Apache License 2.0 - see [LICENSE](LICENSE) file.
 
 ---
 
-⭐ **If this helps you, please star the repo!** ⭐
-
-**Author**: [Seokjae Lee](https://github.com/doljae) | **Blog**: [doljae.tistory.com](https://doljae.tistory.com) 
+⭐ **If this helps you, please star the repo!** ⭐ 
