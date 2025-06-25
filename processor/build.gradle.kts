@@ -1,5 +1,3 @@
-import com.vanniktech.maven.publish.SonatypeHost
-
 plugins {
     kotlin("jvm")
     id("com.vanniktech.maven.publish")
@@ -28,7 +26,7 @@ kotlin {
 
 // https://vanniktech.github.io/gradle-maven-publish-plugin/central/
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
 
     // Only sign when publishing to Maven Central, not for GitHub Packages
     if (System.getenv("GITHUB_TOKEN") == null) {
