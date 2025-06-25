@@ -56,7 +56,7 @@ check_branch() {
     local current_branch=$(git rev-parse --abbrev-ref HEAD)
     if [[ $current_branch != "main" ]]; then
         print_warning "You are not on the main branch (current: $current_branch)"
-        print_warning "It's recommended to release from the main branch."
+        print_warning "It's recommended to create release PR from the main branch."
         read -p "Do you want to continue? [y/N]: " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -72,8 +72,8 @@ check_github_cli() {
         print_error "GitHub CLI (gh) is not installed."
         print_error "Please install it from: https://cli.github.com/"
         print_error ""
-        print_error "Alternative: Use GitHub UI to trigger tag release:"
-        print_error "  1. Go to: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/tag-release.yml"
+        print_error "Alternative: Use GitHub UI to create release PR:"
+        print_error "  1. Go to: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/create-release-pr.yml"
         print_error "  2. Click 'Run workflow'"
         print_error "  3. Enter version and click 'Run workflow'"
         exit 1
@@ -127,22 +127,25 @@ show_release_plan() {
     local tag="v$version"
     
     echo
-    print_info "🚀 Tag Release Plan:"
-    print_info "  1. Trigger Tag Release workflow with version: $version"
-    print_info "  2. GitHub Actions will automatically:"
+    print_info "🚀 Release PR Plan:"
+    print_info "  1. Create Release PR with version: $version"
+    print_info "  2. GitHub Actions will:"
     print_info "     - Validate version format and check for duplicates"
     print_info "     - Run tests and code quality checks"
-    print_info "     - Update version references in documentation"
-    print_info "     - Commit version updates"
-    print_info "     - Create and push git tag: $tag"
-    print_info "     - Create GitHub Release with auto-generated notes"
-    print_info "  3. Manual step: Run Maven Publish workflow to upload to Maven Central"
+    print_info "     - Create release branch: release/$version"
+    print_info "     - Update version references in all files"
+    print_info "     - Create PR with detailed description and checklist"
+    print_info "  3. Review and merge the PR to trigger automatic release:"
+    print_info "     - Create git tag: $tag"
+    print_info "     - Generate GitHub Release with release notes"
+    print_info "     - Upload to Maven Central staging"
+    print_info "  4. Manual step: Complete publishing at https://oss.sonatype.org/"
     echo
 }
 
 # Main function
 main() {
-    print_info "🏷️  kotlin-logging-extensions Tag Release Helper"
+    print_info "🚀 kotlin-logging-extensions Release PR Creator"
     echo
     
     # Prerequisites checks
@@ -161,7 +164,7 @@ main() {
     suggest_next_version
     
     # Get version from user
-    read -p "Enter version to release (e.g., 2.1.21-0.0.1): " version
+    read -p "Enter version for release PR (e.g., 2.1.21-0.0.1): " version
     
     if [[ -z $version ]]; then
         print_error "Version is required."
@@ -183,63 +186,63 @@ main() {
     show_release_plan "$version"
     
     # Final confirmation
-    print_warning "⚠️  This will trigger the tag release workflow."
-    print_warning "   Make sure all your changes are committed and tested!"
-    print_warning "   Maven publishing will be a separate step after tag creation."
+    print_warning "⚠️  This will create a Release PR for version $version."
+    print_warning "   After PR creation, you'll need to review and merge it to trigger the actual release."
     echo
     
-    read -p "Are you sure you want to create tag release for $version? [y/N]: " -n 1 -r
+    read -p "Are you sure you want to create release PR for $version? [y/N]: " -n 1 -r
     echo
     
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Tag release cancelled."
+        print_info "Release PR creation cancelled."
         exit 0
     fi
     
-    # Trigger GitHub Actions tag release workflow
-    print_info "Triggering GitHub Actions tag release workflow..."
+    # Trigger GitHub Actions create release PR workflow
+    print_info "Triggering GitHub Actions create release PR workflow..."
     
-    if gh workflow run tag-release.yml --field version="$version"; then
-        print_success "✅ Tag release workflow triggered successfully!"
+    if gh workflow run create-release-pr.yml --field version="$version"; then
+        print_success "✅ Release PR workflow triggered successfully!"
         echo
-        print_info "🔗 Monitor progress: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/tag-release.yml"
-        print_info "🏷️  Release will be available at: https://github.com/doljae/kotlin-logging-extensions/releases/tag/$tag"
+        print_info "🔗 Monitor progress: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/create-release-pr.yml"
+        print_info "📋 Review the PR when ready: https://github.com/doljae/kotlin-logging-extensions/pulls"
         echo
-        print_warning "📦 Next Step: Maven Central Publishing"
-        print_info "   After tag release completes, run Maven publish workflow:"
-        print_info "   https://github.com/doljae/kotlin-logging-extensions/actions/workflows/maven-publish.yml"
+        print_warning "📝 Next Steps:"
+        print_info "  1. Wait for the Release PR workflow to complete"
+        print_info "  2. Review the created PR (release/$version)"
+        print_info "  3. Check that all version references are updated correctly"
+        print_info "  4. Merge the PR to trigger automatic release"
         echo
-        print_success "🎉 Tag release workflow started! Maven publishing is separate."
+        print_success "🎉 Release PR creation started! Check GitHub for the PR."
     else
-        print_error "Failed to trigger tag release workflow."
+        print_error "Failed to trigger release PR workflow."
         print_error "You can manually trigger it from GitHub UI:"
-        print_error "  https://github.com/doljae/kotlin-logging-extensions/actions/workflows/tag-release.yml"
+        print_error "  https://github.com/doljae/kotlin-logging-extensions/actions/workflows/create-release-pr.yml"
         exit 1
     fi
 }
 
 # Show help if requested
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    echo "kotlin-logging-extensions Tag Release Helper"
+    echo "kotlin-logging-extensions Release PR Creator"
     echo
     echo "Usage: $0"
     echo
-    echo "This script helps you create a tagged release by:"
+    echo "This script helps you create a release by:"
     echo "  1. Checking prerequisites (clean working directory, main branch)"
     echo "  2. Suggesting next version based on existing tags"
-    echo "  3. Triggering GitHub Actions tag release workflow via GitHub CLI"
+    echo "  3. Creating a Release PR via GitHub Actions workflow"
     echo
-    echo "The Tag Release workflow will automatically:"
-    echo "  - Validate version format and check for duplicate tags"
+    echo "The Release PR workflow will:"
+    echo "  - Validate version format and check for duplicates"
     echo "  - Run tests and code quality checks"
-    echo "  - Update version references in documentation"
-    echo "  - Commit version updates and create git tag"
-    echo "  - Create GitHub Release with auto-generated release notes"
+    echo "  - Create release branch with version updates"
+    echo "  - Create PR with detailed description and review checklist"
     echo
-    echo "After tag release, you can separately publish to Maven Central:"
-    echo "  - Go to: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/maven-publish.yml"
-    echo "  - Enter the created tag (e.g., v2.1.21-0.0.1)"
-    echo "  - Manual step: Complete publishing at https://oss.sonatype.org/"
+    echo "After PR merge, the auto-release workflow will:"
+    echo "  - Create git tag and GitHub Release"
+    echo "  - Upload to Maven Central staging repository"
+    echo "  - Manual step required: Complete publishing at https://oss.sonatype.org/"
     echo
     echo "Prerequisites:"
     echo "  - Clean working directory (no uncommitted changes)"
@@ -247,7 +250,7 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "  - GitHub CLI installed and authenticated (gh auth login)"
     echo
     echo "Alternative (without GitHub CLI):"
-    echo "  1. Go to: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/tag-release.yml"
+    echo "  1. Go to: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/create-release-pr.yml"
     echo "  2. Click 'Run workflow'"
     echo "  3. Enter version and click 'Run workflow'"
     echo

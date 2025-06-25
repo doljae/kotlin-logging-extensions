@@ -1,0 +1,269 @@
+name: Create Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (KSP format: KOTLIN_VERSION-LIB_VERSION, e.g., 2.1.21-0.0.2)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
+      branch_name: ${{ steps.version.outputs.branch_name }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Set version variables
+      id: version
+      run: |
+        VERSION="${{ github.event.inputs.version }}"
+        TAG_NAME="v${VERSION}"
+        BRANCH_NAME="release/${VERSION}"
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+        echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION}"
+        echo "Tag: ${TAG_NAME}"
+        echo "Branch: ${BRANCH_NAME}"
+        
+    - name: Validate version format
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "❌ Error: Version must be in KSP format KOTLIN_VERSION-LIB_VERSION (e.g., 2.1.21-0.0.1)"
+          echo "   Input version: ${VERSION}"
+          echo "   Expected format: KOTLIN_VERSION-LIB_VERSION (e.g., 2.1.21-0.0.1)"
+          exit 1
+        fi
+        echo "✅ Version format is valid: ${VERSION}"
+        
+    - name: Check if tag already exists
+      run: |
+        TAG_NAME="${{ steps.version.outputs.tag_name }}"
+        if git rev-parse --verify "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
+          echo "❌ Error: Tag ${TAG_NAME} already exists!"
+          echo "   Please use a different version number."
+          exit 1
+        fi
+        echo "✅ Tag ${TAG_NAME} does not exist, proceeding with release PR"
+        
+    - name: Check if release branch already exists
+      run: |
+        BRANCH_NAME="${{ steps.version.outputs.branch_name }}"
+        if git ls-remote --heads origin "${BRANCH_NAME}" | grep -q "${BRANCH_NAME}"; then
+          echo "❌ Error: Branch ${BRANCH_NAME} already exists!"
+          echo "   Please use a different version number or delete the existing branch."
+          exit 1
+        fi
+        echo "✅ Branch ${BRANCH_NAME} does not exist, proceeding with release PR"
+
+  test:
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Run tests
+      run: ./gradlew test
+      
+    - name: Run ktlint check
+      run: ./gradlew ktlintCheck
+      
+    - name: Build artifacts
+      run: ./gradlew build
+
+  create-pr:
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Create release branch
+      run: |
+        BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
+        git checkout -b "${BRANCH_NAME}"
+        echo "✅ Created release branch: ${BRANCH_NAME}"
+        
+    - name: Update version references
+      run: |
+        VERSION="${{ needs.validate.outputs.version }}"
+        echo "📝 Updating version references to: $VERSION"
+        
+        # Update README.md (4 locations)
+        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
+        
+        # Update issue templates (2 locations in bug_report.yml)
+        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+/io.github.doljae:kotlin-logging-extensions:$VERSION/g" .github/ISSUE_TEMPLATE/bug_report.yml
+        
+        # Update example versions in all issue templates
+        find .github/ISSUE_TEMPLATE/ -name "*.yml" -exec sed -i "s/e\.g\., [0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+/e.g., $VERSION/g" {} \;
+        
+        # Update gradle.properties
+        sed -i "s/project.version=.*/project.version=$VERSION/" gradle.properties
+        
+        echo "✅ Version references updated successfully"
+
+    - name: Commit version updates
+      run: |
+        VERSION="${{ needs.validate.outputs.version }}"
+        
+        # Configure git user
+        git config user.name "Seokjae Lee"
+        git config user.email "seok9211@naver.com"
+        
+        # Add changed files
+        git add README.md gradle.properties .github/ISSUE_TEMPLATE/
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "ℹ️ No version changes to commit"
+          exit 1
+        else
+          # Commit changes
+          git commit -m "chore: update version references to $VERSION" -m "- Update README.md dependency examples" -m "- Update issue template version examples" -m "- Update project version in gradle.properties"
+          echo "✅ Version updates committed"
+        fi
+        
+    - name: Push release branch
+      run: |
+        BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
+        git push origin "${BRANCH_NAME}"
+        echo "✅ Pushed release branch: ${BRANCH_NAME}"
+        
+    - name: Generate release notes for PR
+      id: release_notes
+      run: |
+        # Get the previous tag
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+        CURRENT_VERSION="${{ needs.validate.outputs.version }}"
+        
+        echo "Generating release notes since ${PREVIOUS_TAG}"
+        
+        # Create PR description
+        echo "## 🚀 Release ${{ needs.validate.outputs.tag_name }}" > pr_description.md
+        echo "" >> pr_description.md
+        echo "This PR prepares the release of version \`${CURRENT_VERSION}\`." >> pr_description.md
+        echo "" >> pr_description.md
+        
+        if [ -z "$PREVIOUS_TAG" ]; then
+          # First release
+          echo "### 🎉 Initial Release" >> pr_description.md
+          echo "" >> pr_description.md
+          echo "This is the first release of kotlin-logging-extensions!" >> pr_description.md
+          echo "" >> pr_description.md
+          echo "**Features:**" >> pr_description.md
+          echo "- Automatic logger generation for Kotlin classes using KSP" >> pr_description.md
+          echo "- Zero boilerplate - just use \`log.info { }\` in any class" >> pr_description.md
+          echo "- Package-aware naming with fully qualified class names" >> pr_description.md
+          echo "- Seamless integration with kotlin-logging library" >> pr_description.md
+          echo "" >> pr_description.md
+        else
+          # Regular release
+          echo "### 📝 Changes since ${PREVIOUS_TAG}" >> pr_description.md
+          echo "" >> pr_description.md
+          
+          # Get commits since last tag
+          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD~1 --pretty=format:"- %s (%h)" --no-merges)
+          if [ -n "$COMMITS" ]; then
+            echo "$COMMITS" >> pr_description.md
+            echo "" >> pr_description.md
+          else
+            echo "- Minor improvements and updates" >> pr_description.md
+            echo "" >> pr_description.md
+          fi
+        fi
+        
+        # Add version compatibility info
+        echo "### ⚡ Version Compatibility" >> pr_description.md
+        echo "- **Kotlin**: 2.1.21" >> pr_description.md
+        echo "- **KSP**: 2.1.21-2.0.2" >> pr_description.md
+        echo "- **kotlin-logging**: 7.0.7+" >> pr_description.md
+        echo "" >> pr_description.md
+        
+        # Add what will happen after merge
+        echo "### 🔄 After Merge" >> pr_description.md
+        echo "When this PR is merged, the following will happen automatically:" >> pr_description.md
+        echo "- ✅ Create git tag: \`${{ needs.validate.outputs.tag_name }}\`" >> pr_description.md
+        echo "- ✅ Generate GitHub Release with release notes" >> pr_description.md
+        echo "- ✅ Upload to Maven Central staging repository" >> pr_description.md
+        echo "- ⚠️ Manual step: Complete publishing at https://oss.sonatype.org/" >> pr_description.md
+        echo "" >> pr_description.md
+        
+        # Add review checklist
+        echo "### ✅ Review Checklist" >> pr_description.md
+        echo "- [ ] Version number is correct" >> pr_description.md
+        echo "- [ ] All version references are updated consistently" >> pr_description.md
+        echo "- [ ] Tests are passing" >> pr_description.md
+        echo "- [ ] Ready to release" >> pr_description.md
+        
+        # Set output for PR creation
+        echo 'pr_description<<EOF' >> $GITHUB_OUTPUT
+        cat pr_description.md >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+        
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ needs.validate.outputs.branch_name }}
+        title: "Release ${{ needs.validate.outputs.tag_name }}"
+        body: ${{ steps.release_notes.outputs.pr_description }}
+        labels: |
+          release
+          version-update
+        assignees: doljae
+        reviewers: doljae
+        author: Seokjae Lee <seok9211@naver.com>
+        
+    - name: Summary
+      run: |
+        echo "🎉 Release PR created successfully!"
+        echo ""
+        echo "📦 Version: ${{ needs.validate.outputs.version }}"
+        echo "🏷️ Tag: ${{ needs.validate.outputs.tag_name }}"
+        echo "🌿 Branch: ${{ needs.validate.outputs.branch_name }}"
+        echo ""
+        echo "🔗 Review and merge the PR to trigger automatic release:"
+        echo "   https://github.com/${{ github.repository }}/pulls"
+        echo ""
+        echo "ℹ️ After PR merge, check the auto-release workflow:"
+        echo "   https://github.com/${{ github.repository }}/actions" 
