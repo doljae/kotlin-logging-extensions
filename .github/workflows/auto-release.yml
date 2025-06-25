@@ -269,7 +269,7 @@ jobs:
         echo 'EOF' >> $GITHUB_OUTPUT
         
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ needs.check-release.outputs.tag_name }}
         name: Release ${{ needs.check-release.outputs.tag_name }}
