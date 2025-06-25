@@ -244,6 +244,7 @@ jobs:
       uses: peter-evans/create-pull-request@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        base: main
         branch: ${{ needs.validate.outputs.branch_name }}
         title: "Release ${{ needs.validate.outputs.tag_name }}"
         body: ${{ steps.release_notes.outputs.pr_description }}
