@@ -201,6 +201,17 @@ jobs:
     - name: Generate release notes
       id: release_notes
       run: |
+        # Extract build script versions for release notes
+        echo "📍 Extracting build script versions..."
+        KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' workload/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
+        
+        echo "✅ Extracted versions:"
+        echo "   - Kotlin: $KOTLIN_VERSION"
+        echo "   - KSP: $KSP_VERSION"  
+        echo "   - kotlin-logging-jvm: $KOTLIN_LOGGING_VERSION"
+        
         # Get the previous tag
         PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)
         CURRENT_TAG="${{ needs.check-release.outputs.tag_name }}"
@@ -240,9 +251,9 @@ jobs:
         
         # Add version compatibility info
         echo "## ⚡ Version Compatibility" >> release_notes.md
-        echo "- **Kotlin**: 2.1.21" >> release_notes.md
-        echo "- **KSP**: 2.1.21-2.0.2" >> release_notes.md
-        echo "- **kotlin-logging**: 7.0.7+" >> release_notes.md
+        echo "- **Kotlin**: $KOTLIN_VERSION" >> release_notes.md
+        echo "- **KSP**: $KSP_VERSION" >> release_notes.md
+        echo "- **kotlin-logging**: $KOTLIN_LOGGING_VERSION+" >> release_notes.md
         echo "" >> release_notes.md
         
         # Add installation instructions
@@ -250,14 +261,14 @@ jobs:
         echo "" >> release_notes.md
         echo "\`\`\`kotlin" >> release_notes.md
         echo "plugins {" >> release_notes.md
-        echo "    kotlin(\"jvm\") version \"2.1.21\"" >> release_notes.md
-        echo "    id(\"com.google.devtools.ksp\") version \"2.1.21-2.0.2\"" >> release_notes.md
+        echo "    kotlin(\"jvm\") version \"$KOTLIN_VERSION\"" >> release_notes.md
+        echo "    id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"" >> release_notes.md
         echo "}" >> release_notes.md
         echo "" >> release_notes.md
         echo "dependencies {" >> release_notes.md
         echo "    ksp(\"io.github.doljae:kotlin-logging-extensions:${{ needs.check-release.outputs.version }}\")" >> release_notes.md
         echo "    implementation(\"io.github.doljae:kotlin-logging-extensions:${{ needs.check-release.outputs.version }}\")" >> release_notes.md
-        echo "    implementation(\"io.github.oshai:kotlin-logging-jvm:7.0.7\")" >> release_notes.md
+        echo "    implementation(\"io.github.oshai:kotlin-logging-jvm:$KOTLIN_LOGGING_VERSION\")" >> release_notes.md
         echo "}" >> release_notes.md
         echo "\`\`\`" >> release_notes.md
         echo "" >> release_notes.md

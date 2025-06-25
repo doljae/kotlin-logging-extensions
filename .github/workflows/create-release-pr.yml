@@ -135,6 +135,11 @@ jobs:
         KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
         echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted KSP version: ${KSP_VERSION}"
+        
+        # Extract kotlin-logging-jvm version from workload/build.gradle.kts
+        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' workload/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
+        echo "kotlin_logging_version=${KOTLIN_LOGGING_VERSION}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted kotlin-logging-jvm version: ${KOTLIN_LOGGING_VERSION}"
 
     - name: Update version references
       run: |
@@ -287,11 +292,15 @@ jobs:
           fi
         fi
         
-        # Add version compatibility info
+        # Add version compatibility info (using extracted build script versions)
+        KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
+        KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
+        KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
+        
         echo "### ⚡ Version Compatibility" >> pr_description.md
-        echo "- **Kotlin**: 2.1.21" >> pr_description.md
-        echo "- **KSP**: 2.1.21-2.0.2" >> pr_description.md
-        echo "- **kotlin-logging**: 7.0.7+" >> pr_description.md
+        echo "- **Kotlin**: $KOTLIN_VERSION" >> pr_description.md
+        echo "- **KSP**: $KSP_VERSION" >> pr_description.md
+        echo "- **kotlin-logging**: $KOTLIN_LOGGING_VERSION+" >> pr_description.md
         echo "" >> pr_description.md
         
         # Add what will happen after merge
@@ -353,6 +362,7 @@ jobs:
         VERSION="${{ needs.validate.outputs.version }}"
         KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
+        KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
         TAG_NAME="${{ needs.validate.outputs.tag_name }}"
         BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
         
@@ -361,6 +371,7 @@ jobs:
         echo "📦 Library Version: $VERSION"
         echo "⚡ Kotlin Version: $KOTLIN_VERSION"
         echo "🔧 KSP Version: $KSP_VERSION"
+        echo "📚 kotlin-logging Version: $KOTLIN_LOGGING_VERSION"
         echo "🏷️ Tag: $TAG_NAME"
         echo "🌿 Branch: $BRANCH_NAME"
         echo ""
