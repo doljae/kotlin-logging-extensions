@@ -1,0 +1,20 @@
+# Global ownership - all files require review from the project maintainer
+* @doljae
+
+# Critical files that always require careful review
+/.github/workflows/ @doljae
+/gradle/ @doljae
+/build.gradle.kts @doljae
+/settings.gradle.kts @doljae
+/gradle.properties @doljae
+
+# Release and deployment related files
+/scripts/ @doljae
+/.github/CODEOWNERS @doljae
+
+# Security related files
+/SECURITY.md @doljae
+/.github/ISSUE_TEMPLATE/ @doljae
+
+# Core processor implementation
+/processor/src/main/kotlin/ @doljae 
