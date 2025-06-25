@@ -240,20 +240,38 @@ jobs:
         cat pr_description.md >> $GITHUB_OUTPUT
         echo 'EOF' >> $GITHUB_OUTPUT
         
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v6
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        base: main
-        branch: ${{ needs.validate.outputs.branch_name }}
-        title: "Release ${{ needs.validate.outputs.tag_name }}"
-        body: ${{ steps.release_notes.outputs.pr_description }}
-        labels: |
-          release
-          version-update
-        assignees: doljae
-        reviewers: doljae
-        author: Seokjae Lee <seok9211@naver.com>
+    - name: Create Pull Request using GitHub CLI
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ needs.validate.outputs.version }}"
+        TAG_NAME="${{ needs.validate.outputs.tag_name }}"
+        BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
+        
+        # Save PR description to file for GitHub CLI
+        cat > pr_body.md << 'EOF'
+        ${{ steps.release_notes.outputs.pr_description }}
+        EOF
+        
+        # Create PR using GitHub CLI (preserves all commits in branch)
+        echo "🔄 Creating Pull Request from branch ${BRANCH_NAME} to main..."
+        PR_URL=$(gh pr create \
+          --title "Release ${TAG_NAME}" \
+          --body-file pr_body.md \
+          --base main \
+          --head "${BRANCH_NAME}" \
+          --assignee doljae \
+          --reviewer doljae)
+        
+        echo "✅ Pull Request created: ${PR_URL}"
+        
+        # Try to add labels (may fail if labels don't exist)
+        PR_NUMBER=$(basename "${PR_URL}")
+        gh pr edit "${PR_NUMBER}" --add-label "release" || echo "⚠️ Could not add 'release' label"
+        gh pr edit "${PR_NUMBER}" --add-label "version-update" || echo "⚠️ Could not add 'version-update' label"
+        
+        # Clean up temporary files
+        rm -f pr_body.md pr_description.md
         
     - name: Summary
       run: |
