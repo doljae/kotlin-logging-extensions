@@ -6,7 +6,7 @@
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![KSP](https://img.shields.io/badge/KSP-2.1.21--2.0.2-purple.svg)](https://github.com/google/ksp)
 
-**Automatic logger generation for Kotlin classes using KSP.** Write `log.info { }` in any class without boilerplate!
+**Automatic logger generation for Kotlin classes using [kotlin-logging](https://github.com/oshai/kotlin-logging) & [KSP](https://github.com/google/ksp).** Write `log.info { }` in any class without boilerplate!
 
 ## 🚀 Quick Start
 
@@ -224,11 +224,6 @@ cd kotlin-logging-extensions
 ## 📄 License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file.
-
-## 🔗 Related Projects
-
-- [kotlin-logging](https://github.com/oshai/kotlin-logging) - The logging framework this project extends
-- [KSP](https://github.com/google/ksp) - Kotlin Symbol Processing framework
 
 ---
 
