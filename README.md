@@ -50,6 +50,7 @@ dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
     implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+    implementation("ch.qos.logback:logback-classic:1.5.18") // Logger implementation required
 }
 ```
 
@@ -116,22 +117,7 @@ This project was developed and tested with **kotlin-logging-jvm**, but it should
 > **Note**: While broader compatibility is expected due to the shared kotlin-logging API, only `kotlin-logging-jvm` has been thoroughly tested.
 
 ### ⚠️ Logger Implementation Required
-**Important**: kotlin-logging is a facade that requires an actual logger implementation to function properly.
-
-**You must also add one of these logger implementations:**
-- **Logback** (recommended): `ch.qos.logback:logback-classic:1.4.12`
-- **Log4j2**: `org.apache.logging.log4j:log4j-slf4j2-impl:2.21.1`
-- **Simple**: `org.slf4j:slf4j-simple:2.0.9`
-
-**Example with Logback:**
-```kotlin
-dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
-    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
-    implementation("ch.qos.logback:logback-classic:1.4.12")  // ← Logger implementation
-}
-```
+kotlin-logging requires an actual logger implementation. Add one like [Logback](https://logback.qos.ch/) or [Log4j2](https://logging.apache.org/log4j/2.x/).
 
 Without a logger implementation, your logs will not be printed or processed.
 
@@ -160,6 +146,7 @@ dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
     implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
 }
 ```
 
