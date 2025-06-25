@@ -7,6 +7,8 @@ body:
     attributes:
       value: |
         Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+        
+        **⚠️ Version Compatibility**: This library is highly dependent on Kotlin and KSP versions. Please ensure you're using the correct versions before requesting features.
 
   - type: checkboxes
     id: prerequisites

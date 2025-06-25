@@ -9,6 +9,8 @@ body:
         Have a question about kotlin-logging-extensions? We're here to help!
         
         **Before asking**: Please check the [documentation](https://github.com/doljae/kotlin-logging-extensions/blob/main/README.md) and [existing issues](https://github.com/doljae/kotlin-logging-extensions/issues) first.
+        
+        **⚠️ Version Compatibility**: This library is highly dependent on Kotlin and KSP versions. If you're experiencing issues, please ensure you're using the exact versions specified in the documentation.
 
   - type: checkboxes
     id: prerequisites

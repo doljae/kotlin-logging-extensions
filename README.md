@@ -112,6 +112,14 @@ plugins {
 }
 ```
 
+### 📦 Versioning Policy
+This project follows the **same versioning strategy as KSP**:
+- Library versions are aligned with KSP releases (e.g., `2.1.21-0.0.1` for KSP `2.1.21-2.0.2`)
+- The first part (`2.1.21`) matches the Kotlin version
+- The last part (`0.0.1`) is our library's patch version
+
+This ensures clear compatibility mapping and reduces version confusion.
+
 ### 💡 Future Improvements
 We're working on improving version compatibility in future releases. Have ideas or suggestions? 
 **We'd love to hear from you!** Please open an issue in the [Issues tab](https://github.com/doljae/kotlin-logging-extensions/issues).
