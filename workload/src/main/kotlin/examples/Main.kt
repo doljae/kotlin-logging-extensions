@@ -7,13 +7,20 @@ import examples.enterprise.service.impl.PaymentServiceImpl
  * 
  * This file shows how to use the auto-generated `log` property in various scenarios:
  * - User management with validation and error handling
- * - Order processing with performance logging
+ * - Order processing with performance logging  
  * - Data access with database operations
+ * - Deep package structure with fully qualified logger names
  * 
- * Run this example to see the logging in action!
+ * All example classes (UserService, OrderProcessor, DataRepository, PaymentServiceImpl) 
+ * now use the auto-generated `log` property with calls like:
+ * - log.info { "message" }
+ * - log.debug { "debug info" }
+ * - log.error(exception) { "error message" }
  * 
- * Note: In the actual implementation after KSP processing, the println statements
- * will be replaced with actual log.info { }, log.error { }, etc. calls.
+ * Run this example to see the kotlin-logging in action!
+ * 
+ * Note: You'll see actual logging output from logback, not println statements.
+ * The logger names will be fully qualified class names (e.g., "examples.UserService").
  */
 fun main() {
     println("=".repeat(60))
@@ -34,6 +41,7 @@ fun main() {
     
     println("=".repeat(60))
     println("✨ All examples completed! Check the logs above.")
+    println("✨ Notice how each class automatically has 'log' available!")
     println("=".repeat(60))
 }
 

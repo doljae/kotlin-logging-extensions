@@ -14,26 +14,26 @@ package examples.enterprise.service.impl
 class PaymentServiceImpl {
 
     fun processPayment(amount: Double, paymentMethod: String): PaymentResult {
-        println("LOG [INFO] [examples.enterprise.service.impl.PaymentServiceImpl] Processing payment: amount=$amount, method=$paymentMethod")
+        log.info { "Processing payment: amount=$amount, method=$paymentMethod" }
 
         return try {
             validatePayment(amount, paymentMethod)
             executePayment(amount, paymentMethod)
             
-            println("LOG [INFO] [examples.enterprise.service.impl.PaymentServiceImpl] Payment processed successfully")
+            log.info { "Payment processed successfully" }
             PaymentResult(success = true, transactionId = "TXN-${System.currentTimeMillis()}")
             
         } catch (e: PaymentValidationException) {
-            println("LOG [WARN] [examples.enterprise.service.impl.PaymentServiceImpl] Payment validation failed: ${e.message}")
+            log.warn(e) { "Payment validation failed" }
             PaymentResult(success = false, error = e.message)
         } catch (e: Exception) {
-            println("LOG [ERROR] [examples.enterprise.service.impl.PaymentServiceImpl] Unexpected payment error: ${e.message}")
+            log.error(e) { "Unexpected payment error" }
             PaymentResult(success = false, error = "Internal payment processing error")
         }
     }
 
     private fun validatePayment(amount: Double, paymentMethod: String) {
-        println("LOG [DEBUG] [examples.enterprise.service.impl.PaymentServiceImpl] Validating payment parameters")
+        log.debug { "Validating payment parameters" }
         
         if (amount <= 0) {
             throw PaymentValidationException("Amount must be positive")
@@ -43,16 +43,16 @@ class PaymentServiceImpl {
             throw PaymentValidationException("Payment method is required")
         }
         
-        println("LOG [DEBUG] [examples.enterprise.service.impl.PaymentServiceImpl] Payment validation completed")
+        log.debug { "Payment validation completed" }
     }
 
     private fun executePayment(amount: Double, paymentMethod: String) {
-        println("LOG [DEBUG] [examples.enterprise.service.impl.PaymentServiceImpl] Executing payment with $paymentMethod")
+        log.debug { "Executing payment with $paymentMethod" }
         
         // Simulate payment processing
         Thread.sleep(50)
         
-        println("LOG [TRACE] [examples.enterprise.service.impl.PaymentServiceImpl] Payment gateway response received")
+        log.trace { "Payment gateway response received" }
     }
 }
 

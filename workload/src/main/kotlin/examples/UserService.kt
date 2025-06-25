@@ -14,12 +14,12 @@ import kotlin.random.Random
 class UserService {
 
     fun createUser(name: String, email: String): User {
-        // Auto-generated log property will be available here
-        println("LOG [INFO] Creating new user: name='$name', email='$email'")
+        // Auto-generated log property is available here!
+        log.info { "Creating new user: name='$name', email='$email'" }
 
         // Validate input
         if (name.isBlank()) {
-            println("LOG [WARN] Attempted to create user with blank name. Email: $email")
+            log.warn { "Attempted to create user with blank name. Email: $email" }
             throw IllegalArgumentException("User name cannot be blank")
         }
 
@@ -31,48 +31,48 @@ class UserService {
                 email = email
             )
 
-            println("LOG [INFO] Successfully created user: ${user.id}")
-            println("LOG [DEBUG] User details: $user")
+            log.info { "Successfully created user: ${user.id}" }
+            log.debug { "User details: $user" }
 
             return user
         } catch (e: Exception) {
-            println("LOG [ERROR] Failed to create user: name='$name', email='$email' - ${e.message}")
+            log.error(e) { "Failed to create user: name='$name', email='$email'" }
             throw UserCreationException("Could not create user", e)
         }
     }
 
     fun findUser(userId: String): User? {
-        println("LOG [DEBUG] Looking up user with ID: $userId")
+        log.debug { "Looking up user with ID: $userId" }
 
         return if (Random.nextBoolean()) {
             val user = User(userId, "Sample User", "user@example.com")
-            println("LOG [INFO] Found user: $userId")
+            log.info { "Found user: $userId" }
             user
         } else {
-            println("LOG [WARN] User not found: $userId")
+            log.warn { "User not found: $userId" }
             null
         }
     }
 
     fun deleteUser(userId: String) {
-        println("LOG [INFO] Attempting to delete user: $userId")
+        log.info { "Attempting to delete user: $userId" }
 
         try {
             // Simulate deletion logic
             if (Random.nextBoolean()) {
-                println("LOG [INFO] Successfully deleted user: $userId")
+                log.info { "Successfully deleted user: $userId" }
             } else {
                 throw RuntimeException("Database connection failed")
             }
         } catch (e: Exception) {
-            println("LOG [ERROR] Failed to delete user: $userId - ${e.message}")
+            log.error(e) { "Failed to delete user: $userId" }
             throw e
         }
     }
 
     private fun generateUserId(): String {
         val id = "user_${Random.nextInt(1000, 9999)}"
-        println("LOG [DEBUG] Generated user ID: $id")
+        log.debug { "Generated user ID: $id" }
         return id
     }
 }
