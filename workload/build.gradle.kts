@@ -10,14 +10,6 @@ version = project.property("project.version") as String
 repositories {
     mavenCentral()
     
-    // Sonatype Central (primary) - for public releases
-    maven {
-        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-        content {
-            includeGroup("io.github.doljae")
-        }
-    }
-    
     // GitHub Packages (optional) - requires authentication
     // Configure using environment variables or gradle.properties:
     // - GITHUB_USERNAME / GITHUB_TOKEN (environment variables)

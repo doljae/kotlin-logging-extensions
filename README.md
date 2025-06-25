@@ -1,6 +1,7 @@
 # Kotlin Logging Extensions
 
 [![CI](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.doljae/kotlin-logging-extensions.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![KSP](https://img.shields.io/badge/KSP-2.1.21--2.0.2-purple.svg)](https://github.com/google/ksp)
@@ -32,34 +33,16 @@ class UserService {
 
 ### How to Use
 
-**Step 1: Setup GitHub Packages Access**
-
-Create a [GitHub Personal Access Token](https://github.com/settings/tokens) with `read:packages` scope, then set environment variables:
-```bash
-export GITHUB_USERNAME="your-github-username"
-export GITHUB_TOKEN="your-personal-access-token"
-```
-
-**Step 2: Configure Repository**
+**Step 1: Add Dependencies**
 
 Add to your `build.gradle.kts`:
 ```kotlin
-repositories {
-    mavenCentral()
-    maven {
-        url = uri("https://maven.pkg.github.com/doljae/kotlin-logging-extensions")
-        credentials {
-            username = System.getenv("GITHUB_USERNAME")
-            password = System.getenv("GITHUB_TOKEN")
-        }
-    }
-}
-```
-
-**Step 3: Add Dependencies**
-```kotlin
 plugins {
     id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
@@ -69,7 +52,7 @@ dependencies {
 }
 ```
 
-**Step 4: Use `log` in Any Class**
+**Step 2: Use `log` in Any Class**
 ```kotlin
 class OrderProcessor {
     fun processOrder(id: String) {
@@ -87,8 +70,6 @@ class OrderProcessor {
 
 That's it! The logger is automatically available with the class name (`OrderProcessor` in this example).
 
-> **💡 Coming Soon**: Maven Central support will eliminate Steps 1-2, making setup even simpler!
-
 ## ✨ Features
 
 - **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
@@ -99,13 +80,14 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 ## 📦 Installation
 
-### Current: GitHub Packages
-Follow the [Quick Start](#quick-start) guide above for complete setup instructions.
-
-### Coming Soon: Maven Central  
+### Maven Central (Recommended)
 ```kotlin
+plugins {
+    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+}
+
 repositories {
-    mavenCentral()  // No authentication needed!
+    mavenCentral()
 }
 
 dependencies {
@@ -113,6 +95,28 @@ dependencies {
     implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
 }
+```
+
+### GitHub Packages (Alternative)
+For development or specific use cases, you can also use GitHub Packages:
+
+```kotlin
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/doljae/kotlin-logging-extensions")
+        credentials {
+            username = System.getenv("GITHUB_USERNAME")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+```
+
+**Note**: GitHub Packages requires authentication. Set environment variables:
+```bash
+export GITHUB_USERNAME="your-github-username"
+export GITHUB_TOKEN="your-personal-access-token"
 ```
 
 ## 📝 Examples
