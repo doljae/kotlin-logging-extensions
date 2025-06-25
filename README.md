@@ -81,14 +81,15 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 ## ⚠️ Version Compatibility
 
-> **Important**: This project is highly dependent on Kotlin and KSP versions due to its nature as a symbol processing library.
+> **Important**: This project is highly dependent on **Kotlin and KSP versions** due to its nature as a symbol processing library.
 
-### 🔧 Required Versions
-- **Kotlin**: `2.1.21`
-- **KSP**: `2.1.21-2.0.2`
+### 🔧 Critical Requirements
+- **Kotlin**: `2.1.21` ⭐ **Most Important**
+- **KSP**: `2.1.21-2.0.2` ⭐ **Most Important**
+- **kotlin-logging**: Any version (API-compatible)
 
 ### 📋 Before Using
-Please ensure your project uses the **exact same versions** as shown above. Version mismatches may cause:
+Please ensure your project uses the **exact same Kotlin and KSP versions** as shown above. Version mismatches may cause:
 - Compilation failures
 - Missing log property generation
 - Runtime issues
@@ -103,7 +104,7 @@ plugins {
 ```
 
 ### 🚀 Upgrade if Needed
-If your versions don't match, consider upgrading:
+If your Kotlin/KSP versions don't match, consider upgrading:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.1.21"
@@ -116,17 +117,18 @@ We're working on improving version compatibility in future releases. Have ideas 
 **We'd love to hear from you!** Please open an issue in the [Issues tab](https://github.com/doljae/kotlin-logging-extensions/issues).
 
 ### 🌐 kotlin-logging Compatibility
-This project was developed and tested with **kotlin-logging-jvm**, but it should be compatible with other kotlin-logging variants:
+This project is compatible with **any version of kotlin-logging** as long as the logger declaration API remains unchanged:
+- `kotlin-logging-jvm` for JVM environments
 - `kotlin-logging-js` for JavaScript/Node.js environments
 - `kotlin-logging-linuxx64`, `kotlin-logging-mingwx64` for native targets
 - Other platform-specific variants
 
-> **Note**: While broader compatibility is expected due to the shared kotlin-logging API, only `kotlin-logging-jvm` has been thoroughly tested.
+> **Note**: The kotlin-logging API is stable, so version compatibility should not be an issue.
 
-### ⚠️ Logger Implementation Required
-kotlin-logging requires an actual logger implementation. Add one like [Logback](https://logback.qos.ch/) or [Log4j2](https://logging.apache.org/log4j/2.x/).
+### ⚠️ Logger Implementation
+**If you're already using kotlin-logging successfully in your project, you don't need to add any additional logger implementation dependencies.**
 
-Without a logger implementation, your logs will not be printed or processed.
+If you're setting up logging for the first time, you'll need a logger implementation like [Logback](https://logback.qos.ch/) or [Log4j2](https://logging.apache.org/log4j/2.x/).
 
 ## ✨ Features
 
@@ -179,20 +181,6 @@ export GITHUB_USERNAME="your-github-username"
 export GITHUB_TOKEN="your-personal-access-token"
 ```
 
-
-## 🔧 How It Works
-
-Uses Kotlin Symbol Processing (KSP) to automatically generate extension properties for each class:
-
-```kotlin
-// For class com.example.UserService, generates:
-val UserService.log: KLogger
-    get() = KotlinLogging.logger("com.example.UserService")
-```
-
-- **Compile-time**: No runtime performance impact
-- **Type-safe**: Full IDE support and auto-completion
-- **Standard logging**: Uses kotlin-logging underneath
 
 ## 💡 Why This Project?
 
