@@ -1,0 +1,234 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Extract version from tag
+      id: version
+      run: |
+        TAG_NAME="${{ github.ref_name }}"
+        VERSION="${TAG_NAME#v}"
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION}"
+        echo "Tag: ${TAG_NAME}"
+        
+    - name: Validate version format
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "❌ Error: Version must be in format X.Y.Z (e.g., 1.0.0)"
+          echo "   Current tag: ${{ github.ref_name }}"
+          echo "   Expected format: vX.Y.Z"
+          exit 1
+        fi
+        echo "✅ Version format is valid: ${VERSION}"
+
+  test:
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Run tests
+      run: ./gradlew test
+      
+    - name: Run ktlint check
+      run: ./gradlew ktlintCheck
+      
+    - name: Build artifacts
+      run: ./gradlew build
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Update version in gradle.properties
+      run: |
+        sed -i "s/project.version=.*/project.version=${{ needs.validate.outputs.version }}/" gradle.properties
+        echo "Updated version to: ${{ needs.validate.outputs.version }}"
+        
+    - name: Build for release
+      run: ./gradlew build
+      
+    - name: Publish to Maven Central
+      env:
+        ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+        ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+        ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+      run: |
+        echo "🚀 Publishing to Maven Central..."
+        ./gradlew publishToMavenCentral --no-configuration-cache
+        echo "✅ Published to Maven Central successfully!"
+      
+    - name: Publish to GitHub Packages
+      env:
+        GITHUB_USERNAME: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "📦 Publishing to GitHub Packages..."
+        ./gradlew publishAllPublicationsToGithubPackagesRepository
+        echo "✅ Published to GitHub Packages successfully!"
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [validate, test, publish]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        # Get the previous tag
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)
+        CURRENT_TAG="${{ needs.validate.outputs.tag_name }}"
+        
+        echo "Generating release notes from ${PREVIOUS_TAG} to ${CURRENT_TAG}"
+        
+        # Create release notes
+        if [ -z "$PREVIOUS_TAG" ]; then
+          # First release
+          echo "🎉 **Initial Release**" > release_notes.md
+          echo "" >> release_notes.md
+          echo "This is the first release of kotlin-logging-extensions!" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "## 🚀 Features" >> release_notes.md
+          echo "- Automatic logger generation for Kotlin classes using KSP" >> release_notes.md
+          echo "- Zero boilerplate - just use \`log.info { }\` in any class" >> release_notes.md
+          echo "- Package-aware naming with fully qualified class names" >> release_notes.md
+          echo "- Seamless integration with kotlin-logging library" >> release_notes.md
+          echo "" >> release_notes.md
+        else
+          # Regular release
+          echo "## 🔄 Changes since ${PREVIOUS_TAG}" > release_notes.md
+          echo "" >> release_notes.md
+          
+          # Get commits since last tag
+          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          if [ -n "$COMMITS" ]; then
+            echo "### 📝 Commits" >> release_notes.md
+            echo "$COMMITS" >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+        fi
+        
+        # Add installation instructions
+        echo "## 📦 Installation" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "\`\`\`kotlin" >> release_notes.md
+        echo "plugins {" >> release_notes.md
+        echo "    kotlin(\"jvm\") version \"2.1.21\"" >> release_notes.md
+        echo "    id(\"com.google.devtools.ksp\") version \"2.1.21-2.0.2\"" >> release_notes.md
+        echo "}" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "dependencies {" >> release_notes.md
+        echo "    ksp(\"io.github.doljae:kotlin-logging-extensions:${{ needs.validate.outputs.version }}\")" >> release_notes.md
+        echo "    implementation(\"io.github.doljae:kotlin-logging-extensions:${{ needs.validate.outputs.version }}\")" >> release_notes.md
+        echo "    implementation(\"io.github.oshai:kotlin-logging-jvm:7.0.7\")" >> release_notes.md
+        echo "}" >> release_notes.md
+        echo "\`\`\`" >> release_notes.md
+        echo "" >> release_notes.md
+        
+        # Add links
+        echo "## 🔗 Links" >> release_notes.md
+        echo "- 📚 [Documentation](https://github.com/doljae/kotlin-logging-extensions/blob/main/README.md)" >> release_notes.md
+        echo "- 📦 [Maven Central](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.validate.outputs.version }})" >> release_notes.md
+        if [ -n "$PREVIOUS_TAG" ]; then
+          echo "- 🔄 [Full Changelog](https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${CURRENT_TAG})" >> release_notes.md
+        fi
+        
+        # Set output for GitHub release
+        echo 'release_notes<<EOF' >> $GITHUB_OUTPUT
+        cat release_notes.md >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.validate.outputs.tag_name }}
+        name: Release ${{ needs.validate.outputs.tag_name }}
+        body: ${{ steps.release_notes.outputs.release_notes }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Release summary
+      run: |
+        echo "🎉 Release ${{ needs.validate.outputs.tag_name }} completed successfully!"
+        echo ""
+        echo "📦 Maven Central: https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.validate.outputs.version }}"
+        echo "🔖 GitHub Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate.outputs.tag_name }}"
+        echo ""
+        echo "✅ All done! Users can now use version ${{ needs.validate.outputs.version }}" 

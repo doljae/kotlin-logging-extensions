@@ -221,6 +221,24 @@ cd kotlin-logging-extensions
 ./gradlew ktlintCheck
 ```
 
+### 🚀 Creating a Release
+
+For maintainers: this project uses **Git Tag-based automatic releases**.
+
+```bash
+# Quick release (recommended)
+./scripts/release.sh
+
+# Or manually
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This automatically:
+- ✅ Runs tests
+- 📦 Publishes to Maven Central  
+- 🏷️ Creates GitHub Release with notes
+
 ## 🤝 Contributing
 
 1. Fork and create a feature branch
