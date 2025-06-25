@@ -26,7 +26,8 @@ kotlin {
 
 // https://vanniktech.github.io/gradle-maven-publish-plugin/central/
 mavenPublishing {
-    publishToMavenCentral()
+    // Upload to staging repository only, require manual release
+    publishToMavenCentral(automaticRelease = false)
 
     // Only sign when publishing to Maven Central, not for GitHub Packages
     if (System.getenv("GITHUB_TOKEN") == null) {

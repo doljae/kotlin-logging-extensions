@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*-*.*.*'
 
 permissions:
   contents: write
@@ -35,10 +35,10 @@ jobs:
     - name: Validate version format
       run: |
         VERSION="${{ steps.version.outputs.version }}"
-        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "❌ Error: Version must be in format X.Y.Z (e.g., 1.0.0)"
+        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "❌ Error: Version must be in KSP format KOTLIN_VERSION-LIB_VERSION (e.g., 2.1.21-0.0.1)"
           echo "   Current tag: ${{ github.ref_name }}"
-          echo "   Expected format: vX.Y.Z"
+          echo "   Expected format: vKOTLIN_VERSION-LIB_VERSION (e.g., v2.1.21-0.0.1)"
           exit 1
         fi
         echo "✅ Version format is valid: ${VERSION}"
@@ -79,7 +79,7 @@ jobs:
     - name: Build artifacts
       run: ./gradlew build
 
-  publish:
+  stage:
     runs-on: ubuntu-latest
     needs: [validate, test]
     
@@ -116,16 +116,17 @@ jobs:
     - name: Build for release
       run: ./gradlew build
       
-    - name: Publish to Maven Central
+    - name: Upload to Maven Central Staging
       env:
         ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
         ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
         ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
       run: |
-        echo "🚀 Publishing to Maven Central..."
+        echo "📤 Uploading to Maven Central staging repository..."
         ./gradlew publishToMavenCentral --no-configuration-cache
-        echo "✅ Published to Maven Central successfully!"
+        echo "✅ Uploaded to staging repository successfully!"
+        echo "🔄 Manual release required: Go to https://oss.sonatype.org/ to publish"
       
     - name: Publish to GitHub Packages
       env:
@@ -138,7 +139,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: [validate, test, publish]
+    needs: [validate, test, stage]
     
     steps:
     - name: Checkout code
@@ -150,7 +151,7 @@ jobs:
       id: release_notes
       run: |
         # Get the previous tag
-        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)
         CURRENT_TAG="${{ needs.validate.outputs.tag_name }}"
         
         echo "Generating release notes from ${PREVIOUS_TAG} to ${CURRENT_TAG}"
@@ -226,9 +227,13 @@ jobs:
         
     - name: Release summary
       run: |
-        echo "🎉 Release ${{ needs.validate.outputs.tag_name }} completed successfully!"
+        echo "🎉 Release ${{ needs.validate.outputs.tag_name }} staging completed successfully!"
         echo ""
-        echo "📦 Maven Central: https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.validate.outputs.version }}"
+        echo "📤 Staged at: https://oss.sonatype.org/#stagingRepositories"
         echo "🔖 GitHub Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate.outputs.tag_name }}"
         echo ""
-        echo "✅ All done! Users can now use version ${{ needs.validate.outputs.version }}" 
+        echo "⚠️  MANUAL ACTION REQUIRED:"
+        echo "   1. Go to https://oss.sonatype.org/"
+        echo "   2. Login and check staging repositories"
+        echo "   3. Close and Release the staging repository"
+        echo "   4. Version will be available at: https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.validate.outputs.version }}" 

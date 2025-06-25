@@ -29,8 +29,9 @@ print_error() {
 # Function to validate version format
 validate_version() {
     local version=$1
-    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        print_error "Version must be in format X.Y.Z (e.g., 1.0.0)"
+    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        print_error "Version must be in KSP format: KOTLIN_VERSION-LIB_VERSION"
+        print_error "Example: 2.1.21-0.0.1 (Kotlin 2.1.21, Library version 0.0.1)"
         exit 1
     fi
 }
@@ -67,26 +68,35 @@ check_branch() {
 
 # Function to suggest next version
 suggest_next_version() {
-    local latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+    local latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
     
     if [[ -z $latest_tag ]]; then
-        echo "1.0.0"
+        echo
+        print_info "No previous releases found"
+        print_info "Suggested first version: 2.1.21-0.0.1 (current Kotlin version + initial lib version)"
+        echo
         return
     fi
     
     local version=${latest_tag#v}
+    local kotlin_version=${version%-*}
+    local lib_version=${version#*-}
+    
     local IFS='.'
-    read -ra VERSION_PARTS <<< "$version"
-    local major=${VERSION_PARTS[0]}
-    local minor=${VERSION_PARTS[1]}
-    local patch=${VERSION_PARTS[2]}
+    read -ra LIB_PARTS <<< "$lib_version"
+    local lib_major=${LIB_PARTS[0]}
+    local lib_minor=${LIB_PARTS[1]}
+    local lib_patch=${LIB_PARTS[2]}
     
     echo
     print_info "Current latest version: $version"
+    print_info "Kotlin version: $kotlin_version, Library version: $lib_version"
+    print_info ""
     print_info "Suggestions:"
-    print_info "  Patch (bug fixes): $major.$minor.$((patch + 1))"
-    print_info "  Minor (new features): $major.$((minor + 1)).0"
-    print_info "  Major (breaking changes): $((major + 1)).0.0"
+    print_info "  Patch (bug fixes): $kotlin_version-$lib_major.$lib_minor.$((lib_patch + 1))"
+    print_info "  Minor (new features): $kotlin_version-$lib_major.$((lib_minor + 1)).0"
+    print_info "  Major (breaking changes): $kotlin_version-$((lib_major + 1)).0.0"
+    print_info "  Kotlin upgrade: 2.1.21-$lib_version (if Kotlin version changed)"
     echo
 }
 
@@ -102,8 +112,9 @@ show_release_plan() {
     print_info "  3. GitHub Actions will automatically:"
     print_info "     - Run tests"
     print_info "     - Build artifacts"
-    print_info "     - Publish to Maven Central"
+    print_info "     - Upload to Maven Central staging"
     print_info "     - Create GitHub Release with notes"
+    print_info "  4. Manual step: Go to https://oss.sonatype.org/ to publish"
     echo
 }
 
@@ -127,7 +138,7 @@ main() {
     suggest_next_version
     
     # Get version from user
-    read -p "Enter version to release (e.g., 1.0.0): " version
+    read -p "Enter version to release (e.g., 2.1.21-0.0.1): " version
     
     if [[ -z $version ]]; then
         print_error "Version is required."
@@ -141,7 +152,7 @@ main() {
     if tag_exists "$tag"; then
         print_error "Tag $tag already exists."
         print_info "Existing tags:"
-        git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -5
+        git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -5
         exit 1
     fi
     
@@ -191,8 +202,9 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo
     echo "The GitHub Actions workflow will automatically:"
     echo "  - Run tests and code quality checks"
-    echo "  - Publish to Maven Central"
+    echo "  - Upload to Maven Central staging repository"
     echo "  - Create GitHub Release with release notes"
+    echo "  - Manual step required: Go to https://oss.sonatype.org/ to publish"
     echo
     echo "Prerequisites:"
     echo "  - Clean working directory (no uncommitted changes)"

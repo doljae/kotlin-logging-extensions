@@ -223,21 +223,26 @@ cd kotlin-logging-extensions
 
 ### 🚀 Creating a Release
 
-For maintainers: this project uses **Git Tag-based automatic releases**.
+For maintainers: this project uses **KSP-style versioning** with **staged Maven Central releases**.
 
 ```bash
 # Quick release (recommended)
 ./scripts/release.sh
 
 # Or manually
-git tag v1.0.0
-git push origin v1.0.0
+git tag v2.1.21-0.0.1  # KOTLIN_VERSION-LIB_VERSION
+git push origin v2.1.21-0.0.1
 ```
 
 This automatically:
 - ✅ Runs tests
-- 📦 Publishes to Maven Central  
+- 📤 Uploads to Maven Central staging  
 - 🏷️ Creates GitHub Release with notes
+- ⚠️ **Manual step**: Go to [Sonatype](https://oss.sonatype.org/) to publish
+
+**Version Format**: `KOTLIN_VERSION-LIB_VERSION` (e.g., `2.1.21-0.0.1`)
+
+**Setup Required**: [GitHub Secrets Configuration](docs/SECRETS_SETUP.md) - Required for Maven Central publishing
 
 ## 🤝 Contributing
 
