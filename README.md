@@ -7,7 +7,7 @@
 [![kotlin-logging](https://img.shields.io/badge/kotlin--logging-7.0.7-green.svg)](https://github.com/oshai/kotlin-logging)
 [![KSP](https://img.shields.io/badge/KSP-2.1.21--2.0.2-purple.svg)](https://github.com/google/ksp)
 
-**Automatic logger generation for Kotlin classes using [kotlin-logging](https://github.com/oshai/kotlin-logging) & [KSP](https://github.com/google/ksp)** 
+**Elegant [kotlin-logging](https://github.com/oshai/kotlin-logging) extensions for zero-boilerplate logger generation in Kotlin classes using [KSP](https://github.com/google/ksp)**
 
 **Write `log.info { }` in any class without boilerplate!**
 
