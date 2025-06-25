@@ -38,6 +38,7 @@ class UserService {
 Add to your `build.gradle.kts`:
 ```kotlin
 plugins {
+    kotlin("jvm") version "2.1.21"
     id("com.google.devtools.ksp") version "2.1.21-2.0.2"
 }
 
@@ -70,6 +71,42 @@ class OrderProcessor {
 
 That's it! The logger is automatically available with the class name (`OrderProcessor` in this example).
 
+## ⚠️ Version Compatibility
+
+> **Important**: This project is highly dependent on Kotlin and KSP versions due to its nature as a symbol processing library.
+
+### 🔧 Required Versions
+- **Kotlin**: `2.1.21`
+- **KSP**: `2.1.21-2.0.2`
+
+### 📋 Before Using
+Please ensure your project uses the **exact same versions** as shown above. Version mismatches may cause:
+- Compilation failures
+- Missing log property generation
+- Runtime issues
+
+### 🔍 How to Check Your Versions
+```kotlin
+// In your build.gradle.kts, check:
+plugins {
+    kotlin("jvm") version "2.1.21"  // ← Should match exactly
+    id("com.google.devtools.ksp") version "2.1.21-2.0.2"  // ← Should match exactly
+}
+```
+
+### 🚀 Upgrade if Needed
+If your versions don't match, consider upgrading:
+```kotlin
+plugins {
+    kotlin("jvm") version "2.1.21"
+    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+}
+```
+
+### 💡 Future Improvements
+We're working on improving version compatibility in future releases. Have ideas or suggestions? 
+**We'd love to hear from you!** Please open an issue in the [Issues tab](https://github.com/doljae/kotlin-logging-extensions/issues).
+
 ## ✨ Features
 
 - **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
@@ -83,6 +120,7 @@ That's it! The logger is automatically available with the class name (`OrderProc
 ### Maven Central (Recommended)
 ```kotlin
 plugins {
+    kotlin("jvm") version "2.1.21"
     id("com.google.devtools.ksp") version "2.1.21-2.0.2"
 }
 
