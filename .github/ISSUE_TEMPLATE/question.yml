@@ -48,6 +48,15 @@ body:
     validations:
       required: false
 
+  - type: input
+    id: kotlin-logging-version
+    attributes:
+      label: kotlin-logging Version
+      description: Which kotlin-logging dependency are you using?
+      placeholder: "e.g., io.github.oshai:kotlin-logging-jvm:7.0.7"
+    validations:
+      required: false
+
   - type: textarea
     id: code-sample
     attributes:

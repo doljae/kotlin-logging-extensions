@@ -140,6 +140,11 @@ jobs:
         KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
         echo "kotlin_logging_version=${KOTLIN_LOGGING_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted kotlin-logging-jvm version: ${KOTLIN_LOGGING_VERSION}"
+        
+        # Extract full kotlin-logging dependency from processor/build.gradle.kts
+        KOTLIN_LOGGING_DEPENDENCY=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*"\([^"]*\)".*/\1/')
+        echo "kotlin_logging_dependency=${KOTLIN_LOGGING_DEPENDENCY}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted kotlin-logging dependency: ${KOTLIN_LOGGING_DEPENDENCY}"
 
     - name: Update version references
       run: |
@@ -147,12 +152,14 @@ jobs:
         KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
         KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
+        KOTLIN_LOGGING_DEPENDENCY="${{ steps.build_versions.outputs.kotlin_logging_dependency }}"
         
         echo "📝 Updating version references:"
         echo "  - Library version: $VERSION (user input)"
         echo "  - Kotlin version: $KOTLIN_VERSION (from root build.gradle.kts)" 
         echo "  - KSP version: $KSP_VERSION (from root build.gradle.kts)"
         echo "  - kotlin-logging-jvm version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
+        echo "  - kotlin-logging dependency: $KOTLIN_LOGGING_DEPENDENCY (from processor/build.gradle.kts)"
         
         # 1. Update README.md
         echo "🔄 Updating README.md..."
@@ -170,16 +177,19 @@ jobs:
         sed -i '/label: Library Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$VERSION"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
         sed -i '/label: Kotlin Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_VERSION"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
         sed -i '/label: KSP Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KSP_VERSION"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
+        sed -i '/label: kotlin-logging Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_LOGGING_DEPENDENCY"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
         
         # 3. Update version_compatibility.yml (placeholders only)
         echo "🔄 Updating version_compatibility.yml..."
         sed -i '/label: kotlin-logging-extensions Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$VERSION"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
         sed -i '/label: Your Kotlin Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_VERSION"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
         sed -i '/label: Your KSP Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KSP_VERSION"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
+        sed -i '/label: Your kotlin-logging Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_LOGGING_DEPENDENCY"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
         
         # 4. Update question.yml (placeholder only)
         echo "🔄 Updating question.yml..."
         sed -i '/label: Library Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$VERSION"'"/' .github/ISSUE_TEMPLATE/question.yml
+        sed -i '/label: kotlin-logging Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_LOGGING_DEPENDENCY"'"/' .github/ISSUE_TEMPLATE/question.yml
         
         # 5. Update gradle.properties
         echo "🔄 Updating gradle.properties..."
@@ -198,6 +208,7 @@ jobs:
         echo "  - Kotlin Version: $KOTLIN_VERSION (from root build.gradle.kts)"
         echo "  - KSP Version: $KSP_VERSION (from root build.gradle.kts)"
         echo "  - kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
+        echo "  - kotlin-logging Dependency: $KOTLIN_LOGGING_DEPENDENCY (from processor/build.gradle.kts)"
         echo "✅ Version references updated successfully"
 
     - name: Commit version updates
@@ -206,6 +217,7 @@ jobs:
         KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
         KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
+        KOTLIN_LOGGING_DEPENDENCY="${{ steps.build_versions.outputs.kotlin_logging_dependency }}"
         
         # Configure git user
         git config user.name "Seokjae Lee"
@@ -228,7 +240,8 @@ jobs:
             -m "  * Library Version → $VERSION" \
             -m "  * Kotlin Version → $KOTLIN_VERSION" \
             -m "  * KSP Version → $KSP_VERSION" \
-            -m "  * kotlin-logging-jvm Version → $KOTLIN_LOGGING_VERSION"
+            -m "  * kotlin-logging-jvm Version → $KOTLIN_LOGGING_VERSION" \
+            -m "  * kotlin-logging Dependency → $KOTLIN_LOGGING_DEPENDENCY"
           echo "✅ Empty commit created for release branch"
         else
           # Commit changes
@@ -239,6 +252,7 @@ jobs:
             -m "  * Kotlin Version → $KOTLIN_VERSION" \
             -m "  * KSP Version → $KSP_VERSION" \
             -m "  * kotlin-logging-jvm Version → $KOTLIN_LOGGING_VERSION" \
+            -m "  * kotlin-logging Dependency → $KOTLIN_LOGGING_DEPENDENCY" \
             -m "- Update project version in gradle.properties"
           echo "✅ Version updates committed"
           
@@ -367,6 +381,7 @@ jobs:
         KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
         KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
+        KOTLIN_LOGGING_DEPENDENCY="${{ steps.build_versions.outputs.kotlin_logging_dependency }}"
         TAG_NAME="${{ needs.validate.outputs.tag_name }}"
         BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
         
@@ -376,6 +391,7 @@ jobs:
         echo "⚡ Kotlin Version: $KOTLIN_VERSION (root build.gradle.kts)"
         echo "🔧 KSP Version: $KSP_VERSION (root build.gradle.kts)"
         echo "📚 kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (processor/build.gradle.kts)"
+        echo "🔗 kotlin-logging Dependency: $KOTLIN_LOGGING_DEPENDENCY (processor/build.gradle.kts)"
         echo "🏷️ Tag: $TAG_NAME"
         echo "🌿 Branch: $BRANCH_NAME"
         echo ""

@@ -107,6 +107,34 @@ plugins {
 We're working on improving version compatibility in future releases. Have ideas or suggestions? 
 **We'd love to hear from you!** Please open an issue in the [Issues tab](https://github.com/doljae/kotlin-logging-extensions/issues).
 
+### 🌐 kotlin-logging Compatibility
+This project was developed and tested with **kotlin-logging-jvm**, but it should be compatible with other kotlin-logging variants:
+- `kotlin-logging-js` for JavaScript/Node.js environments
+- `kotlin-logging-linuxx64`, `kotlin-logging-mingwx64` for native targets
+- Other platform-specific variants
+
+> **Note**: While broader compatibility is expected due to the shared kotlin-logging API, only `kotlin-logging-jvm` has been thoroughly tested.
+
+### ⚠️ Logger Implementation Required
+**Important**: kotlin-logging is a facade that requires an actual logger implementation to function properly.
+
+**You must also add one of these logger implementations:**
+- **Logback** (recommended): `ch.qos.logback:logback-classic:1.4.12`
+- **Log4j2**: `org.apache.logging.log4j:log4j-slf4j2-impl:2.21.1`
+- **Simple**: `org.slf4j:slf4j-simple:2.0.9`
+
+**Example with Logback:**
+```kotlin
+dependencies {
+    ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
+    implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+    implementation("ch.qos.logback:logback-classic:1.4.12")  // ← Logger implementation
+}
+```
+
+Without a logger implementation, your logs will not be printed or processed.
+
 ## ✨ Features
 
 - **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`

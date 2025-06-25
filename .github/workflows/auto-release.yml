@@ -326,4 +326,27 @@ jobs:
         echo "   - Maven Central: https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.check-release.outputs.version }}"
         echo ""
         echo "⚠️  MANUAL ACTION REQUIRED:"
-        echo "   Complete Maven Central publishing at https://oss.sonatype.org/" 
+        echo "   Complete Maven Central publishing at https://oss.sonatype.org/"
+
+    - name: Extract build script versions
+      id: build_versions
+      run: |
+        # Extract Kotlin version from build.gradle.kts
+        KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        echo "kotlin_version=${KOTLIN_VERSION}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted Kotlin version: ${KOTLIN_VERSION}"
+        
+        # Extract KSP version from build.gradle.kts  
+        KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted KSP version: ${KSP_VERSION}"
+        
+        # Extract kotlin-logging-jvm version from processor/build.gradle.kts
+        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
+        echo "kotlin_logging_version=${KOTLIN_LOGGING_VERSION}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted kotlin-logging-jvm version: ${KOTLIN_LOGGING_VERSION}"
+        
+        # Extract full kotlin-logging dependency from processor/build.gradle.kts
+        KOTLIN_LOGGING_DEPENDENCY=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*"\([^"]*\)".*/\1/')
+        echo "kotlin_logging_dependency=${KOTLIN_LOGGING_DEPENDENCY}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted kotlin-logging dependency: ${KOTLIN_LOGGING_DEPENDENCY}" 
