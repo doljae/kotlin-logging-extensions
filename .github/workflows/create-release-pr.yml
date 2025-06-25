@@ -128,18 +128,24 @@ jobs:
         VERSION="${{ needs.validate.outputs.version }}"
         echo "📝 Updating version references to: $VERSION"
         
-        # Update README.md (4 locations)
-        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
+        # Update README.md - Handle both semantic version (0.0.1) and KSP format (2.1.21-0.0.1)
+        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
         
-        # Update issue templates (2 locations in bug_report.yml)
-        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+/io.github.doljae:kotlin-logging-extensions:$VERSION/g" .github/ISSUE_TEMPLATE/bug_report.yml
+        # Update bug_report.yml - Handle both version formats in code block
+        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" .github/ISSUE_TEMPLATE/bug_report.yml
         
-        # Update example versions in all issue templates
-        find .github/ISSUE_TEMPLATE/ -name "*.yml" -exec sed -i "s/e\.g\., [0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+/e.g., $VERSION/g" {} \;
+        # Update issue template placeholders - Handle both semantic and KSP format examples
+        find .github/ISSUE_TEMPLATE/ -name "*.yml" -exec sed -i "s/e\.g\., [0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/e.g., $VERSION/g" {} \;
         
         # Update gradle.properties
         sed -i "s/project.version=.*/project.version=$VERSION/" gradle.properties
         
+        # Log what was updated
+        echo "📋 Updated files:"
+        echo "  - README.md (dependency examples)"
+        echo "  - .github/ISSUE_TEMPLATE/bug_report.yml (code blocks)" 
+        echo "  - .github/ISSUE_TEMPLATE/*.yml (placeholder examples)"
+        echo "  - gradle.properties (project version)"
         echo "✅ Version references updated successfully"
 
     - name: Commit version updates
@@ -155,12 +161,22 @@ jobs:
         
         # Check if there are changes to commit
         if git diff --staged --quiet; then
-          echo "ℹ️ No version changes to commit"
-          exit 1
+          echo "⚠️ No version changes to commit - files may already be up to date"
+          echo "Current gradle.properties version: $(grep 'project.version=' gradle.properties)"
+          echo "Target version: $VERSION"
+          
+          # Still commit to ensure the release branch has something
+          echo "Creating empty commit to ensure release branch exists..."
+          git commit --allow-empty -m "chore: prepare release $VERSION" -m "No version changes needed - files already up to date"
+          echo "✅ Empty commit created for release branch"
         else
           # Commit changes
           git commit -m "chore: update version references to $VERSION" -m "- Update README.md dependency examples" -m "- Update issue template version examples" -m "- Update project version in gradle.properties"
           echo "✅ Version updates committed"
+          
+          # Show what was changed
+          echo "📋 Changed files:"
+          git diff --name-only HEAD~1 HEAD | sed 's/^/  - /'
         fi
         
     - name: Push release branch
