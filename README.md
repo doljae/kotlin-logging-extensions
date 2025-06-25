@@ -157,32 +157,6 @@ export GITHUB_USERNAME="your-github-username"
 export GITHUB_TOKEN="your-personal-access-token"
 ```
 
-## 📝 Examples
-
-### Real-world Usage Examples
-Check out [`workload/src/main/kotlin/examples/`](workload/src/main/kotlin/examples/) for complete examples:
-
-- **[UserService.kt](workload/src/main/kotlin/examples/UserService.kt)** - User management with validation
-- **[OrderProcessor.kt](workload/src/main/kotlin/examples/OrderProcessor.kt)** - Order processing with performance logging  
-- **[DataRepository.kt](workload/src/main/kotlin/examples/DataRepository.kt)** - Database operations with different log levels
-- **[PaymentServiceImpl.kt](workload/src/main/kotlin/examples/enterprise/service/impl/PaymentServiceImpl.kt)** - Deep package structure
-
-Run the examples:
-```bash
-./gradlew :workload:run
-```
-
-### Different Log Levels
-```kotlin
-class ApiController {
-    fun handleRequest(request: Request) {
-        log.debug { "Received request: ${request.id}" }
-        log.info { "Processing ${request.type} request" }
-        log.warn { "Rate limit approaching for user ${request.userId}" }
-        log.error { "Request failed: ${request.id}" }
-    }
-}
-```
 
 ## 🔧 How It Works
 
