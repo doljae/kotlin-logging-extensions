@@ -4,9 +4,12 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.doljae/kotlin-logging-extensions.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![kotlin-logging](https://img.shields.io/badge/kotlin--logging-7.0.7-green.svg)](https://github.com/oshai/kotlin-logging)
 [![KSP](https://img.shields.io/badge/KSP-2.1.21--2.0.2-purple.svg)](https://github.com/google/ksp)
 
-**Automatic logger generation for Kotlin classes using [kotlin-logging](https://github.com/oshai/kotlin-logging) & [KSP](https://github.com/google/ksp).** Write `log.info { }` in any class without boilerplate!
+**Automatic logger generation for Kotlin classes using [kotlin-logging](https://github.com/oshai/kotlin-logging) & [KSP](https://github.com/google/ksp)** 
+
+**Write `log.info { }` in any class without boilerplate!**
 
 ## 🚀 Quick Start
 
