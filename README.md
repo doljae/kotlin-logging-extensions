@@ -70,6 +70,13 @@ class OrderProcessor {
 }
 ```
 
+**Step 3: Generate Logger Code**
+After writing your code, run KSP to generate the logger extensions:
+```bash
+./gradlew kspKotlin kspTestKotlin
+```
+This will generate the `log` property and resolve any compilation errors in your IDE.
+
 That's it! The logger is automatically available with the class name (`OrderProcessor` in this example).
 
 ## ⚠️ Version Compatibility
