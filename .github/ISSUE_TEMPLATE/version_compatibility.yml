@@ -1,0 +1,96 @@
+name: ⚠️ Version Compatibility Issue
+description: Report version compatibility problems or conflicts
+title: "[Version] "
+labels: ["version-compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is specifically for version compatibility issues between Kotlin, KSP, and kotlin-logging-extensions.
+        
+        **Required versions**: Kotlin `2.1.21`, KSP `2.1.21-2.0.2`
+
+  - type: input
+    id: library-version
+    attributes:
+      label: kotlin-logging-extensions Version
+      description: Which version are you using?
+      placeholder: "e.g., 0.0.1"
+    validations:
+      required: true
+
+  - type: input
+    id: kotlin-version
+    attributes:
+      label: Your Kotlin Version
+      description: Which Kotlin version are you using?
+      placeholder: "e.g., 2.1.20"
+    validations:
+      required: true
+
+  - type: input
+    id: ksp-version
+    attributes:
+      label: Your KSP Version
+      description: Which KSP version are you using?
+      placeholder: "e.g., 2.1.20-2.0.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Message
+      description: What error are you getting?
+      render: text
+      placeholder: |
+        e.g., 
+        Unresolved reference: log
+        or
+        Class 'X' was compiled with an incompatible version of Kotlin
+    validations:
+      required: true
+
+  - type: textarea
+    id: build-output
+    attributes:
+      label: Build Output
+      description: Full build error output (if applicable)
+      render: text
+      placeholder: Paste the complete build error here...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: attempted-fixes
+    attributes:
+      label: What I've Tried
+      description: Check all that you've attempted
+      options:
+        - label: Clean build (`./gradlew clean build`)
+        - label: Upgrading Kotlin to the required version (2.1.21)
+        - label: Upgrading KSP to the required version (2.1.21-2.0.2)
+        - label: Clearing Gradle cache
+        - label: Invalidating IDE caches and restarting
+
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Impact
+      description: How is this affecting your work?
+      options:
+        - Can't use the library at all
+        - Some features don't work
+        - Minor inconvenience
+        - Just curious about compatibility
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any constraints preventing you from upgrading versions?
+      placeholder: "e.g., Other dependencies require older Kotlin version, company policy, etc."
+    validations:
+      required: false 

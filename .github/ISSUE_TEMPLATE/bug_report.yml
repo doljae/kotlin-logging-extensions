@@ -1,0 +1,130 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill out this form to help us understand and reproduce the issue.
+        
+        **⚠️ Important**: This library is highly dependent on Kotlin and KSP versions. Please ensure you're using the correct versions before reporting.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm you have completed these steps
+      options:
+        - label: I have searched existing issues to make sure this is not a duplicate
+          required: true
+        - label: I am using the exact Kotlin and KSP versions specified in the documentation
+          required: true
+        - label: I have tried building with a clean Gradle build (`./gradlew clean build`)
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Library Version
+      description: Which version of kotlin-logging-extensions are you using?
+      placeholder: "e.g., 0.0.1"
+    validations:
+      required: true
+
+  - type: input
+    id: kotlin-version
+    attributes:
+      label: Kotlin Version
+      description: Which Kotlin version are you using?
+      placeholder: "e.g., 2.1.21"
+    validations:
+      required: true
+
+  - type: input
+    id: ksp-version
+    attributes:
+      label: KSP Version
+      description: Which KSP version are you using?
+      placeholder: "e.g., 2.1.21-2.0.2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Create a class with...
+        2. Add dependency...
+        3. Run build...
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: The log property should be automatically generated and available for use
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Compilation fails with error "Unresolved reference: log"
+    validations:
+      required: true
+
+  - type: textarea
+    id: build-config
+    attributes:
+      label: Build Configuration
+      description: Your relevant build.gradle.kts configuration
+      render: kotlin
+      placeholder: |
+        plugins {
+            kotlin("jvm") version "2.1.21"
+            id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+        }
+        
+        dependencies {
+            ksp("io.github.doljae:kotlin-logging-extensions:0.0.1")
+            implementation("io.github.doljae:kotlin-logging-extensions:0.0.1")
+            implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+        }
+    validations:
+      required: false
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Logs
+      description: Any relevant error messages or stack traces
+      render: text
+      placeholder: Paste error logs here...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: Add any other context, screenshots, or relevant information
+    validations:
+      required: false 

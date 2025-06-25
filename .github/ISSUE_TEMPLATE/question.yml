@@ -1,0 +1,82 @@
+name: ❓ Question
+description: Ask a question or request help
+title: "[Question] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about kotlin-logging-extensions? We're here to help!
+        
+        **Before asking**: Please check the [documentation](https://github.com/doljae/kotlin-logging-extensions/blob/main/README.md) and [existing issues](https://github.com/doljae/kotlin-logging-extensions/issues) first.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm you have completed these steps
+      options:
+        - label: I have read the documentation and couldn't find an answer
+          required: true
+        - label: I have searched existing issues for similar questions
+          required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: "I'm trying to... How can I... Is it possible to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide context about what you're trying to achieve
+      placeholder: "I'm working on... I want to... My goal is to..."
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Library Version
+      description: Which version of kotlin-logging-extensions are you using?
+      placeholder: "e.g., 0.0.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Code Sample
+      description: Share relevant code that demonstrates your question (if applicable)
+      render: kotlin
+      placeholder: |
+        class MyClass {
+            fun myMethod() {
+                // What I'm trying to do...
+            }
+        }
+    validations:
+      required: false
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What I've Tried
+      description: What have you already attempted?
+      placeholder: "I tried... I looked at... I attempted..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other relevant information
+      placeholder: "Environment details, specific requirements, etc."
+    validations:
+      required: false 

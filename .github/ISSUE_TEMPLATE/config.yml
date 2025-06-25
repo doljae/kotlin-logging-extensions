@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/doljae/kotlin-logging-extensions/blob/main/README.md
+    about: Read the documentation for setup and usage instructions
+  - name: 💬 Discussions
+    url: https://github.com/doljae/kotlin-logging-extensions/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🔍 Search Existing Issues
+    url: https://github.com/doljae/kotlin-logging-extensions/issues?q=is%3Aissue
+    about: Search through existing issues before creating a new one 
