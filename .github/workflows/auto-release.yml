@@ -205,12 +205,12 @@ jobs:
         echo "📍 Extracting build script versions..."
         KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
         KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' workload/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
+        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
         
         echo "✅ Extracted versions:"
-        echo "   - Kotlin: $KOTLIN_VERSION"
-        echo "   - KSP: $KSP_VERSION"  
-        echo "   - kotlin-logging-jvm: $KOTLIN_LOGGING_VERSION"
+        echo "   - Kotlin: $KOTLIN_VERSION (from root build.gradle.kts)"
+        echo "   - KSP: $KSP_VERSION (from root build.gradle.kts)"  
+        echo "   - kotlin-logging-jvm: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
         
         # Get the previous tag
         PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)

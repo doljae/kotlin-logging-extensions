@@ -136,8 +136,8 @@ jobs:
         echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted KSP version: ${KSP_VERSION}"
         
-        # Extract kotlin-logging-jvm version from workload/build.gradle.kts
-        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' workload/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
+        # Extract kotlin-logging-jvm version from processor/build.gradle.kts
+        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
         echo "kotlin_logging_version=${KOTLIN_LOGGING_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted kotlin-logging-jvm version: ${KOTLIN_LOGGING_VERSION}"
 
@@ -146,11 +146,13 @@ jobs:
         VERSION="${{ needs.validate.outputs.version }}"
         KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
+        KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
         
         echo "📝 Updating version references:"
-        echo "  - Library version: $VERSION"
-        echo "  - Kotlin version: $KOTLIN_VERSION" 
-        echo "  - KSP version: $KSP_VERSION"
+        echo "  - Library version: $VERSION (user input)"
+        echo "  - Kotlin version: $KOTLIN_VERSION (from root build.gradle.kts)" 
+        echo "  - KSP version: $KSP_VERSION (from root build.gradle.kts)"
+        echo "  - kotlin-logging-jvm version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
         
         # Update README.md - Handle both semantic version (0.0.1) and KSP format (2.1.21-0.0.1)
         sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
@@ -194,9 +196,10 @@ jobs:
         echo "  - gradle.properties (project version)"
         echo ""
         echo "📌 Version updates applied:"
-        echo "  - Library Version: $VERSION"
-        echo "  - Kotlin Version: $KOTLIN_VERSION (from build.gradle.kts)"
-        echo "  - KSP Version: $KSP_VERSION (from build.gradle.kts)"
+        echo "  - Library Version: $VERSION (user input)"
+        echo "  - Kotlin Version: $KOTLIN_VERSION (from root build.gradle.kts)"
+        echo "  - KSP Version: $KSP_VERSION (from root build.gradle.kts)"
+        echo "  - kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
         echo "✅ Version references updated successfully"
 
     - name: Commit version updates
@@ -204,6 +207,7 @@ jobs:
         VERSION="${{ needs.validate.outputs.version }}"
         KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
+        KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
         
         # Configure git user
         git config user.name "Seokjae Lee"
@@ -216,7 +220,7 @@ jobs:
         if git diff --staged --quiet; then
           echo "⚠️ No version changes to commit - files may already be up to date"
           echo "Current gradle.properties version: $(grep 'project.version=' gradle.properties)"
-          echo "Target versions: Library=$VERSION, Kotlin=$KOTLIN_VERSION, KSP=$KSP_VERSION"
+          echo "Target versions: Library=$VERSION, Kotlin=$KOTLIN_VERSION, KSP=$KSP_VERSION, kotlin-logging-jvm=$KOTLIN_LOGGING_VERSION"
           
           # Still commit to ensure the release branch has something
           echo "Creating empty commit to ensure release branch exists..."
@@ -225,7 +229,8 @@ jobs:
             -m "Target versions:" \
             -m "  * Library Version → $VERSION" \
             -m "  * Kotlin Version → $KOTLIN_VERSION" \
-            -m "  * KSP Version → $KSP_VERSION"
+            -m "  * KSP Version → $KSP_VERSION" \
+            -m "  * kotlin-logging-jvm Version → $KOTLIN_LOGGING_VERSION"
           echo "✅ Empty commit created for release branch"
         else
           # Commit changes
@@ -235,6 +240,7 @@ jobs:
             -m "  * Library Version → $VERSION" \
             -m "  * Kotlin Version → $KOTLIN_VERSION" \
             -m "  * KSP Version → $KSP_VERSION" \
+            -m "  * kotlin-logging-jvm Version → $KOTLIN_LOGGING_VERSION" \
             -m "- Update project version in gradle.properties"
           echo "✅ Version updates committed"
           
@@ -368,14 +374,14 @@ jobs:
         
         echo "🎉 Release PR created successfully!"
         echo ""
-        echo "📦 Library Version: $VERSION"
-        echo "⚡ Kotlin Version: $KOTLIN_VERSION"
-        echo "🔧 KSP Version: $KSP_VERSION"
-        echo "📚 kotlin-logging Version: $KOTLIN_LOGGING_VERSION"
+        echo "📦 Library Version: $VERSION (user input)"
+        echo "⚡ Kotlin Version: $KOTLIN_VERSION (root build.gradle.kts)"
+        echo "🔧 KSP Version: $KSP_VERSION (root build.gradle.kts)"
+        echo "📚 kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (processor/build.gradle.kts)"
         echo "🏷️ Tag: $TAG_NAME"
         echo "🌿 Branch: $BRANCH_NAME"
         echo ""
-        echo "📝 Updated placeholders in issue templates with actual build script versions"
+        echo "📝 Updated placeholders in issue templates with extracted build script versions"
         echo ""
         echo "🔗 Review and merge the PR to trigger automatic release:"
         echo "   https://github.com/${{ github.repository }}/pulls"
