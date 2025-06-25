@@ -123,34 +123,82 @@ jobs:
         git checkout -b "${BRANCH_NAME}"
         echo "✅ Created release branch: ${BRANCH_NAME}"
         
+    - name: Extract build script versions
+      id: build_versions
+      run: |
+        # Extract Kotlin version from build.gradle.kts
+        KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        echo "kotlin_version=${KOTLIN_VERSION}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted Kotlin version: ${KOTLIN_VERSION}"
+        
+        # Extract KSP version from build.gradle.kts  
+        KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted KSP version: ${KSP_VERSION}"
+
     - name: Update version references
       run: |
         VERSION="${{ needs.validate.outputs.version }}"
-        echo "📝 Updating version references to: $VERSION"
+        KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
+        KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
+        
+        echo "📝 Updating version references:"
+        echo "  - Library version: $VERSION"
+        echo "  - Kotlin version: $KOTLIN_VERSION" 
+        echo "  - KSP version: $KSP_VERSION"
         
         # Update README.md - Handle both semantic version (0.0.1) and KSP format (2.1.21-0.0.1)
         sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
         
-        # Update bug_report.yml - Handle both version formats in code block
-        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" .github/ISSUE_TEMPLATE/bug_report.yml
+        # Update build script version references in README.md
+        sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" README.md
+        sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" README.md
         
-        # Update issue template placeholders - Handle both semantic and KSP format examples
-        find .github/ISSUE_TEMPLATE/ -name "*.yml" -exec sed -i "s/e\.g\., [0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/e.g., $VERSION/g" {} \;
+        # Update bug_report.yml - Handle both version formats in code block and placeholders
+        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" .github/ISSUE_TEMPLATE/bug_report.yml
+        sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" .github/ISSUE_TEMPLATE/bug_report.yml
+        sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" .github/ISSUE_TEMPLATE/bug_report.yml
+        
+        # Update issue template placeholders with specific versions
+        echo "🔄 Updating issue template placeholders..."
+        
+        # Update each template file individually for better control
+        for template_file in .github/ISSUE_TEMPLATE/*.yml; do
+          if [[ -f "$template_file" ]]; then
+            echo "  📝 Updating $(basename "$template_file")..."
+            
+            # Library Version placeholders (e.g., 0.0.1 or 2.1.21-0.0.1)
+            sed -i "s/placeholder: \"e\.g\., [0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?\"/placeholder: \"e.g., $VERSION\"/g" "$template_file"
+            
+            # Kotlin Version placeholders (e.g., 2.1.21 or 2.1.20)
+            sed -i "s/placeholder: \"e\.g\., [0-9]\+\.[0-9]\+\.[0-9]\+\"$/placeholder: \"e.g., $KOTLIN_VERSION\"/g" "$template_file"
+            
+            # KSP Version placeholders (e.g., 2.1.21-2.0.2 or 2.1.20-2.0.1)  
+            sed -i "s/placeholder: \"e\.g\., [0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/placeholder: \"e.g., $KSP_VERSION\"/g" "$template_file"
+          fi
+        done
         
         # Update gradle.properties
         sed -i "s/project.version=.*/project.version=$VERSION/" gradle.properties
         
         # Log what was updated
         echo "📋 Updated files:"
-        echo "  - README.md (dependency examples)"
-        echo "  - .github/ISSUE_TEMPLATE/bug_report.yml (code blocks)" 
-        echo "  - .github/ISSUE_TEMPLATE/*.yml (placeholder examples)"
+        echo "  - README.md (dependency examples + build script versions)"
+        echo "  - .github/ISSUE_TEMPLATE/bug_report.yml (code blocks + placeholders)" 
+        echo "  - .github/ISSUE_TEMPLATE/*.yml (version-specific placeholders)"
         echo "  - gradle.properties (project version)"
+        echo ""
+        echo "📌 Version updates applied:"
+        echo "  - Library Version: $VERSION"
+        echo "  - Kotlin Version: $KOTLIN_VERSION (from build.gradle.kts)"
+        echo "  - KSP Version: $KSP_VERSION (from build.gradle.kts)"
         echo "✅ Version references updated successfully"
 
     - name: Commit version updates
       run: |
         VERSION="${{ needs.validate.outputs.version }}"
+        KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
+        KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
         
         # Configure git user
         git config user.name "Seokjae Lee"
@@ -163,15 +211,26 @@ jobs:
         if git diff --staged --quiet; then
           echo "⚠️ No version changes to commit - files may already be up to date"
           echo "Current gradle.properties version: $(grep 'project.version=' gradle.properties)"
-          echo "Target version: $VERSION"
+          echo "Target versions: Library=$VERSION, Kotlin=$KOTLIN_VERSION, KSP=$KSP_VERSION"
           
           # Still commit to ensure the release branch has something
           echo "Creating empty commit to ensure release branch exists..."
-          git commit --allow-empty -m "chore: prepare release $VERSION" -m "No version changes needed - files already up to date"
+          git commit --allow-empty -m "chore: prepare release $VERSION" \
+            -m "No version changes needed - files already up to date" \
+            -m "Target versions:" \
+            -m "  * Library Version → $VERSION" \
+            -m "  * Kotlin Version → $KOTLIN_VERSION" \
+            -m "  * KSP Version → $KSP_VERSION"
           echo "✅ Empty commit created for release branch"
         else
           # Commit changes
-          git commit -m "chore: update version references to $VERSION" -m "- Update README.md dependency examples" -m "- Update issue template version examples" -m "- Update project version in gradle.properties"
+          git commit -m "chore: update version references to $VERSION" \
+            -m "- Update README.md dependency examples and build script versions" \
+            -m "- Update issue template placeholders with build script versions:" \
+            -m "  * Library Version → $VERSION" \
+            -m "  * Kotlin Version → $KOTLIN_VERSION" \
+            -m "  * KSP Version → $KSP_VERSION" \
+            -m "- Update project version in gradle.properties"
           echo "✅ Version updates committed"
           
           # Show what was changed
@@ -291,11 +350,21 @@ jobs:
         
     - name: Summary
       run: |
+        VERSION="${{ needs.validate.outputs.version }}"
+        KOTLIN_VERSION="${{ steps.build_versions.outputs.kotlin_version }}"
+        KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
+        TAG_NAME="${{ needs.validate.outputs.tag_name }}"
+        BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
+        
         echo "🎉 Release PR created successfully!"
         echo ""
-        echo "📦 Version: ${{ needs.validate.outputs.version }}"
-        echo "🏷️ Tag: ${{ needs.validate.outputs.tag_name }}"
-        echo "🌿 Branch: ${{ needs.validate.outputs.branch_name }}"
+        echo "📦 Library Version: $VERSION"
+        echo "⚡ Kotlin Version: $KOTLIN_VERSION"
+        echo "🔧 KSP Version: $KSP_VERSION"
+        echo "🏷️ Tag: $TAG_NAME"
+        echo "🌿 Branch: $BRANCH_NAME"
+        echo ""
+        echo "📝 Updated placeholders in issue templates with actual build script versions"
         echo ""
         echo "🔗 Review and merge the PR to trigger automatic release:"
         echo "   https://github.com/${{ github.repository }}/pulls"
