@@ -66,6 +66,27 @@ check_branch() {
     fi
 }
 
+# Function to check if GitHub CLI is installed
+check_github_cli() {
+    if ! command -v gh &> /dev/null; then
+        print_error "GitHub CLI (gh) is not installed."
+        print_error "Please install it from: https://cli.github.com/"
+        print_error ""
+        print_error "Alternative: Use GitHub UI to trigger release:"
+        print_error "  1. Go to: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/release.yml"
+        print_error "  2. Click 'Run workflow'"
+        print_error "  3. Enter version and click 'Run workflow'"
+        exit 1
+    fi
+    
+    # Check if authenticated
+    if ! gh auth status &> /dev/null; then
+        print_error "GitHub CLI is not authenticated."
+        print_error "Please run: gh auth login"
+        exit 1
+    fi
+}
+
 # Function to suggest next version
 suggest_next_version() {
     local latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
@@ -107,25 +128,28 @@ show_release_plan() {
     
     echo
     print_info "🚀 Release Plan:"
-    print_info "  1. Create git tag: $tag"
-    print_info "  2. Push tag to GitHub"
-    print_info "  3. GitHub Actions will automatically:"
-    print_info "     - Run tests"
+    print_info "  1. Trigger GitHub Actions workflow with version: $version"
+    print_info "  2. GitHub Actions will automatically:"
+    print_info "     - Validate version format"
+    print_info "     - Check if tag already exists"
+    print_info "     - Run tests and code quality checks"
     print_info "     - Build artifacts"
+    print_info "     - Create and push git tag: $tag"
     print_info "     - Upload to Maven Central staging"
-    print_info "     - Create GitHub Release with notes"
-    print_info "  4. Manual step: Go to https://oss.sonatype.org/ to publish"
+    print_info "     - Create GitHub Release with auto-generated notes"
+    print_info "  3. Manual step: Go to https://oss.sonatype.org/ to publish"
     echo
 }
 
 # Main function
 main() {
-    print_info "🏷️  kotlin-logging-extensions Release Helper"
+    print_info "🏷️  kotlin-logging-extensions Release Helper (Manual Trigger)"
     echo
     
     # Prerequisites checks
     check_working_directory
     check_branch
+    check_github_cli
     
     # Show current state
     local current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -160,11 +184,11 @@ main() {
     show_release_plan "$version"
     
     # Final confirmation
-    print_warning "⚠️  This will create a new release and trigger automatic publishing."
+    print_warning "⚠️  This will trigger the release workflow with manual validation."
     print_warning "   Make sure all your changes are committed and tested!"
     echo
     
-    read -p "Are you sure you want to create release $tag? [y/N]: " -n 1 -r
+    read -p "Are you sure you want to trigger release workflow for $version? [y/N]: " -n 1 -r
     echo
     
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -172,44 +196,54 @@ main() {
         exit 0
     fi
     
-    # Create and push tag
-    print_info "Creating tag $tag..."
-    git tag -a "$tag" -m "Release $tag"
+    # Trigger GitHub Actions workflow
+    print_info "Triggering GitHub Actions release workflow..."
     
-    print_info "Pushing tag to GitHub..."
-    git push origin "$tag"
-    
-    print_success "✅ Tag $tag created and pushed!"
-    echo
-    print_info "🔗 GitHub Actions workflow: https://github.com/doljae/kotlin-logging-extensions/actions"
-    print_info "📦 Track publishing: https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions"
-    print_info "🏷️  Release will be available at: https://github.com/doljae/kotlin-logging-extensions/releases/tag/$tag"
-    echo
-    print_success "🎉 Release process started! Check GitHub Actions for progress."
+    if gh workflow run release.yml --field version="$version"; then
+        print_success "✅ Release workflow triggered successfully!"
+        echo
+        print_info "🔗 Monitor progress: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/release.yml"
+        print_info "📦 Track publishing: https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions"
+        print_info "🏷️  Release will be available at: https://github.com/doljae/kotlin-logging-extensions/releases/tag/$tag"
+        echo
+        print_success "🎉 Release workflow started! The workflow will handle tag creation and publishing."
+    else
+        print_error "Failed to trigger release workflow."
+        print_error "You can manually trigger it from GitHub UI:"
+        print_error "  https://github.com/doljae/kotlin-logging-extensions/actions/workflows/release.yml"
+        exit 1
+    fi
 }
 
 # Show help if requested
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    echo "kotlin-logging-extensions Release Helper"
+    echo "kotlin-logging-extensions Release Helper (Manual Trigger)"
     echo
     echo "Usage: $0"
     echo
-    echo "This script helps you create a new release by:"
+    echo "This script helps you trigger a release workflow by:"
     echo "  1. Checking prerequisites (clean working directory, main branch)"
     echo "  2. Suggesting next version based on existing tags"
-    echo "  3. Creating and pushing a git tag"
-    echo "  4. Triggering GitHub Actions for automatic publishing"
+    echo "  3. Triggering GitHub Actions release workflow via GitHub CLI"
     echo
     echo "The GitHub Actions workflow will automatically:"
+    echo "  - Validate version format and check for duplicate tags"
     echo "  - Run tests and code quality checks"
+    echo "  - Create and push git tag"
     echo "  - Upload to Maven Central staging repository"
-    echo "  - Create GitHub Release with release notes"
+    echo "  - Create GitHub Release with auto-generated release notes"
     echo "  - Manual step required: Go to https://oss.sonatype.org/ to publish"
     echo
     echo "Prerequisites:"
     echo "  - Clean working directory (no uncommitted changes)"
     echo "  - On main branch (recommended)"
+    echo "  - GitHub CLI installed and authenticated (gh auth login)"
     echo "  - GitHub secrets configured for Maven Central publishing"
+    echo
+    echo "Alternative (without GitHub CLI):"
+    echo "  1. Go to: https://github.com/doljae/kotlin-logging-extensions/actions/workflows/release.yml"
+    echo "  2. Click 'Run workflow'"
+    echo "  3. Enter version and click 'Run workflow'"
     echo
     exit 0
 fi

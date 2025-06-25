@@ -1,9 +1,12 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*-*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (KSP format: KOTLIN_VERSION-LIB_VERSION, e.g., 2.1.21-0.0.2)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -22,11 +25,11 @@ jobs:
       with:
         fetch-depth: 0
         
-    - name: Extract version from tag
+    - name: Set version variables
       id: version
       run: |
-        TAG_NAME="${{ github.ref_name }}"
-        VERSION="${TAG_NAME#v}"
+        VERSION="${{ github.event.inputs.version }}"
+        TAG_NAME="v${VERSION}"
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
         echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
         echo "Version: ${VERSION}"
@@ -37,11 +40,21 @@ jobs:
         VERSION="${{ steps.version.outputs.version }}"
         if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           echo "❌ Error: Version must be in KSP format KOTLIN_VERSION-LIB_VERSION (e.g., 2.1.21-0.0.1)"
-          echo "   Current tag: ${{ github.ref_name }}"
-          echo "   Expected format: vKOTLIN_VERSION-LIB_VERSION (e.g., v2.1.21-0.0.1)"
+          echo "   Input version: ${VERSION}"
+          echo "   Expected format: KOTLIN_VERSION-LIB_VERSION (e.g., 2.1.21-0.0.1)"
           exit 1
         fi
         echo "✅ Version format is valid: ${VERSION}"
+        
+    - name: Check if tag already exists
+      run: |
+        TAG_NAME="${{ steps.version.outputs.tag_name }}"
+        if git rev-parse --verify "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
+          echo "❌ Error: Tag ${TAG_NAME} already exists!"
+          echo "   Please use a different version number."
+          exit 1
+        fi
+        echo "✅ Tag ${TAG_NAME} does not exist, proceeding with release"
 
   test:
     runs-on: ubuntu-latest
@@ -147,6 +160,22 @@ jobs:
       with:
         fetch-depth: 0
         
+    - name: Create and push tag
+      run: |
+        TAG_NAME="${{ needs.validate.outputs.tag_name }}"
+        echo "Creating tag ${TAG_NAME}..."
+        
+        # Configure git user (required for tagging)
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+        # Create annotated tag
+        git tag -a "${TAG_NAME}" -m "Release ${TAG_NAME}"
+        
+        # Push tag to origin
+        git push origin "${TAG_NAME}"
+        echo "✅ Tag ${TAG_NAME} created and pushed successfully!"
+        
     - name: Generate release notes
       id: release_notes
       run: |
@@ -157,8 +186,8 @@ jobs:
         echo "Generating release notes from ${PREVIOUS_TAG} to ${CURRENT_TAG}"
         
         # Create release notes
-        if [ -z "$PREVIOUS_TAG" ]; then
-          # First release
+        if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ]; then
+          # First release or no previous tags
           echo "🎉 **Initial Release**" > release_notes.md
           echo "" >> release_notes.md
           echo "This is the first release of kotlin-logging-extensions!" >> release_notes.md
@@ -174,14 +203,25 @@ jobs:
           echo "## 🔄 Changes since ${PREVIOUS_TAG}" > release_notes.md
           echo "" >> release_notes.md
           
-          # Get commits since last tag
-          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          # Get commits since last tag (excluding the current tag commit)
+          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD~1 --pretty=format:"- %s (%h)" --no-merges)
           if [ -n "$COMMITS" ]; then
             echo "### 📝 Commits" >> release_notes.md
             echo "$COMMITS" >> release_notes.md
             echo "" >> release_notes.md
+          else
+            echo "### 📝 Changes" >> release_notes.md
+            echo "- Minor improvements and updates" >> release_notes.md
+            echo "" >> release_notes.md
           fi
         fi
+        
+        # Add version compatibility info
+        echo "## ⚡ Version Compatibility" >> release_notes.md
+        echo "- **Kotlin**: 2.1.21" >> release_notes.md
+        echo "- **KSP**: 2.1.21-2.0.2" >> release_notes.md
+        echo "- **kotlin-logging**: 7.0.7+" >> release_notes.md
+        echo "" >> release_notes.md
         
         # Add installation instructions
         echo "## 📦 Installation" >> release_notes.md
@@ -204,7 +244,7 @@ jobs:
         echo "## 🔗 Links" >> release_notes.md
         echo "- 📚 [Documentation](https://github.com/doljae/kotlin-logging-extensions/blob/main/README.md)" >> release_notes.md
         echo "- 📦 [Maven Central](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.validate.outputs.version }})" >> release_notes.md
-        if [ -n "$PREVIOUS_TAG" ]; then
+        if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$CURRENT_TAG" ]; then
           echo "- 🔄 [Full Changelog](https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${CURRENT_TAG})" >> release_notes.md
         fi
         
@@ -227,7 +267,7 @@ jobs:
         
     - name: Release summary
       run: |
-        echo "🎉 Release ${{ needs.validate.outputs.tag_name }} staging completed successfully!"
+        echo "🎉 Release ${{ needs.validate.outputs.tag_name }} completed successfully!"
         echo ""
         echo "📤 Staged at: https://oss.sonatype.org/#stagingRepositories"
         echo "🔖 GitHub Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate.outputs.tag_name }}"
