@@ -44,7 +44,7 @@ body:
     attributes:
       label: Library Version
       description: Which version of kotlin-logging-extensions are you using?
-      placeholder: "e.g., 0.0.1"
+      placeholder: "e.g., 2.1.21-0.0.1"
     validations:
       required: false
 
