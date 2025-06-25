@@ -31,32 +31,52 @@ jobs:
     - name: Check if this is a release commit
       id: check
       run: |
-        # Check if the last commit is a version update commit
+        # Check if the last commit is a release commit
         LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
         
-        if [[ $LAST_COMMIT_MSG =~ ^chore:\ update\ version\ references\ to\ [0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        # Check for Release PR merge pattern: "Release v[VERSION] (#[PR_NUMBER])"
+        if [[ $LAST_COMMIT_MSG =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+\ \(\#[0-9]+\)$ ]]; then
           echo "is-release=true" >> $GITHUB_OUTPUT
-          echo "✅ This is a release commit: $LAST_COMMIT_MSG"
+          echo "✅ This is a Release PR merge commit: $LAST_COMMIT_MSG"
+        # Also check for direct version update commit pattern (fallback)
+        elif [[ $LAST_COMMIT_MSG =~ ^chore:\ update\ version\ references\ to\ [0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "is-release=true" >> $GITHUB_OUTPUT
+          echo "✅ This is a direct version update commit: $LAST_COMMIT_MSG"
         else
           echo "is-release=false" >> $GITHUB_OUTPUT
           echo "ℹ️ This is not a release commit: $LAST_COMMIT_MSG"
         fi
         
-    - name: Extract version from gradle.properties
+    - name: Extract version from commit message or gradle.properties
       id: extract
       if: steps.check.outputs.is-release == 'true'
       run: |
-        VERSION=$(grep "project.version=" gradle.properties | cut -d'=' -f2)
+        LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+        
+        # Try to extract version from Release PR merge commit message first
+        if [[ $LAST_COMMIT_MSG =~ Release\ v([0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+)\ \(\#[0-9]+\) ]]; then
+          VERSION="${BASH_REMATCH[1]}"
+          echo "✅ Extracted version from Release PR merge commit: ${VERSION}"
+        # Fallback to version update commit message
+        elif [[ $LAST_COMMIT_MSG =~ chore:\ update\ version\ references\ to\ ([0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+          VERSION="${BASH_REMATCH[1]}"
+          echo "✅ Extracted version from version update commit: ${VERSION}"
+        # Last fallback to gradle.properties
+        else
+          VERSION=$(grep "project.version=" gradle.properties | cut -d'=' -f2)
+          echo "✅ Extracted version from gradle.properties: ${VERSION}"
+        fi
+        
         TAG_NAME="v${VERSION}"
         
         if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "❌ Error: Invalid version format in gradle.properties: $VERSION"
+          echo "❌ Error: Invalid version format: $VERSION"
           exit 1
         fi
         
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
         echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-        echo "✅ Extracted version: ${VERSION}, tag: ${TAG_NAME}"
+        echo "✅ Final version: ${VERSION}, tag: ${TAG_NAME}"
 
   test:
     runs-on: ubuntu-latest
