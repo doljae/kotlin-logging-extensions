@@ -41,8 +41,8 @@ class UserService {
 Add to your `build.gradle.kts`:
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.1.21"
-    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+    kotlin("jvm") version "2.2.0"
+    id("com.google.devtools.ksp") version "2.2.0-2.0.2"
 }
 
 repositories {
@@ -50,8 +50,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.1")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.1")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18") // Logger implementation required
 }
@@ -101,8 +101,8 @@ Please ensure your project uses the **exact same Kotlin and KSP versions** as sh
 ```kotlin
 // In your build.gradle.kts, check:
 plugins {
-    kotlin("jvm") version "2.1.21"  // ← Should match exactly
-    id("com.google.devtools.ksp") version "2.1.21-2.0.2"  // ← Should match exactly
+    kotlin("jvm") version "2.2.0"  // ← Should match exactly
+    id("com.google.devtools.ksp") version "2.2.0-2.0.2"  // ← Should match exactly
 }
 ```
 
@@ -110,8 +110,8 @@ plugins {
 If your Kotlin/KSP versions don't match, consider upgrading:
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.1.21"
-    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+    kotlin("jvm") version "2.2.0"
+    id("com.google.devtools.ksp") version "2.2.0-2.0.2"
 }
 ```
 
@@ -154,8 +154,8 @@ If you're setting up logging for the first time, you'll need a logger implementa
 ### Maven Central (Recommended)
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.1.21"
-    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+    kotlin("jvm") version "2.2.0"
+    id("com.google.devtools.ksp") version "2.2.0-2.0.2"
 }
 
 repositories {
@@ -163,8 +163,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.1")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.1")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
 }
