@@ -51,20 +51,24 @@ jobs:
           # Get current Kotlin version from build.gradle.kts
           BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
           
-          # Create new description with latest version info
-          NEW_DESCRIPTION="Release version (KSP format: KOTLIN_VERSION-LIB_VERSION)\\n\\nCurrent: ${LATEST_VERSION}\\nSuggested: ${NEXT_PATCH} (patch), ${NEXT_MINOR} (minor)"
+          # Create new description with suggested versions
+          SUGGESTED_TEXT="${NEXT_PATCH} (patch), ${NEXT_MINOR} (minor)"
           
           # Check if Kotlin version has been updated
           if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
             KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
-            NEW_DESCRIPTION="${NEW_DESCRIPTION}, ${KOTLIN_UPDATE} (Kotlin update)"
+            SUGGESTED_TEXT="${SUGGESTED_TEXT}, ${KOTLIN_UPDATE} (Kotlin update)"
           fi
           
-          # Update the workflow file
-          sed -i "s|description: 'Release version (KSP format: KOTLIN_VERSION-LIB_VERSION[^']*'|description: '${NEW_DESCRIPTION}'|" .github/workflows/create-release-pr.yml
+          # Use sed to update the description lines in the workflow file
+          # First, find and replace the "Current:" line
+          sed -i "s/Current: .*/Current: ${LATEST_VERSION}/" .github/workflows/create-release-pr.yml
+          
+          # Then, find and replace the "Suggested:" line
+          sed -i "s/Suggested: .*/Suggested: ${SUGGESTED_TEXT}/" .github/workflows/create-release-pr.yml
           
           echo "✅ Updated description with latest version: ${LATEST_VERSION}"
-          echo "📝 New description: ${NEW_DESCRIPTION}"
+          echo "📝 New suggested versions: ${SUGGESTED_TEXT}"
         else
           echo "⚠️ No tags found, keeping original description"
           exit 0

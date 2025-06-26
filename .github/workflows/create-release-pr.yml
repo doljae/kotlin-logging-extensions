@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (KSP format: KOTLIN_VERSION-LIB_VERSION)\n\nCurrent: 2.2.0-0.0.1\nSuggested: 2.2.0-0.0.2 (patch), 2.2.0-0.1.0 (minor)'
+        description: |
+          Release version (KSP format: KOTLIN_VERSION-LIB_VERSION)
+          
+          Current: 2.2.0-0.0.1
+          Suggested: 2.2.0-0.0.2 (patch), 2.2.0-0.1.0 (minor)
         required: true
         type: string
 
