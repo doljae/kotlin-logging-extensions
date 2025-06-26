@@ -1,15 +1,9 @@
 name: Update Release Workflow Description
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'gradle.properties'
-  workflow_run:
-    workflows: ["Release"]
-    types:
-      - completed
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 permissions:
   contents: write
@@ -17,7 +11,10 @@ permissions:
 jobs:
   update-description:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success')
+    # Only run when release PR is merged (branch starts with 'release/')
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/')
     
     steps:
     - name: Checkout code
@@ -26,8 +23,11 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Get latest version and update description
+    - name: Update release workflow description
       run: |
+        echo "✅ Release PR merged: ${{ github.event.pull_request.title }}"
+        echo "   Branch: ${{ github.event.pull_request.head.ref }}"
+        echo "   Proceeding with description update"
         # Get the latest tag
         LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
         
