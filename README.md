@@ -82,13 +82,21 @@ This will generate the `log` property and resolve any compilation errors in your
 
 That's it! The logger is automatically available with the class name (`OrderProcessor` in this example).
 
+## ✨ Features
+
+- **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
+- **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead  
+- **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
+- **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
+- **🎯 Works Everywhere**: Compatible with any package depth and class structure
+
 ## ⚠️ Version Compatibility
 
 > **Important**: This project is highly dependent on **Kotlin and KSP versions** due to its nature as a symbol processing library.
 
 ### 🔧 Critical Requirements
-- **Kotlin**: `2.1.21` ⭐ **Most Important**
-- **KSP**: `2.1.21-2.0.2` ⭐ **Most Important**
+- **Kotlin**: `2.2.0` ⭐ **Most Important**
+- **KSP**: `2.2.0-2.0.2` ⭐ **Most Important**
 - **kotlin-logging**: Any version (API-compatible)
 
 ### 📦 How to Choose the Right Library Version
@@ -138,26 +146,12 @@ dependencies {
 }
 ```
 
-### 🚀 Upgrade if Needed
-If your Kotlin/KSP versions don't match, consider upgrading:
-```kotlin
-plugins {
-    kotlin("jvm") version "2.2.0"
-    id("com.google.devtools.ksp") version "2.2.0-2.0.2"
-}
-```
-
 ### 📦 Versioning Policy
 This project follows the **same versioning pattern as KSP**:
-- Our library versions use the format: `KOTLIN_VERSION-LIBRARY_VERSION` (e.g., `2.1.21-0.0.1`)
-- The first part (`2.1.21`) matches the Kotlin version used to build the library
+- Our library versions use the format: `KOTLIN_VERSION-LIBRARY_VERSION` (e.g., `2.2.0-0.0.1`)
+- The first part (`2.2.0`) matches the Kotlin version used to build the library
 - The second part (`0.0.1`) is our library's own version number
 - This mirrors KSP's versioning where the hyphen separates Kotlin version from tool version
-
-**Why this pattern?**
-- **Clear compatibility**: You instantly know which Kotlin version the library supports
-- **Easy selection**: Match the first part with your project's Kotlin version
-- **Version clarity**: No confusion about compatibility requirements
 
 This ensures clear compatibility mapping and reduces version confusion.
 
@@ -178,14 +172,6 @@ This project is compatible with **any version of kotlin-logging** as long as the
 **If you're already using kotlin-logging successfully in your project, you don't need to add any additional logger implementation dependencies.**
 
 If you're setting up logging for the first time, you'll need a logger implementation like [Logback](https://logback.qos.ch/) or [Log4j2](https://logging.apache.org/log4j/2.x/).
-
-## ✨ Features
-
-- **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
-- **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead  
-- **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
-- **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
-- **🎯 Works Everywhere**: Compatible with any package depth and class structure
 
 ## 📦 Installation
 

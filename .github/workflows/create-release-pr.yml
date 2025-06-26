@@ -171,9 +171,9 @@ jobs:
         sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
         sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" README.md
         sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" README.md
-        # Update Version Compatibility section
-        sed -i "s/- \*\*Kotlin\*\*: \`[0-9]\+\.[0-9]\+\.[0-9]\+\`/- **Kotlin**: \`$KOTLIN_VERSION\`/g" README.md
-        sed -i "s/- \*\*KSP\*\*: \`[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\`/- **KSP**: \`$KSP_VERSION\`/g" README.md
+        # Update Version Compatibility section (Critical Requirements)
+        sed -i "s/- \*\*Kotlin\*\*: \`[0-9]\+\.[0-9]\+\.[0-9]\+\` ⭐ \*\*Most Important\*\*/- **Kotlin**: \`$KOTLIN_VERSION\` ⭐ **Most Important**/g" README.md
+        sed -i "s/- \*\*KSP\*\*: \`[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\` ⭐ \*\*Most Important\*\*/- **KSP**: \`$KSP_VERSION\` ⭐ **Most Important**/g" README.md
         sed -i "s/io\.github\.oshai:kotlin-logging-jvm:[0-9]\+\.[0-9]\+\.[0-9]\+/io.github.oshai:kotlin-logging-jvm:$KOTLIN_LOGGING_VERSION/g" README.md
         
         # 2. Update bug_report.yml (code blocks and placeholders)
