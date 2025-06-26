@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (KSP format: KOTLIN_VERSION-LIB_VERSION, e.g., 2.1.21-0.0.2)'
+        description: 'Release version (KSP format: KOTLIN_VERSION-LIB_VERSION)\n\nCurrent: 2.2.0-0.0.1\nSuggested: 2.2.0-0.0.2 (patch), 2.2.0-0.1.0 (minor)'
         required: true
         type: string
 
@@ -39,13 +39,63 @@ jobs:
         echo "Tag: ${TAG_NAME}"
         echo "Branch: ${BRANCH_NAME}"
         
-    - name: Validate version format
+    - name: Show latest version and validate format
       run: |
         VERSION="${{ steps.version.outputs.version }}"
+        
+        # Show current latest version for reference
+        LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+        if [ -n "$LATEST_TAG" ]; then
+          LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+          echo "📋 Current latest version: ${LATEST_VERSION}"
+          
+          # Extract current version parts for suggestions
+          CURRENT_KOTLIN=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
+          CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
+          
+          # Get current Kotlin version from build.gradle.kts
+          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+          echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
+          
+          # Extract library version parts (MAJOR.MINOR.PATCH)
+          LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
+          LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
+          LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
+          
+          # Suggest next possible versions
+          NEXT_PATCH="${CURRENT_KOTLIN}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
+          NEXT_MINOR="${CURRENT_KOTLIN}-${LIB_MAJOR}.$((LIB_MINOR + 1)).0"
+          NEXT_MAJOR="${CURRENT_KOTLIN}-$((LIB_MAJOR + 1)).0.0"
+          
+          echo "💡 Suggested next versions:"
+          echo "   📦 Patch update: ${NEXT_PATCH}"
+          echo "   🔧 Minor update: ${NEXT_MINOR}"
+          echo "   🚀 Major update: ${NEXT_MAJOR}"
+          
+          # Check if Kotlin version has been updated
+          if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
+            KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
+            echo "   ⚡ Kotlin version update: ${KOTLIN_UPDATE} (recommended for new Kotlin ${BUILD_KOTLIN_VERSION})"
+          else
+            echo "   ⚡ For future Kotlin version: NEW_KOTLIN_VERSION-0.0.1"
+          fi
+          echo ""
+        else
+          echo "📋 No previous releases found - this will be the first release!"
+          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+          echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
+          echo "💡 Suggested first version: ${BUILD_KOTLIN_VERSION}-0.0.1"
+          echo ""
+        fi
+        
+        # Validate input version format
         if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "❌ Error: Version must be in KSP format KOTLIN_VERSION-LIB_VERSION (e.g., 2.1.21-0.0.1)"
+          echo "❌ Error: Version must be in KSP format KOTLIN_VERSION-LIB_VERSION"
           echo "   Input version: ${VERSION}"
-          echo "   Expected format: KOTLIN_VERSION-LIB_VERSION (e.g., 2.1.21-0.0.1)"
+          echo "   Expected format: KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.0-0.0.2)"
+          if [ -n "$LATEST_TAG" ]; then
+            echo "   Use one of the suggested versions above or follow the same pattern"
+          fi
           exit 1
         fi
         echo "✅ Version format is valid: ${VERSION}"

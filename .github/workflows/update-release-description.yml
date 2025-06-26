@@ -1,0 +1,88 @@
+name: Update Release Workflow Description
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'gradle.properties'
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  update-description:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Get latest version and update description
+      run: |
+        # Get the latest tag
+        LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+        
+        if [ -n "$LATEST_TAG" ]; then
+          LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+          echo "📋 Found latest version: ${LATEST_VERSION}"
+          
+          # Extract version parts for next version suggestions
+          CURRENT_KOTLIN=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
+          CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
+          
+          # Extract library version parts (MAJOR.MINOR.PATCH)
+          LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
+          LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
+          LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
+          
+          # Calculate next versions
+          NEXT_PATCH="${CURRENT_KOTLIN}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
+          NEXT_MINOR="${CURRENT_KOTLIN}-${LIB_MAJOR}.$((LIB_MINOR + 1)).0"
+          
+          # Get current Kotlin version from build.gradle.kts
+          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+          
+          # Create new description with latest version info
+          NEW_DESCRIPTION="Release version (KSP format: KOTLIN_VERSION-LIB_VERSION)\\n\\nCurrent: ${LATEST_VERSION}\\nSuggested: ${NEXT_PATCH} (patch), ${NEXT_MINOR} (minor)"
+          
+          # Check if Kotlin version has been updated
+          if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
+            KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
+            NEW_DESCRIPTION="${NEW_DESCRIPTION}, ${KOTLIN_UPDATE} (Kotlin update)"
+          fi
+          
+          # Update the workflow file
+          sed -i "s|description: 'Release version (KSP format: KOTLIN_VERSION-LIB_VERSION[^']*'|description: '${NEW_DESCRIPTION}'|" .github/workflows/create-release-pr.yml
+          
+          echo "✅ Updated description with latest version: ${LATEST_VERSION}"
+          echo "📝 New description: ${NEW_DESCRIPTION}"
+        else
+          echo "⚠️ No tags found, keeping original description"
+          exit 0
+        fi
+        
+    - name: Commit and push if changed
+      run: |
+        # Configure git user
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Check if there are changes
+        if git diff --quiet .github/workflows/create-release-pr.yml; then
+          echo "📋 No changes to commit - description already up to date"
+        else
+          echo "📝 Committing description update..."
+          git add .github/workflows/create-release-pr.yml
+          git commit -m "chore: update release workflow description with latest version [skip ci]"
+          git push origin main
+          echo "✅ Description updated and pushed to main"
+        fi 
