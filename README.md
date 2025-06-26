@@ -148,10 +148,16 @@ plugins {
 ```
 
 ### 📦 Versioning Policy
-This project follows the **same versioning strategy as KSP**:
-- Library versions are aligned with KSP releases (e.g., `2.1.21-0.0.1` for KSP `2.1.21-2.0.2`)
-- The first part (`2.1.21`) matches the Kotlin version
-- The last part (`0.0.1`) is our library's patch version
+This project follows the **same versioning pattern as KSP**:
+- Our library versions use the format: `KOTLIN_VERSION-LIBRARY_VERSION` (e.g., `2.1.21-0.0.1`)
+- The first part (`2.1.21`) matches the Kotlin version used to build the library
+- The second part (`0.0.1`) is our library's own version number
+- This mirrors KSP's versioning where the hyphen separates Kotlin version from tool version
+
+**Why this pattern?**
+- **Clear compatibility**: You instantly know which Kotlin version the library supports
+- **Easy selection**: Match the first part with your project's Kotlin version
+- **Version clarity**: No confusion about compatibility requirements
 
 This ensures clear compatibility mapping and reduces version confusion.
 
