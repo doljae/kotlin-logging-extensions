@@ -206,11 +206,13 @@ jobs:
         KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
         KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
         KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
+        KOTLIN_LOGGING_BADGE=$(grep 'kotlin--logging.*svg' README.md | sed 's/.*kotlin--logging-\([^-]*\)-.*.svg.*/\1/')
         
         echo "✅ Extracted versions:"
         echo "   - Kotlin: $KOTLIN_VERSION (from root build.gradle.kts)"
         echo "   - KSP: $KSP_VERSION (from root build.gradle.kts)"  
         echo "   - kotlin-logging-jvm: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
+        echo "   - kotlin-logging badge: $KOTLIN_LOGGING_BADGE (from README.md)"
         
         # Get the previous tag
         PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)
@@ -301,7 +303,7 @@ jobs:
         echo "## ⚡ Version Compatibility" >> release_notes.md
         echo "- **Kotlin**: $KOTLIN_VERSION" >> release_notes.md
         echo "- **KSP**: $KSP_VERSION" >> release_notes.md
-        echo "- **kotlin-logging**: 5.0.0+" >> release_notes.md
+        echo "- **kotlin-logging**: $KOTLIN_LOGGING_BADGE" >> release_notes.md
         echo "" >> release_notes.md
         
         # Add installation instructions
