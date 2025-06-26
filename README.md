@@ -91,18 +91,50 @@ That's it! The logger is automatically available with the class name (`OrderProc
 - **KSP**: `2.1.21-2.0.2` ⭐ **Most Important**
 - **kotlin-logging**: Any version (API-compatible)
 
+### 📦 How to Choose the Right Library Version
+
+**Step 1: Check Your Project's Kotlin Version**
+```kotlin
+// In your build.gradle.kts, find your Kotlin version:
+plugins {
+    kotlin("jvm") version "2.2.0"  // ← This is your Kotlin version
+}
+```
+
+**Step 2: Find the Matching Library Version**
+Our library versions follow this pattern: `KOTLIN_VERSION-LIBRARY_VERSION`
+- For Kotlin `2.2.0`, use library version `2.2.0-x.x.x`
+- For Kotlin `2.1.21`, use library version `2.1.21-x.x.x`
+
+**Step 3: Use the Latest Patch Version**
+Always use the latest patch version (the last part) for your Kotlin version:
+```kotlin
+dependencies {
+    // ✅ Correct: Kotlin part matches your project
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    
+    // ❌ Wrong: Kotlin part doesn't match your project
+    ksp("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.1")
+}
+```
+
 ### 📋 Before Using
 Please ensure your project uses the **exact same Kotlin and KSP versions** as shown above. Version mismatches may cause:
 - Compilation failures
 - Missing log property generation
 - Runtime issues
 
-### 🔍 How to Check Your Versions
+### 🔍 Quick Version Check
 ```kotlin
 // In your build.gradle.kts, check:
 plugins {
-    kotlin("jvm") version "2.2.0"  // ← Should match exactly
+    kotlin("jvm") version "2.2.0"  // ← Should match library's Kotlin part
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"  // ← Should match exactly
+}
+
+dependencies {
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    //                                                   ↑ Should match Kotlin version
 }
 ```
 
