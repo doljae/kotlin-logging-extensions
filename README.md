@@ -96,7 +96,7 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 | Library | Kotlin | KSP |
 |---------|--------|-----|
-| `2.2.0-0.0.1` | `2.2.0` | `2.2.0-2.0.2` |
+| `2.2.0-0.0.1` | `2.2.0` | `2.1.21-2.0.2` |
 | `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` |
 
 ### How to Use
