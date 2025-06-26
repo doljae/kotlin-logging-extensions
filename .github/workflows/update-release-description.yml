@@ -31,8 +31,8 @@ jobs:
         
         # Wait for release tag to be created (Release workflow runs after PR merge)
         echo "⏳ Waiting for release tag to be created..."
-        for i in {1..12}; do
-          sleep 10
+        for i in {1..24}; do
+          sleep 15
           LATEST_TAG=$(git fetch --tags && git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
           if [ -n "$LATEST_TAG" ]; then
             LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
@@ -47,7 +47,7 @@ jobs:
               echo "   Found tag ${LATEST_TAG} but expected ${EXPECTED_VERSION}, continuing to wait..."
             fi
           else
-            echo "   No release tags found yet, waiting... (${i}/12)"
+            echo "   No release tags found yet, waiting... (${i}/24)"
           fi
         done
         
@@ -89,26 +89,90 @@ jobs:
           echo "✅ Updated description with latest version: ${LATEST_VERSION}"
           echo "📝 New suggested versions: ${SUGGESTED_TEXT}"
         else
-          echo "❌ Failed to find expected release tag after waiting 2 minutes"
+          echo "❌ Failed to find expected release tag after waiting 6 minutes"
           echo "   Expected version: ${EXPECTED_VERSION} from branch ${BRANCH_NAME}"
           echo "   Latest found tag: ${LATEST_TAG:-"none"}"
           echo "   Release workflow may still be running, will retry on next trigger"
           exit 1
         fi
         
-    - name: Commit and push if changed
+    - name: Create PR for workflow description update
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # Check if there are changes
+        if git diff --quiet .github/workflows/create-release-pr.yml; then
+          echo "📋 No changes to commit - description already up to date"
+          exit 0
+        fi
+        
+        # Create branch name with timestamp
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        BRANCH_NAME="update-workflow-description/${TIMESTAMP}"
+        
+        echo "📝 Changes detected, creating PR..."
+        echo "🌿 Branch name: ${BRANCH_NAME}"
+        
+        # Create and switch to new branch
+        git checkout -b "${BRANCH_NAME}"
+        echo "✅ Created branch: ${BRANCH_NAME}"
+        
         # Configure git user
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         
-        # Check if there are changes
-        if git diff --quiet .github/workflows/create-release-pr.yml; then
-          echo "📋 No changes to commit - description already up to date"
-        else
-          echo "📝 Committing description update..."
-          git add .github/workflows/create-release-pr.yml
-          git commit -m "chore: update release workflow description with latest version [skip ci]"
-          git push origin main
-          echo "✅ Description updated and pushed to main"
-        fi 
+        # Add and commit changes
+        git add .github/workflows/create-release-pr.yml
+        git commit -m "chore: update release workflow description with latest version
+        
+        - Update current version and suggested next versions
+        - Auto-update after successful release of ${LATEST_VERSION}
+        - Triggered by merged release PR: ${{ github.event.pull_request.title }}"
+        
+        echo "✅ Changes committed"
+        
+        # Push branch to origin
+        git push origin "${BRANCH_NAME}"
+        echo "✅ Pushed branch: ${BRANCH_NAME}"
+        
+        # Create PR description
+        cat > pr_description.md << EOF
+        ## 🔄 Auto-update Release Workflow Description
+        
+        This PR automatically updates the release workflow description with the latest version information after a successful release.
+        
+        ### 📋 Changes
+        - **Current version**: Updated to \`${LATEST_VERSION}\`
+        - **Suggested versions**: Updated next patch/minor version suggestions
+        
+        ### 🚀 Triggered by
+        - **Release**: ${LATEST_VERSION}
+        - **Merged PR**: ${{ github.event.pull_request.title }}
+        - **Branch**: ${{ github.event.pull_request.head.ref }}
+        
+        ### ✅ Ready to merge
+        This is an automated maintenance update with no functional changes.
+        EOF
+        
+        # Create PR using GitHub CLI
+        echo "🔄 Creating Pull Request..."
+        PR_URL=$(gh pr create \
+          --title "chore: update release workflow description with v${LATEST_VERSION}" \
+          --body-file pr_description.md \
+          --base main \
+          --head "${BRANCH_NAME}" \
+          --assignee doljae \
+          --reviewer doljae)
+        
+        echo "✅ Pull Request created: ${PR_URL}"
+        
+        # Try to add labels (may fail if labels don't exist)
+        PR_NUMBER=$(basename "${PR_URL}")
+        gh pr edit "${PR_NUMBER}" --add-label "maintenance" || echo "⚠️ Could not add 'maintenance' label"
+        gh pr edit "${PR_NUMBER}" --add-label "workflow" || echo "⚠️ Could not add 'workflow' label"
+        
+        # Clean up temporary files
+        rm -f pr_description.md
+        
+        echo "🎉 Workflow description update PR created successfully!"
+        echo "📋 Please review and merge the PR to complete the update." 
