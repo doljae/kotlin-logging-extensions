@@ -90,88 +90,37 @@ That's it! The logger is automatically available with the class name (`OrderProc
 - **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
 - **🎯 Works Everywhere**: Compatible with any package depth and class structure
 
-## ⚠️ Version Compatibility
+## 📋 Version Compatibility
 
-> **Important**: This project is highly dependent on **Kotlin and KSP versions** due to its nature as a symbol processing library.
+**Choose the library version that matches your project's Kotlin version.** Our versioning follows the `KOTLIN_VERSION-LIBRARY_VERSION` pattern (same as KSP).
 
-### 🔧 Critical Requirements
-- **Kotlin**: `2.2.0` ⭐ **Most Important**
-- **KSP**: `2.2.0-2.0.2` ⭐ **Most Important**
-- **kotlin-logging**: Any version (API-compatible)
+| Library Version | Kotlin Version | KSP Version | kotlin-logging |
+|----------------|----------------|-------------|----------------|
+| `2.2.0-0.0.1` | `2.2.0` | `2.2.0-2.0.2` | Any version |
+| `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` | Any version |
 
-### 📦 How to Choose the Right Library Version
+### How to Use
+1. **Check your Kotlin version** in `build.gradle.kts`
+2. **Pick the matching library version** from the table above
+3. **Use the exact KSP version** shown in the table
 
-**Step 1: Check Your Project's Kotlin Version**
 ```kotlin
-// In your build.gradle.kts, find your Kotlin version:
+// For Kotlin 2.2.0 projects:
 plugins {
-    kotlin("jvm") version "2.2.0"  // ← This is your Kotlin version
-}
-```
-
-**Step 2: Find the Matching Library Version**
-Our library versions follow this pattern: `KOTLIN_VERSION-LIBRARY_VERSION`
-- For Kotlin `2.2.0`, use library version `2.2.0-x.x.x`
-- For Kotlin `2.1.21`, use library version `2.1.21-x.x.x`
-
-**Step 3: Use the Latest Patch Version**
-Always use the latest patch version (the last part) for your Kotlin version:
-```kotlin
-dependencies {
-    // ✅ Correct: Kotlin part matches your project
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
-    
-    // ❌ Wrong: Kotlin part doesn't match your project
-    ksp("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.1")
-}
-```
-
-### 📋 Before Using
-Please ensure your project uses the **exact same Kotlin and KSP versions** as shown above. Version mismatches may cause:
-- Compilation failures
-- Missing log property generation
-- Runtime issues
-
-### 🔍 Quick Version Check
-```kotlin
-// In your build.gradle.kts, check:
-plugins {
-    kotlin("jvm") version "2.2.0"  // ← Should match library's Kotlin part
-    id("com.google.devtools.ksp") version "2.2.0-2.0.2"  // ← Should match exactly
+    kotlin("jvm") version "2.2.0"
+    id("com.google.devtools.ksp") version "2.2.0-2.0.2"
 }
 
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
-    //                                                   ↑ Should match Kotlin version
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7") // Any version
 }
 ```
 
-### 📦 Versioning Policy
-This project follows the **same versioning pattern as KSP**:
-- Our library versions use the format: `KOTLIN_VERSION-LIBRARY_VERSION` (e.g., `2.2.0-0.0.1`)
-- The first part (`2.2.0`) matches the Kotlin version used to build the library
-- The second part (`0.0.1`) is our library's own version number
-- This mirrors KSP's versioning where the hyphen separates Kotlin version from tool version
+**kotlin-logging compatibility**: This library works with any version of kotlin-logging as the API is stable across versions.
 
-This ensures clear compatibility mapping and reduces version confusion.
-
-### 💡 Future Improvements
-We're working on improving version compatibility in future releases. Have ideas or suggestions? 
-**We'd love to hear from you!** Please open an issue in the [Issues tab](https://github.com/doljae/kotlin-logging-extensions/issues).
-
-### 🌐 kotlin-logging Compatibility
-This project is compatible with **any version of kotlin-logging** as long as the logger declaration API remains unchanged:
-- `kotlin-logging-jvm` for JVM environments
-- `kotlin-logging-js` for JavaScript/Node.js environments
-- `kotlin-logging-linuxx64`, `kotlin-logging-mingwx64` for native targets
-- Other platform-specific variants
-
-> **Note**: The kotlin-logging API is stable, so version compatibility should not be an issue.
-
-### ⚠️ Logger Implementation
-**If you're already using kotlin-logging successfully in your project, you don't need to add any additional logger implementation dependencies.**
-
-If you're setting up logging for the first time, you'll need a logger implementation like [Logback](https://logback.qos.ch/) or [Log4j2](https://logging.apache.org/log4j/2.x/).
+**Logger implementation**: If you're already using kotlin-logging in your project, no additional setup needed. For new projects, add a logger implementation like [Logback](https://logback.qos.ch/) or [Log4j2](https://logging.apache.org/log4j/2.x/).
 
 ## 📦 Installation
 
