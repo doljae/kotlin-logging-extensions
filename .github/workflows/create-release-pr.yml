@@ -174,8 +174,8 @@ jobs:
         # Update Version Compatibility table - add new version row if not exists
         if ! grep -q "| \`$VERSION\` |" README.md; then
           # Add new version row to the table (after the header)
-          echo "| \`$VERSION\` | \`$KOTLIN_VERSION\` | \`$KSP_VERSION\` | Any version |" > new_version_row.tmp
-          sed -i "/| Library Version | Kotlin Version | KSP Version | kotlin-logging |/r new_version_row.tmp" README.md
+          echo "| \`$VERSION\` | \`$KOTLIN_VERSION\` | \`$KSP_VERSION\` | 5.0.0+ |" > new_version_row.tmp
+          sed -i "/| Library | Kotlin | KSP | kotlin-logging |/r new_version_row.tmp" README.md
           rm new_version_row.tmp
         fi
         # Update code example versions in Version Compatibility section

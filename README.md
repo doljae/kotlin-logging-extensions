@@ -94,10 +94,10 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 **Choose the library version that matches your project's Kotlin version.** Our versioning follows the `KOTLIN_VERSION-LIBRARY_VERSION` pattern (same as KSP).
 
-| Library Version | Kotlin Version | KSP Version | kotlin-logging |
-|----------------|----------------|-------------|----------------|
-| `2.2.0-0.0.1` | `2.2.0` | `2.2.0-2.0.2` | Any version |
-| `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` | Any version |
+| Library | Kotlin | KSP | kotlin-logging |
+|---------|--------|-----|----------------|
+| `2.2.0-0.0.1` | `2.2.0` | `2.2.0-2.0.2` | 5.0.0+ |
+| `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` | 5.0.0+ |
 
 ### How to Use
 1. **Check your Kotlin version** in `build.gradle.kts`
@@ -118,7 +118,7 @@ dependencies {
 }
 ```
 
-**kotlin-logging compatibility**: This library works with any version of kotlin-logging as the API is stable across versions.
+**kotlin-logging compatibility**: This library requires kotlin-logging 5.0.0+ due to package name changes. Versions 5.x+ use `io.github.oshai.kotlinlogging` package, while older versions used `mu` package.
 
 **Logger implementation**: If you're already using kotlin-logging in your project, no additional setup needed. For new projects, add a logger implementation like [Logback](https://logback.qos.ch/) or [Log4j2](https://logging.apache.org/log4j/2.x/).
 
