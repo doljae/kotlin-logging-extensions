@@ -383,10 +383,6 @@ jobs:
           FEATURES_FIXES=""
           VERSION_DEPS=""
           DOCS_MAINTENANCE=""
-          CONTRIBUTORS=""
-          
-          # Collect unique contributors (excluding automation)
-          declare -A CONTRIBUTOR_MAP
           
           while IFS= read -r line; do
             if [ -n "$line" ]; then
@@ -395,11 +391,6 @@ jobs:
               AUTHOR_EMAIL=$(echo "$line" | cut -d$'\t' -f3)
               
               echo "  Categorizing: $COMMIT_MSG"
-              
-              # Collect contributors (exclude automation accounts)
-              if [[ "$AUTHOR_EMAIL" != *"github-actions"* ]] && [[ "$AUTHOR_EMAIL" != *"noreply.github.com"* ]]; then
-                CONTRIBUTOR_MAP["$AUTHOR_NAME"]="$AUTHOR_EMAIL"
-              fi
               
                              # Categorize commits
                if [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || 
@@ -446,14 +437,7 @@ jobs:
               echo "$DOCS_MAINTENANCE" >> pr_description.md
             fi
             
-            # Contributors
-            if [ ${#CONTRIBUTOR_MAP[@]} -gt 0 ]; then
-              echo "#### 👥 Contributors" >> pr_description.md
-              for contributor in "${!CONTRIBUTOR_MAP[@]}"; do
-                echo "- ${contributor}" >> pr_description.md
-              done
-              echo "" >> pr_description.md
-            fi
+
           else
             echo "- No significant changes" >> pr_description.md
             echo "" >> pr_description.md
