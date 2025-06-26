@@ -131,8 +131,8 @@ jobs:
         echo "kotlin_version=${KOTLIN_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted Kotlin version: ${KOTLIN_VERSION}"
         
-        # Extract KSP version from build.gradle.kts  
-        KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        # Extract KSP version from processor/build.gradle.kts
+        KSP_VERSION=$(grep 'com.google.devtools.ksp:symbol-processing-api:' processor/build.gradle.kts | sed 's/.*symbol-processing-api:\([^"]*\)".*/\1/')
         echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted KSP version: ${KSP_VERSION}"
         
@@ -157,16 +157,18 @@ jobs:
         echo "📝 Updating version references:"
         echo "  - Library version: $VERSION (user input)"
         echo "  - Kotlin version: $KOTLIN_VERSION (from root build.gradle.kts)" 
-        echo "  - KSP version: $KSP_VERSION (from root build.gradle.kts)"
+        echo "  - KSP version: $KSP_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging-jvm version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging dependency: $KOTLIN_LOGGING_DEPENDENCY (from processor/build.gradle.kts)"
         
         # 1. Update README.md
         echo "🔄 Updating README.md..."
         # Update badges at the top of README
+        # For KSP badge, convert version format: 2.2.0-2.0.2 -> 2-2-0--2-0-2
+        KSP_BADGE_VERSION=$(echo $KSP_VERSION | sed 's/-/--/g' | sed 's/\./-/g')
         sed -i "s|https://img\.shields\.io/badge/kotlin-[0-9]\+\.[0-9]\+\.[0-9]\+-blue\.svg|https://img.shields.io/badge/kotlin-$KOTLIN_VERSION-blue.svg|g" README.md
         sed -i "s|https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg|https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg|g" README.md
-        sed -i "s|https://img\.shields\.io/badge/KSP-[0-9]\+\.[0-9]\+\.[0-9]\+--[0-9]\+\.[0-9]\+\.[0-9]\+-purple\.svg|https://img.shields.io/badge/KSP-$(echo $KSP_VERSION | sed 's/\./-/g')-purple.svg|g" README.md
+        sed -i "s|https://img\.shields\.io/badge/KSP-[0-9]\+\.[0-9]\+\.[0-9]\+--[0-9]\+\.[0-9]\+\.[0-9]\+-purple\.svg|https://img.shields.io/badge/KSP-$KSP_BADGE_VERSION-purple.svg|g" README.md
         # Update dependency examples in README
         sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
         sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" README.md
@@ -224,7 +226,7 @@ jobs:
         echo "📌 Version updates applied:"
         echo "  - Library Version: $VERSION (user input)"
         echo "  - Kotlin Version: $KOTLIN_VERSION (from root build.gradle.kts)"
-        echo "  - KSP Version: $KSP_VERSION (from root build.gradle.kts)"
+        echo "  - KSP Version: $KSP_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging Dependency: $KOTLIN_LOGGING_DEPENDENCY (from processor/build.gradle.kts)"
         echo "✅ Version references updated successfully"
@@ -406,7 +408,7 @@ jobs:
         echo ""
         echo "📦 Library Version: $VERSION (user input)"
         echo "⚡ Kotlin Version: $KOTLIN_VERSION (root build.gradle.kts)"
-        echo "🔧 KSP Version: $KSP_VERSION (root build.gradle.kts)"
+        echo "🔧 KSP Version: $KSP_VERSION (processor/build.gradle.kts)"
         echo "📚 kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (processor/build.gradle.kts)"
         echo "🔗 kotlin-logging Dependency: $KOTLIN_LOGGING_DEPENDENCY (processor/build.gradle.kts)"
         echo "🏷️ Tag: $TAG_NAME"
