@@ -114,7 +114,7 @@ plugins {
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
     implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7") // Any version
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.7") // 5.0.0+
 }
 ```
 
