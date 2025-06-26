@@ -229,10 +229,13 @@ jobs:
         sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" README.md
         # Update Version Compatibility table - add new version row if not exists
         if ! grep -q "| \`$VERSION\` |" README.md; then
-          # Add new version row to the table (after the header)
+          # Add new version row to the table (after the separator line, as first data row)
           echo "| \`$VERSION\` | \`$KOTLIN_VERSION\` | \`$KSP_VERSION\` |" > new_version_row.tmp
-          sed -i "/| Library | Kotlin | KSP |/r new_version_row.tmp" README.md
+          sed -i "/|---------|--------|-----|/r new_version_row.tmp" README.md
           rm new_version_row.tmp
+          echo "✅ Added new version row: $VERSION"
+        else
+          echo "ℹ️  Version $VERSION already exists in compatibility table"
         fi
         # Update code example versions in Version Compatibility section
         sed -i "s/\/\/ For Kotlin [0-9]\+\.[0-9]\+\.[0-9]\+ projects:/\/\/ For Kotlin $KOTLIN_VERSION projects:/g" README.md
