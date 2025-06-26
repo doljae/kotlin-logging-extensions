@@ -376,13 +376,86 @@ jobs:
           echo "### 📝 Changes since ${PREVIOUS_TAG}" >> pr_description.md
           echo "" >> pr_description.md
           
-          # Get commits since last tag
-          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD~1 --pretty=format:"- %s (%h)" --no-merges)
-          if [ -n "$COMMITS" ]; then
-            echo "$COMMITS" >> pr_description.md
-            echo "" >> pr_description.md
+          # Get commits since last tag and categorize them
+          ALL_COMMITS=$(git log ${PREVIOUS_TAG}..HEAD~1 --pretty=format:"%s (%h)	%an	%ae" --no-merges)
+          
+          # Initialize categories
+          FEATURES_FIXES=""
+          VERSION_DEPS=""
+          DOCS_MAINTENANCE=""
+          CONTRIBUTORS=""
+          
+          # Collect unique contributors (excluding automation)
+          declare -A CONTRIBUTOR_MAP
+          
+          while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              COMMIT_MSG=$(echo "$line" | cut -d$'\t' -f1)
+              AUTHOR_NAME=$(echo "$line" | cut -d$'\t' -f2)
+              AUTHOR_EMAIL=$(echo "$line" | cut -d$'\t' -f3)
+              
+              echo "  Categorizing: $COMMIT_MSG"
+              
+              # Collect contributors (exclude automation accounts)
+              if [[ "$AUTHOR_EMAIL" != *"github-actions"* ]] && [[ "$AUTHOR_EMAIL" != *"noreply.github.com"* ]]; then
+                CONTRIBUTOR_MAP["$AUTHOR_NAME"]="$AUTHOR_EMAIL"
+              fi
+              
+                             # Categorize commits
+               if [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || 
+                  ([[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]]) && 
+                  ([[ "$COMMIT_MSG" == *update* ]] || [[ "$COMMIT_MSG" == *upgrade* ]] || [[ "$COMMIT_MSG" == *bump* ]]) && 
+                  ([[ "$COMMIT_MSG" == *dependency* ]] || [[ "$COMMIT_MSG" == *dependencies* ]] || [[ "$COMMIT_MSG" == *deps* ]] || 
+                   [[ "$COMMIT_MSG" == *version* ]] || [[ "$COMMIT_MSG" == *kotlin* ]] || [[ "$COMMIT_MSG" == *ksp* ]] || [[ "$COMMIT_MSG" == *gradle* ]]); then
+                 # Version & Dependency updates (check this first)
+                 VERSION_DEPS="${VERSION_DEPS}- ${COMMIT_MSG}"$'\n'
+                 echo "    → Dependencies & Versions"
+               elif [[ "$COMMIT_MSG" == feat:* ]] || [[ "$COMMIT_MSG" == fix:* ]] || [[ "$COMMIT_MSG" == perf:* ]] || [[ "$COMMIT_MSG" == refactor:* ]]; then
+                 # Features & Fixes
+                 FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
+                 echo "    → Features & Fixes"
+               elif [[ "$COMMIT_MSG" == docs:* ]] || [[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]] || [[ "$COMMIT_MSG" == style:* ]] || [[ "$COMMIT_MSG" == test:* ]]; then
+                 # Documentation & Maintenance
+                 DOCS_MAINTENANCE="${DOCS_MAINTENANCE}- ${COMMIT_MSG}"$'\n'
+                 echo "    → Documentation & Maintenance"
+               else
+                 # Uncategorized - put in Features & Fixes as default
+                 FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
+                 echo "    → Features & Fixes (default)"
+               fi
+            fi
+          done <<< "$ALL_COMMITS"
+          
+          # Build categorized commit list
+          if [ -n "$FEATURES_FIXES" ] || [ -n "$VERSION_DEPS" ] || [ -n "$DOCS_MAINTENANCE" ]; then
+            # Features & Fixes
+            if [ -n "$FEATURES_FIXES" ]; then
+              echo "#### 🚀 Features & Fixes" >> pr_description.md
+              echo "$FEATURES_FIXES" >> pr_description.md
+            fi
+            
+            # Dependencies & Versions
+            if [ -n "$VERSION_DEPS" ]; then
+              echo "#### 📦 Dependencies & Versions" >> pr_description.md
+              echo "$VERSION_DEPS" >> pr_description.md
+            fi
+            
+            # Documentation & Maintenance
+            if [ -n "$DOCS_MAINTENANCE" ]; then
+              echo "#### 📚 Documentation & Maintenance" >> pr_description.md
+              echo "$DOCS_MAINTENANCE" >> pr_description.md
+            fi
+            
+            # Contributors
+            if [ ${#CONTRIBUTOR_MAP[@]} -gt 0 ]; then
+              echo "#### 👥 Contributors" >> pr_description.md
+              for contributor in "${!CONTRIBUTOR_MAP[@]}"; do
+                echo "- ${contributor}" >> pr_description.md
+              done
+              echo "" >> pr_description.md
+            fi
           else
-            echo "- Minor improvements and updates" >> pr_description.md
+            echo "- No significant changes" >> pr_description.md
             echo "" >> pr_description.md
           fi
         fi
