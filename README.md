@@ -50,8 +50,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18") // Logger implementation required
 }
@@ -96,6 +96,7 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 | Library | Kotlin | KSP |
 |---------|--------|-----|
+| `2.2.0-0.0.2` | `2.2.0` | `2.2.0-2.0.2` |
 | `2.2.0-0.0.1` | `2.2.0` | `2.1.21-2.0.2` |
 | `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` |
 
@@ -112,8 +113,8 @@ plugins {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7") // 5.0.0+
 }
 ```
@@ -136,8 +137,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.1")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
 }
