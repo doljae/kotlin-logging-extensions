@@ -255,9 +255,14 @@ jobs:
               AUTHOR_NAME=$(echo "$line" | cut -d$'\t' -f2)
               AUTHOR_EMAIL=$(echo "$line" | cut -d$'\t' -f3)
               
-              # Track contributors (skip bots)
-              if [[ "$AUTHOR_NAME" != *"[bot]" ]] && [[ "$AUTHOR_EMAIL" != *"@users.noreply.github.com" ]]; then
-                CONTRIBUTORS["$AUTHOR_NAME"]="$AUTHOR_EMAIL"
+              # Track contributors (skip only github-actions bot)
+              if [[ "$AUTHOR_NAME" != "github-actions[bot]" ]]; then
+                # Use display name without [bot] suffix for bots
+                DISPLAY_NAME="$AUTHOR_NAME"
+                if [[ "$AUTHOR_NAME" == *"[bot]" ]]; then
+                  DISPLAY_NAME="${AUTHOR_NAME%\[bot\]}"
+                fi
+                CONTRIBUTORS["$DISPLAY_NAME"]="$AUTHOR_EMAIL"
               fi
               
               # Categorize commits
