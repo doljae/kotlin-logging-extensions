@@ -222,7 +222,7 @@ jobs:
         KSP_BADGE_VERSION=$(echo $KSP_VERSION | sed 's/-/--/g' | sed 's/\./-/g')
         sed -i "s|https://img\.shields\.io/badge/kotlin-[0-9]\+\.[0-9]\+\.[0-9]\+-blue\.svg|https://img.shields.io/badge/kotlin-$KOTLIN_VERSION-blue.svg|g" README.md
         sed -i "s|https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg|https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg|g" README.md
-        sed -i "s|https://img\.shields\.io/badge/KSP-[0-9]\+\.[0-9]\+\.[0-9]\+--[0-9]\+\.[0-9]\+\.[0-9]\+-purple\.svg|https://img.shields.io/badge/KSP-$KSP_BADGE_VERSION-purple.svg|g" README.md
+        sed -i "s|https://img\.shields\.io/badge/KSP-[0-9-]\+--[0-9-]\+-purple\.svg|https://img.shields.io/badge/KSP-$KSP_BADGE_VERSION-purple.svg|g" README.md
         # Update dependency examples in README
         sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
         sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" README.md
