@@ -236,12 +236,60 @@ jobs:
           echo "## 🔄 Changes since ${PREVIOUS_TAG}" > release_notes.md
           echo "" >> release_notes.md
           
-          # Get commits since last tag (excluding version update commits)
-          COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | grep -v "^- chore: update version references")
-          if [ -n "$COMMITS" ]; then
-            echo "### 📝 Commits" >> release_notes.md
-            echo "$COMMITS" >> release_notes.md
-            echo "" >> release_notes.md
+          # Get commits since last tag and categorize them
+          ALL_COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"%s (%h)	%an	%ae" --no-merges)
+          
+          # Initialize categories
+          FEATURES_FIXES=""
+          VERSION_DEPS=""
+          DOCS_MAINTENANCE=""
+          
+          while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              COMMIT_MSG=$(echo "$line" | cut -d$'\t' -f1)
+              AUTHOR_NAME=$(echo "$line" | cut -d$'\t' -f2)
+              AUTHOR_EMAIL=$(echo "$line" | cut -d$'\t' -f3)
+              
+              # Categorize commits
+              if [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || 
+                 ([[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]]) && 
+                 ([[ "$COMMIT_MSG" == *update* ]] || [[ "$COMMIT_MSG" == *upgrade* ]] || [[ "$COMMIT_MSG" == *bump* ]]) && 
+                 ([[ "$COMMIT_MSG" == *dependency* ]] || [[ "$COMMIT_MSG" == *dependencies* ]] || [[ "$COMMIT_MSG" == *deps* ]] || 
+                  [[ "$COMMIT_MSG" == *version* ]] || [[ "$COMMIT_MSG" == *kotlin* ]] || [[ "$COMMIT_MSG" == *ksp* ]] || [[ "$COMMIT_MSG" == *gradle* ]]); then
+                # Version & Dependency updates
+                VERSION_DEPS="${VERSION_DEPS}- ${COMMIT_MSG}"$'\n'
+              elif [[ "$COMMIT_MSG" == feat:* ]] || [[ "$COMMIT_MSG" == fix:* ]] || [[ "$COMMIT_MSG" == perf:* ]] || [[ "$COMMIT_MSG" == refactor:* ]]; then
+                # Features & Fixes
+                FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
+              elif [[ "$COMMIT_MSG" == docs:* ]] || [[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]] || [[ "$COMMIT_MSG" == style:* ]] || [[ "$COMMIT_MSG" == test:* ]]; then
+                # Documentation & Maintenance
+                DOCS_MAINTENANCE="${DOCS_MAINTENANCE}- ${COMMIT_MSG}"$'\n'
+              else
+                # Uncategorized - put in Features & Fixes as default
+                FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
+              fi
+            fi
+          done <<< "$ALL_COMMITS"
+          
+          # Build categorized commit list
+          if [ -n "$FEATURES_FIXES" ] || [ -n "$VERSION_DEPS" ] || [ -n "$DOCS_MAINTENANCE" ]; then
+            # Features & Fixes
+            if [ -n "$FEATURES_FIXES" ]; then
+              echo "### 🚀 Features & Fixes" >> release_notes.md
+              echo "$FEATURES_FIXES" >> release_notes.md
+            fi
+            
+            # Dependencies & Versions
+            if [ -n "$VERSION_DEPS" ]; then
+              echo "### 📦 Dependencies & Versions" >> release_notes.md
+              echo "$VERSION_DEPS" >> release_notes.md
+            fi
+            
+            # Documentation & Maintenance
+            if [ -n "$DOCS_MAINTENANCE" ]; then
+              echo "### 📚 Documentation & Maintenance" >> release_notes.md
+              echo "$DOCS_MAINTENANCE" >> release_notes.md
+            fi
           else
             echo "### 📝 Changes" >> release_notes.md
             echo "- Minor improvements and updates" >> release_notes.md
@@ -253,7 +301,7 @@ jobs:
         echo "## ⚡ Version Compatibility" >> release_notes.md
         echo "- **Kotlin**: $KOTLIN_VERSION" >> release_notes.md
         echo "- **KSP**: $KSP_VERSION" >> release_notes.md
-        echo "- **kotlin-logging**: $KOTLIN_LOGGING_VERSION+" >> release_notes.md
+        echo "- **kotlin-logging**: 5.0.0+" >> release_notes.md
         echo "" >> release_notes.md
         
         # Add installation instructions
