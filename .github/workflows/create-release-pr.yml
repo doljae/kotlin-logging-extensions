@@ -163,6 +163,11 @@ jobs:
         
         # 1. Update README.md
         echo "🔄 Updating README.md..."
+        # Update badges at the top of README
+        sed -i "s|https://img\.shields\.io/badge/kotlin-[0-9]\+\.[0-9]\+\.[0-9]\+-blue\.svg|https://img.shields.io/badge/kotlin-$KOTLIN_VERSION-blue.svg|g" README.md
+        sed -i "s|https://img\.shields\.io/badge/kotlin--logging-[0-9]\+\.[0-9]\+\.[0-9]\+-green\.svg|https://img.shields.io/badge/kotlin--logging-$KOTLIN_LOGGING_VERSION-green.svg|g" README.md
+        sed -i "s|https://img\.shields\.io/badge/KSP-[0-9]\+\.[0-9]\+\.[0-9]\+--[0-9]\+\.[0-9]\+\.[0-9]\+-purple\.svg|https://img.shields.io/badge/KSP-$(echo $KSP_VERSION | sed 's/\./-/g')-purple.svg|g" README.md
+        # Update dependency examples in README
         sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
         sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" README.md
         sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" README.md
@@ -197,7 +202,7 @@ jobs:
         
         # Log what was updated
         echo "📋 Updated files:"
-        echo "  - README.md (dependency examples + build script versions)"
+        echo "  - README.md (badges + dependency examples + build script versions)"
         echo "  - .github/ISSUE_TEMPLATE/bug_report.yml (code blocks + placeholders)" 
         echo "  - .github/ISSUE_TEMPLATE/version_compatibility.yml (placeholders)"
         echo "  - .github/ISSUE_TEMPLATE/question.yml (placeholder)"
@@ -246,7 +251,7 @@ jobs:
         else
           # Commit changes
           git commit -m "chore: update version references to $VERSION" \
-            -m "- Update README.md dependency examples and build script versions" \
+            -m "- Update README.md badges, dependency examples and build script versions" \
             -m "- Update issue template placeholders with build script versions:" \
             -m "  * Library Version → $VERSION" \
             -m "  * Kotlin Version → $KOTLIN_VERSION" \
