@@ -4,7 +4,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.doljae/kotlin-logging-extensions.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
-[![kotlin-logging](https://img.shields.io/badge/kotlin--logging-7.0.7-green.svg)](https://github.com/oshai/kotlin-logging)
+[![kotlin-logging](https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg)](https://github.com/oshai/kotlin-logging)
 [![KSP](https://img.shields.io/badge/KSP-2.2.0--2.0.2-purple.svg)](https://github.com/google/ksp)
 
 **Elegant [kotlin-logging](https://github.com/oshai/kotlin-logging) extensions for zero-boilerplate logger generation in Kotlin classes using [KSP](https://github.com/google/ksp)**
@@ -94,10 +94,10 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 **Choose the library version that matches your project's Kotlin version.** Our versioning follows the `KOTLIN_VERSION-LIBRARY_VERSION` pattern (same as KSP).
 
-| Library | Kotlin | KSP | kotlin-logging |
-|---------|--------|-----|----------------|
-| `2.2.0-0.0.1` | `2.2.0` | `2.2.0-2.0.2` | 5.0.0+ |
-| `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` | 5.0.0+ |
+| Library | Kotlin | KSP |
+|---------|--------|-----|
+| `2.2.0-0.0.1` | `2.2.0` | `2.2.0-2.0.2` |
+| `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` |
 
 ### How to Use
 1. **Check your Kotlin version** in `build.gradle.kts`
