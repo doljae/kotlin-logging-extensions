@@ -246,11 +246,24 @@ jobs:
           VERSION_DEPS=""
           DOCS_MAINTENANCE=""
           
+          # Track unique contributors
+          declare -A CONTRIBUTORS
+          
           while IFS= read -r line; do
             if [ -n "$line" ]; then
               COMMIT_MSG=$(echo "$line" | cut -d$'\t' -f1)
               AUTHOR_NAME=$(echo "$line" | cut -d$'\t' -f2)
               AUTHOR_EMAIL=$(echo "$line" | cut -d$'\t' -f3)
+              
+              # Track contributors (skip only github-actions bot)
+              if [[ "$AUTHOR_NAME" != "github-actions[bot]" ]]; then
+                # Use display name without [bot] suffix for bots
+                DISPLAY_NAME="$AUTHOR_NAME"
+                if [[ "$AUTHOR_NAME" == *"[bot]" ]]; then
+                  DISPLAY_NAME="${AUTHOR_NAME%\[bot\]}"
+                fi
+                CONTRIBUTORS["$DISPLAY_NAME"]="$AUTHOR_EMAIL"
+              fi
               
               # Categorize commits
               if [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || 
@@ -295,6 +308,18 @@ jobs:
           else
             echo "### 📝 Changes" >> release_notes.md
             echo "- Minor improvements and updates" >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          # Add contributors section
+          if [ ${#CONTRIBUTORS[@]} -gt 0 ]; then
+            echo "### 👥 Contributors" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "Thanks to all the contributors who made this release possible:" >> release_notes.md
+            echo "" >> release_notes.md
+            for contributor in "${!CONTRIBUTORS[@]}"; do
+              echo "- @${contributor}" >> release_notes.md
+            done
             echo "" >> release_notes.md
           fi
         fi

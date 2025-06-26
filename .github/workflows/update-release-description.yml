@@ -96,19 +96,83 @@ jobs:
           exit 1
         fi
         
-    - name: Commit and push if changed
+    - name: Create PR for workflow description update
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # Check if there are changes
+        if git diff --quiet .github/workflows/create-release-pr.yml; then
+          echo "📋 No changes to commit - description already up to date"
+          exit 0
+        fi
+        
+        # Create branch name with timestamp
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        BRANCH_NAME="update-workflow-description/${TIMESTAMP}"
+        
+        echo "📝 Changes detected, creating PR..."
+        echo "🌿 Branch name: ${BRANCH_NAME}"
+        
+        # Create and switch to new branch
+        git checkout -b "${BRANCH_NAME}"
+        echo "✅ Created branch: ${BRANCH_NAME}"
+        
         # Configure git user
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         
-        # Check if there are changes
-        if git diff --quiet .github/workflows/create-release-pr.yml; then
-          echo "📋 No changes to commit - description already up to date"
-        else
-          echo "📝 Committing description update..."
-          git add .github/workflows/create-release-pr.yml
-          git commit -m "chore: update release workflow description with latest version [skip ci]"
-          git push origin main
-          echo "✅ Description updated and pushed to main"
-        fi 
+        # Add and commit changes
+        git add .github/workflows/create-release-pr.yml
+        git commit -m "chore: update release workflow description with latest version
+        
+        - Update current version and suggested next versions
+        - Auto-update after successful release of ${LATEST_VERSION}
+        - Triggered by merged release PR: ${{ github.event.pull_request.title }}"
+        
+        echo "✅ Changes committed"
+        
+        # Push branch to origin
+        git push origin "${BRANCH_NAME}"
+        echo "✅ Pushed branch: ${BRANCH_NAME}"
+        
+        # Create PR description
+        cat > pr_description.md << EOF
+        ## 🔄 Auto-update Release Workflow Description
+        
+        This PR automatically updates the release workflow description with the latest version information after a successful release.
+        
+        ### 📋 Changes
+        - **Current version**: Updated to \`${LATEST_VERSION}\`
+        - **Suggested versions**: Updated next patch/minor version suggestions
+        
+        ### 🚀 Triggered by
+        - **Release**: ${LATEST_VERSION}
+        - **Merged PR**: ${{ github.event.pull_request.title }}
+        - **Branch**: ${{ github.event.pull_request.head.ref }}
+        
+        ### ✅ Ready to merge
+        This is an automated maintenance update with no functional changes.
+        EOF
+        
+        # Create PR using GitHub CLI
+        echo "🔄 Creating Pull Request..."
+        PR_URL=$(gh pr create \
+          --title "chore: update release workflow description with v${LATEST_VERSION}" \
+          --body-file pr_description.md \
+          --base main \
+          --head "${BRANCH_NAME}" \
+          --assignee doljae \
+          --reviewer doljae)
+        
+        echo "✅ Pull Request created: ${PR_URL}"
+        
+        # Try to add labels (may fail if labels don't exist)
+        PR_NUMBER=$(basename "${PR_URL}")
+        gh pr edit "${PR_NUMBER}" --add-label "maintenance" || echo "⚠️ Could not add 'maintenance' label"
+        gh pr edit "${PR_NUMBER}" --add-label "workflow" || echo "⚠️ Could not add 'workflow' label"
+        
+        # Clean up temporary files
+        rm -f pr_description.md
+        
+        echo "🎉 Workflow description update PR created successfully!"
+        echo "📋 Please review and merge the PR to complete the update." 
