@@ -31,8 +31,8 @@ jobs:
         
         # Wait for release tag to be created (Release workflow runs after PR merge)
         echo "⏳ Waiting for release tag to be created..."
-        for i in {1..24}; do
-          sleep 15
+        for i in {1..12}; do
+          sleep 10
           LATEST_TAG=$(git fetch --tags && git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
           if [ -n "$LATEST_TAG" ]; then
             LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
@@ -47,7 +47,7 @@ jobs:
               echo "   Found tag ${LATEST_TAG} but expected ${EXPECTED_VERSION}, continuing to wait..."
             fi
           else
-            echo "   No release tags found yet, waiting... (${i}/24)"
+            echo "   No release tags found yet, waiting... (${i}/12)"
           fi
         done
         
@@ -89,7 +89,7 @@ jobs:
           echo "✅ Updated description with latest version: ${LATEST_VERSION}"
           echo "📝 New suggested versions: ${SUGGESTED_TEXT}"
         else
-          echo "❌ Failed to find expected release tag after waiting 6 minutes"
+          echo "❌ Failed to find expected release tag after waiting 2 minutes"
           echo "   Expected version: ${EXPECTED_VERSION} from branch ${BRANCH_NAME}"
           echo "   Latest found tag: ${LATEST_TAG:-"none"}"
           echo "   Release workflow may still be running, will retry on next trigger"

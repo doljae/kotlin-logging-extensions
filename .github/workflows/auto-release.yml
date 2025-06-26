@@ -238,32 +238,16 @@ jobs:
           echo "## 🔄 Changes since ${PREVIOUS_TAG}" > release_notes.md
           echo "" >> release_notes.md
           
-          # Get commits since last tag with author information
+          # Get commits since last tag and categorize them
           ALL_COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"%s (%h)	%an	%ae" --no-merges)
           
           # Initialize categories
           FEATURES_FIXES=""
           VERSION_DEPS=""
-          EXTERNAL_CONTRIBUTIONS=""
+          DOCS_MAINTENANCE=""
           
-          # Define bot/automation patterns to filter out
-          BOT_PATTERNS=(
-            "github-actions\[bot\]"
-            "dependabot\[bot\]" 
-            "renovate\[bot\]"
-            ".*\[bot\].*"
-            "noreply\.github\.com"
-          )
-          
-          # Define automation commit patterns to filter out
-          AUTOMATION_PATTERNS=(
-            "^chore: update release workflow description"
-            "^chore: update.*workflow.*description"
-            "^ci:"
-            "^chore\(ci\):"
-            "^\[skip ci\]"
-            ".*\[skip ci\].*"
-          )
+          # Track unique contributors
+          declare -A CONTRIBUTORS
           
           while IFS= read -r line; do
             if [ -n "$line" ]; then
@@ -271,75 +255,66 @@ jobs:
               AUTHOR_NAME=$(echo "$line" | cut -d$'\t' -f2)
               AUTHOR_EMAIL=$(echo "$line" | cut -d$'\t' -f3)
               
-              # Check if this is a bot/automation commit
-              IS_BOT=false
-              for pattern in "${BOT_PATTERNS[@]}"; do
-                if [[ "$AUTHOR_NAME" =~ $pattern ]] || [[ "$AUTHOR_EMAIL" =~ $pattern ]]; then
-                  IS_BOT=true
-                  break
-                fi
-              done
-              
-              # Check if this is an automation commit pattern
-              IS_AUTOMATION=false
-              for pattern in "${AUTOMATION_PATTERNS[@]}"; do
-                if [[ "$COMMIT_MSG" =~ $pattern ]]; then
-                  IS_AUTOMATION=true
-                  break
-                fi
-              done
-              
-              # Skip automation commits unless from external contributors
-              if [ "$IS_AUTOMATION" = true ] && [ "$IS_BOT" = true ]; then
-                continue
-              fi
-              
-              # Check if this is an external contributor (not from main repository owner/collaborators)
-              IS_EXTERNAL=false
-              if [[ "$AUTHOR_EMAIL" != *"@users.noreply.github.com" ]] && 
-                 [[ "$AUTHOR_EMAIL" != "doljae@"* ]] && 
-                 [ "$IS_BOT" = false ]; then
-                IS_EXTERNAL=true
+              # Track contributors (skip bots)
+              if [[ "$AUTHOR_NAME" != *"[bot]" ]] && [[ "$AUTHOR_EMAIL" != *"@users.noreply.github.com" ]]; then
+                CONTRIBUTORS["$AUTHOR_NAME"]="$AUTHOR_EMAIL"
               fi
               
               # Categorize commits
-              if [ "$IS_EXTERNAL" = true ]; then
-                # Always show external contributions
-                EXTERNAL_CONTRIBUTIONS="${EXTERNAL_CONTRIBUTIONS}- ${COMMIT_MSG} by @${AUTHOR_NAME}"$'\n'
-              elif [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || 
-                   ([[ "$COMMIT_MSG" == chore:* ]] && [[ "$COMMIT_MSG" == *update* ]] && [[ "$COMMIT_MSG" == *dependency* ]]); then
-                # Only show significant dependency updates
+              if [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || 
+                 ([[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]]) && 
+                 ([[ "$COMMIT_MSG" == *update* ]] || [[ "$COMMIT_MSG" == *upgrade* ]] || [[ "$COMMIT_MSG" == *bump* ]]) && 
+                 ([[ "$COMMIT_MSG" == *dependency* ]] || [[ "$COMMIT_MSG" == *dependencies* ]] || [[ "$COMMIT_MSG" == *deps* ]] || 
+                  [[ "$COMMIT_MSG" == *version* ]] || [[ "$COMMIT_MSG" == *kotlin* ]] || [[ "$COMMIT_MSG" == *ksp* ]] || [[ "$COMMIT_MSG" == *gradle* ]]); then
+                # Version & Dependency updates
                 VERSION_DEPS="${VERSION_DEPS}- ${COMMIT_MSG}"$'\n'
               elif [[ "$COMMIT_MSG" == feat:* ]] || [[ "$COMMIT_MSG" == fix:* ]] || [[ "$COMMIT_MSG" == perf:* ]] || [[ "$COMMIT_MSG" == refactor:* ]]; then
-                # Features & Fixes (actual source code changes)
+                # Features & Fixes
                 FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
-              # Skip other automation/maintenance commits for cleaner release notes
+              elif [[ "$COMMIT_MSG" == docs:* ]] || [[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]] || [[ "$COMMIT_MSG" == style:* ]] || [[ "$COMMIT_MSG" == test:* ]]; then
+                # Documentation & Maintenance
+                DOCS_MAINTENANCE="${DOCS_MAINTENANCE}- ${COMMIT_MSG}"$'\n'
+              else
+                # Uncategorized - put in Features & Fixes as default
+                FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
               fi
             fi
           done <<< "$ALL_COMMITS"
           
-          # Build categorized commit list (only show meaningful changes)
-          if [ -n "$FEATURES_FIXES" ] || [ -n "$VERSION_DEPS" ] || [ -n "$EXTERNAL_CONTRIBUTIONS" ]; then
-            # External Contributions (show first to highlight community contributions)
-            if [ -n "$EXTERNAL_CONTRIBUTIONS" ]; then
-              echo "### 🤝 Community Contributions" >> release_notes.md
-              echo "$EXTERNAL_CONTRIBUTIONS" >> release_notes.md
-            fi
-            
+          # Build categorized commit list
+          if [ -n "$FEATURES_FIXES" ] || [ -n "$VERSION_DEPS" ] || [ -n "$DOCS_MAINTENANCE" ]; then
             # Features & Fixes
             if [ -n "$FEATURES_FIXES" ]; then
               echo "### 🚀 Features & Fixes" >> release_notes.md
               echo "$FEATURES_FIXES" >> release_notes.md
             fi
             
-            # Dependencies & Versions (only significant updates)
+            # Dependencies & Versions
             if [ -n "$VERSION_DEPS" ]; then
-              echo "### 📦 Dependencies" >> release_notes.md
+              echo "### 📦 Dependencies & Versions" >> release_notes.md
               echo "$VERSION_DEPS" >> release_notes.md
+            fi
+            
+            # Documentation & Maintenance
+            if [ -n "$DOCS_MAINTENANCE" ]; then
+              echo "### 📚 Documentation & Maintenance" >> release_notes.md
+              echo "$DOCS_MAINTENANCE" >> release_notes.md
             fi
           else
             echo "### 📝 Changes" >> release_notes.md
             echo "- Minor improvements and updates" >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          # Add contributors section
+          if [ ${#CONTRIBUTORS[@]} -gt 0 ]; then
+            echo "### 👥 Contributors" >> release_notes.md
+            echo "" >> release_notes.md
+            echo "Thanks to all the contributors who made this release possible:" >> release_notes.md
+            echo "" >> release_notes.md
+            for contributor in "${!CONTRIBUTORS[@]}"; do
+              echo "- @${contributor}" >> release_notes.md
+            done
             echo "" >> release_notes.md
           fi
         fi
