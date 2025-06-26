@@ -331,8 +331,7 @@ jobs:
         echo "When this PR is merged, the following will happen automatically:" >> pr_description.md
         echo "- ✅ Create git tag: \`${{ needs.validate.outputs.tag_name }}\`" >> pr_description.md
         echo "- ✅ Generate GitHub Release with release notes" >> pr_description.md
-        echo "- ✅ Upload to Maven Central staging repository" >> pr_description.md
-        echo "- ⚠️ Manual step: Complete publishing at https://oss.sonatype.org/" >> pr_description.md
+        echo "- ✅ Automatically publish to Maven Central" >> pr_description.md
         echo "" >> pr_description.md
         
         # Add review checklist

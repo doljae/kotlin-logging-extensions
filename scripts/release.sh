@@ -138,8 +138,7 @@ show_release_plan() {
     print_info "  3. Review and merge the PR to trigger automatic release:"
     print_info "     - Create git tag: $tag"
     print_info "     - Generate GitHub Release with release notes"
-    print_info "     - Upload to Maven Central staging"
-    print_info "  4. Manual step: Complete publishing at https://oss.sonatype.org/"
+    print_info "     - Automatically publish to Maven Central"
     echo
 }
 
@@ -241,8 +240,7 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo
     echo "After PR merge, the auto-release workflow will:"
     echo "  - Create git tag and GitHub Release"
-    echo "  - Upload to Maven Central staging repository"
-    echo "  - Manual step required: Complete publishing at https://oss.sonatype.org/"
+    echo "  - Automatically publish to Maven Central"
     echo
     echo "Prerequisites:"
     echo "  - Clean working directory (no uncommitted changes)"
