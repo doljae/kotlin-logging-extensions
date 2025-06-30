@@ -12,6 +12,55 @@ class LoggerProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
 ) : SymbolProcessor {
+    companion object {
+        private val keywords =
+            setOf(
+                "as",
+                "break",
+                "class",
+                "continue",
+                "do",
+                "else",
+                "false",
+                "for",
+                "fun",
+                "if",
+                "in",
+                "interface",
+                "is",
+                "null",
+                "object",
+                "package",
+                "return",
+                "super",
+                "this",
+                "throw",
+                "true",
+                "try",
+                "typealias",
+                "typeof",
+                "val",
+                "var",
+                "when",
+                "while",
+            )
+
+        fun String.wrapReservedWords(
+            delimiter: Char,
+            reservedWords: Collection<String>,
+            quoteChar: Char,
+        ): String {
+            val tokens = split(delimiter)
+            return tokens.joinToString(delimiter.toString()) { token ->
+                if (reservedWords.contains(token)) {
+                    "$quoteChar$token$quoteChar"
+                } else {
+                    token
+                }
+            }
+        }
+    }
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val classes =
             resolver
@@ -41,7 +90,8 @@ class LoggerProcessor(
         codeGenerator
             .createNewFile(
                 Dependencies(false),
-                classDeclaration.packageName.asString(),
+                classDeclaration.packageName.asString()
+                    .wrapReservedWords(delimiter = '.', reservedWords = keywords, quoteChar = '`'),
                 "${className}KotlinLoggingExtensions",
             ).bufferedWriter()
             .use { writer ->
