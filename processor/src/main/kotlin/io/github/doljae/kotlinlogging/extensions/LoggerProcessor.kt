@@ -13,7 +13,8 @@ class LoggerProcessor(
     private val logger: KSPLogger,
 ) : SymbolProcessor {
     companion object {
-        private val keywords =
+        // Ref: https://kotlinlang.org/docs/keyword-reference.html
+        private val hardKeywords =
             setOf(
                 "as",
                 "break",
