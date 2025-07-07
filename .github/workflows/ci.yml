@@ -5,21 +5,50 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  # Allow workflow to run on bot PRs
+  pull_request_target:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run tests'
+        required: false
+        default: 'true'
+        type: boolean
+      run_security:
+        description: 'Run security scan'
+        required: false
+        default: 'true'
+        type: boolean
 
 # Add explicit permissions for security features
 permissions:
   contents: read
   security-events: write
   actions: read
+  # Add permissions for pull_request_target
+  pull-requests: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     
+    # Security check for pull_request_target and manual trigger conditions
+    if: >
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && (github.actor == 'github-actions[bot]' || github.actor == 'dependabot[bot]')) ||
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.run_tests == 'true')
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+      with:
+        # For pull_request_target, checkout the PR head
+        ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+        
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
@@ -60,11 +89,16 @@ jobs:
   security:
     runs-on: ubuntu-latest
     # Only run security scanning on public repositories or when explicitly enabled
-    if: github.event.repository.private == false || github.event_name == 'schedule'
+    if: >
+      (github.event.repository.private == false || github.event_name == 'schedule') &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true')
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        # For pull_request_target, checkout the PR head
+        ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
       
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -83,11 +117,16 @@ jobs:
   # Alternative security job for private repositories
   security-private:
     runs-on: ubuntu-latest
-    if: github.event.repository.private == true
+    if: >
+      github.event.repository.private == true &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true')
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        # For pull_request_target, checkout the PR head
+        ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
       
     - name: Run Trivy vulnerability scanner (Private repo - no SARIF upload)
       uses: aquasecurity/trivy-action@master
