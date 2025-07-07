@@ -3,7 +3,7 @@
 [![CI](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.doljae/kotlin-logging-extensions.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.1.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![kotlin-logging](https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg)](https://github.com/oshai/kotlin-logging)
 [![KSP](https://img.shields.io/badge/KSP-2.2.0--2.0.2-purple.svg)](https://github.com/google/ksp)
 
@@ -41,7 +41,7 @@ class UserService {
 Add to your `build.gradle.kts`:
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.2.0"
+    kotlin("jvm") version "2.1.21"
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"
 }
 
@@ -50,8 +50,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.3")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.3")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18") // Logger implementation required
 }
@@ -96,6 +96,7 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 | Library | Kotlin | KSP |
 |---------|--------|-----|
+| `2.1.21-0.0.3` | `2.1.21` | `2.2.0-2.0.2` |
 | `2.2.0-0.0.2` | `2.2.0` | `2.2.0-2.0.2` |
 | `2.2.0-0.0.1` | `2.2.0` | `2.1.21-2.0.2` |
 | `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` |
@@ -106,15 +107,15 @@ That's it! The logger is automatically available with the class name (`OrderProc
 3. **Use the exact KSP version** shown in the table
 
 ```kotlin
-// For Kotlin 2.2.0 projects:
+// For Kotlin 2.1.21 projects:
 plugins {
-    kotlin("jvm") version "2.2.0"
+    kotlin("jvm") version "2.1.21"
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.3")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.3")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7") // 5.0.0+
 }
 ```
@@ -128,7 +129,7 @@ dependencies {
 ### Maven Central (Recommended)
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.2.0"
+    kotlin("jvm") version "2.1.21"
     id("com.google.devtools.ksp") version "2.2.0-2.0.2"
 }
 
@@ -137,8 +138,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.0-0.0.2")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.3")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.1.21-0.0.3")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
     implementation("ch.qos.logback:logback-classic:1.5.18")
 }
