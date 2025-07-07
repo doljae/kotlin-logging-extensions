@@ -7,6 +7,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import io.github.doljae.common.StringUtility.wrapReservedWords
 
 class LoggerProcessor(
     private val codeGenerator: CodeGenerator,
@@ -41,11 +42,51 @@ class LoggerProcessor(
         codeGenerator
             .createNewFile(
                 Dependencies(false),
-                classDeclaration.packageName.asString(),
+                wrapReservedWords(
+                    target = classDeclaration.packageName.asString(),
+                    delimiter = '.',
+                    reservedWords = hardKeywords,
+                    quoteChar = '`',
+                ),
                 "${className}KotlinLoggingExtensions",
             ).bufferedWriter()
             .use { writer ->
                 writer.write(loggerCode)
             }
+    }
+
+    companion object {
+        // Ref: https://kotlinlang.org/docs/keyword-reference.html
+        private val hardKeywords =
+            setOf(
+                "as",
+                "break",
+                "class",
+                "continue",
+                "do",
+                "else",
+                "false",
+                "for",
+                "fun",
+                "if",
+                "in",
+                "interface",
+                "is",
+                "null",
+                "object",
+                "package",
+                "return",
+                "super",
+                "this",
+                "throw",
+                "true",
+                "try",
+                "typealias",
+                "typeof",
+                "val",
+                "var",
+                "when",
+                "while",
+            )
     }
 }
