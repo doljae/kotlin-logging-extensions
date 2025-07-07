@@ -10,6 +10,8 @@ on:
       - 'docs/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/workflows/**'
+  # Allow manual trigger
+  workflow_dispatch:
 
 permissions:
   contents: write
