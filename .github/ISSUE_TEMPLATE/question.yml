@@ -46,7 +46,7 @@ body:
     attributes:
       label: Library Version
       description: Which version of kotlin-logging-extensions are you using?
-      placeholder: "e.g., 2.1.21-0.0.3"
+      placeholder: "e.g., 2.2.10-0.0.3"
     validations:
       required: false
 
@@ -55,7 +55,7 @@ body:
     attributes:
       label: kotlin-logging Version
       description: Which kotlin-logging dependency are you using?
-      placeholder: "e.g., io.github.oshai:kotlin-logging-jvm:7.0.7"
+      placeholder: "e.g., io.github.oshai:kotlin-logging-jvm:7.0.12"
     validations:
       required: false
 

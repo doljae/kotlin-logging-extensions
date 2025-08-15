@@ -37,8 +37,15 @@ jobs:
     
     # Security check for pull_request_target and manual trigger conditions
     if: >
-      github.event_name == 'pull_request' || 
-      (github.event_name == 'pull_request_target' && (github.actor == 'github-actions[bot]' || github.actor == 'dependabot[bot]')) ||
+      github.event_name == 'pull_request' ||
+      (
+        github.event_name == 'pull_request_target' &&
+        (
+          github.actor == 'github-actions[bot]' ||
+          github.actor == 'dependabot[bot]' ||
+          github.event.pull_request.head.repo.full_name == github.repository
+        )
+      ) ||
       github.event_name == 'push' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.run_tests == 'true')
     
