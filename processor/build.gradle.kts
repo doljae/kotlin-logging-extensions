@@ -1,7 +1,6 @@
 plugins {
     kotlin("jvm")
     id("com.vanniktech.maven.publish")
-    id("org.jlleitschuh.gradle.ktlint")
 }
 
 group = project.property("project.group") as String
@@ -13,7 +12,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.2.10-2.0.2")
+    implementation("com.google.devtools.ksp:symbol-processing-api:2.2.20-2.0.2")
 
     // kotlin-logging dependency for generated code compatibility
     compileOnly("io.github.oshai:kotlin-logging-jvm:7.0.13")
