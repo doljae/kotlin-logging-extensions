@@ -4,6 +4,12 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Specific version to update (optional)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -11,10 +17,11 @@ permissions:
 jobs:
   update-description:
     runs-on: ubuntu-latest
-    # Only run when release PR is merged (branch starts with 'release/')
+    # Run on manual dispatch OR when release PR is merged
     if: |
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.head.ref, 'release/')
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       startsWith(github.event.pull_request.head.ref, 'release/'))
     
     steps:
     - name: Checkout code
@@ -25,80 +32,96 @@ jobs:
         
     - name: Update release workflow description
       run: |
-        echo "✅ Release PR merged: ${{ github.event.pull_request.title }}"
-        echo "   Branch: ${{ github.event.pull_request.head.ref }}"
-        echo "   Proceeding with description update"
-        
-        # Wait for release tag to be created (Release workflow runs after PR merge)
-        echo "⏳ Waiting for release tag to be created..."
-        for i in {1..12}; do
-          sleep 10
+        # 수동 실행 시와 PR 머지 시를 구분하여 처리
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "🔄 Manual execution triggered"
+          echo "📋 This will update the workflow description with the latest version"
+          
+          # 수동 실행 시에는 최신 태그를 찾아서 업데이트
           LATEST_TAG=$(git fetch --tags && git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
           if [ -n "$LATEST_TAG" ]; then
             LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
-            # Extract expected version from branch to verify
-            BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-            EXPECTED_VERSION=$(echo "$BRANCH_NAME" | sed 's|release/||')
-            
-            if [ "$LATEST_VERSION" = "$EXPECTED_VERSION" ]; then
-              echo "✅ Found expected release tag: ${LATEST_TAG}"
-              break
-            else
-              echo "   Found tag ${LATEST_TAG} but expected ${EXPECTED_VERSION}, continuing to wait..."
-            fi
+            echo "✅ Found latest release tag: ${LATEST_TAG}"
           else
-            echo "   No release tags found yet, waiting... (${i}/12)"
+            echo "❌ No release tags found"
+            exit 1
           fi
-        done
-        
-        if [ -n "$LATEST_VERSION" ] && [ "$LATEST_VERSION" = "$EXPECTED_VERSION" ]; then
-          echo "📋 Using release version: ${LATEST_VERSION}"
-          
-          # Extract version parts for next version suggestions
-          CURRENT_KOTLIN=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
-          CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
-          
-          # Extract library version parts (MAJOR.MINOR.PATCH)
-          LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
-          LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
-          LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
-          
-          # Calculate next versions
-          NEXT_PATCH="${CURRENT_KOTLIN}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
-          NEXT_MINOR="${CURRENT_KOTLIN}-${LIB_MAJOR}.$((LIB_MINOR + 1)).0"
-          
-          # Get current Kotlin version from build.gradle.kts
-          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-          
-          # Create new description with suggested versions
-          SUGGESTED_TEXT="${NEXT_PATCH} (patch), ${NEXT_MINOR} (minor)"
-          
-          # Check if Kotlin version has been updated
-          if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
-            KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
-            SUGGESTED_TEXT="${SUGGESTED_TEXT}, ${KOTLIN_UPDATE} (Kotlin update)"
-          fi
-          
-          # Use sed to update the description lines in the workflow file
-          # First, find and replace the "Current:" line
-          sed -i "s/Current: .*/Current: ${LATEST_VERSION}/" .github/workflows/create-release-pr.yml
-          
-          # Then, find and replace the "Suggested:" line
-          sed -i "s/Suggested: .*/Suggested: ${SUGGESTED_TEXT}/" .github/workflows/create-release-pr.yml
-          
-          echo "✅ Updated description with latest version: ${LATEST_VERSION}"
-          echo "📝 New suggested versions: ${SUGGESTED_TEXT}"
         else
-          echo "❌ Failed to find expected release tag after waiting 2 minutes"
-          echo "   Expected version: ${EXPECTED_VERSION} from branch ${BRANCH_NAME}"
-          echo "   Latest found tag: ${LATEST_TAG:-"none"}"
-          echo "   Release workflow may still be running, will retry on next trigger"
-          exit 1
+          echo "✅ Release PR merged: ${{ github.event.pull_request.title }}"
+          echo "   Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "   Proceeding with description update"
+          
+          # Wait for release tag to be created (Release workflow runs after PR merge)
+          echo "⏳ Waiting for release tag to be created..."
+          for i in {1..12}; do
+            sleep 10
+            LATEST_TAG=$(git fetch --tags && git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+            if [ -n "$LATEST_TAG" ]; then
+              LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+              # Extract expected version from branch to verify
+              BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+              EXPECTED_VERSION=$(echo "$BRANCH_NAME" | sed 's|release/||')
+              
+              if [ "$LATEST_VERSION" = "$EXPECTED_VERSION" ]; then
+                echo "✅ Found expected release tag: ${LATEST_TAG}"
+                break
+              else
+                echo "   Found tag ${LATEST_TAG} but expected ${EXPECTED_VERSION}, continuing to wait..."
+              fi
+            else
+              echo "   No release tags found yet, waiting... (${i}/12)"
+            fi
+          done
+          
+          if [ -n "$LATEST_VERSION" ] && [ "$LATEST_VERSION" = "$EXPECTED_VERSION" ]; then
+            echo "📋 Using release version: ${LATEST_VERSION}"
+            
+            # Extract version parts for next version suggestions
+            CURRENT_KOTLIN=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
+            CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
+            
+            # Extract library version parts (MAJOR.MINOR.PATCH)
+            LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
+            LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
+            LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
+            
+            # Calculate next versions
+            NEXT_PATCH="${CURRENT_KOTLIN}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
+            NEXT_MINOR="${CURRENT_KOTLIN}-${LIB_MAJOR}.$((LIB_MINOR + 1)).0"
+            
+            # Get current Kotlin version from build.gradle.kts
+            BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+            
+            # Create new description with suggested versions
+            SUGGESTED_TEXT="${NEXT_PATCH} (patch), ${NEXT_MINOR} (minor)"
+            
+            # Check if Kotlin version has been updated
+            if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
+              KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
+              SUGGESTED_TEXT="${SUGGESTED_TEXT}, ${KOTLIN_UPDATE} (Kotlin update)"
+            fi
+            
+            # Use sed to update the description lines in the workflow file
+            # First, find and replace the "Current:" line
+            sed -i "s/Current: .*/Current: ${LATEST_VERSION}/" .github/workflows/create-release-pr.yml
+            
+            # Then, find and replace the "Suggested:" line
+            sed -i "s/Suggested: .*/Suggested: ${SUGGESTED_TEXT}/" .github/workflows/create-release-pr.yml
+            
+            echo "✅ Updated description with latest version: ${LATEST_VERSION}"
+            echo "📝 New suggested versions: ${SUGGESTED_TEXT}"
+          else
+            echo "❌ Failed to find expected release tag after waiting 2 minutes"
+            echo "   Expected version: ${EXPECTED_VERSION} from branch ${BRANCH_NAME}"
+            echo "   Latest found tag: ${LATEST_TAG:-"none"}"
+            echo "   Release workflow may still be running, will retry on next trigger"
+            exit 1
+          fi
         fi
         
     - name: Create PR for workflow description update
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.WORKFLOW_UPDATE_TOKEN }}
       run: |
         # Check if there are changes
         if git diff --quiet .github/workflows/create-release-pr.yml; then

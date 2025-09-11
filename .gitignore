@@ -313,3 +313,7 @@ local.properties
 # Publishing credentials (local overrides)
 local.gradle.properties
 gradle-local.properties
+
+# binary
+
+**/bin
