@@ -7,8 +7,8 @@ on:
         description: |
           Release version (KSP format: KOTLIN_VERSION-LIB_VERSION)
           
-          Current: 2.2.0-0.0.1
-          Suggested: 2.2.0-0.0.2 (patch), 2.2.0-0.1.0 (minor)
+          Current: 2.2.20-0.0.4
+          Suggested: 2.2.20-0.0.5 (patch), 2.2.20-0.1.0 (minor)
         required: true
         type: string
 
@@ -96,7 +96,7 @@ jobs:
         if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
           echo "❌ Error: Version must be in KSP format KOTLIN_VERSION-LIB_VERSION"
           echo "   Input version: ${VERSION}"
-          echo "   Expected format: KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.0-0.0.2)"
+          echo "   Expected format: KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.20-0.0.5)"
           if [ -n "$LATEST_TAG" ]; then
             echo "   Use one of the suggested versions above or follow the same pattern"
           fi
@@ -218,7 +218,7 @@ jobs:
         # 1. Update README.md
         echo "🔄 Updating README.md..."
         # Update badges at the top of README
-        # For KSP badge, convert version format: 2.2.0-2.0.2 -> 2.2.0--2.0.2
+        # For KSP badge, convert version format: 2.2.20-2.0.4 -> 2.2.20--2.0.4
         KSP_BADGE_VERSION=$(echo $KSP_VERSION | sed 's/-/--/g')
         sed -i "s|https://img\.shields\.io/badge/kotlin-[0-9]\+\.[0-9]\+\.[0-9]\+-blue\.svg|https://img.shields.io/badge/kotlin-$KOTLIN_VERSION-blue.svg|g" README.md
         sed -i "s|https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg|https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg|g" README.md
