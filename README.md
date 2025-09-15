@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![kotlin-logging](https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg)](https://github.com/oshai/kotlin-logging)
-[![KSP](https://img.shields.io/badge/KSP-2.2.20--2.0.2-purple.svg)](https://github.com/google/ksp)
+[![KSP](https://img.shields.io/badge/KSP-2.2.20--2.0.3-purple.svg)](https://github.com/google/ksp)
 
 **Elegant [kotlin-logging](https://github.com/oshai/kotlin-logging) extensions for zero-boilerplate logger generation in Kotlin classes using [KSP](https://github.com/google/ksp)**
 
@@ -42,7 +42,7 @@ Add to your `build.gradle.kts`:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-2.0.2"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.3"
 }
 
 repositories {
@@ -50,8 +50,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.3")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.3")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.4")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.4")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
     implementation("ch.qos.logback:logback-classic:1.5.18") // Logger implementation required
 }
@@ -96,6 +96,7 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 | Library | Kotlin | KSP |
 |---------|--------|-----|
+| `2.2.20-0.0.4` | `2.2.20` | `2.2.20-2.0.3` |
 | `2.2.20-0.0.3` | `2.2.20` | `2.2.20-2.0.2` |
 | `2.2.10-0.0.3` | `2.2.10` | `2.2.0-2.0.2` |
 | `2.2.0-0.0.3` | `2.2.0` | `2.2.0-2.0.2` |
@@ -112,12 +113,12 @@ That's it! The logger is automatically available with the class name (`OrderProc
 // For Kotlin 2.2.20 projects:
 plugins {
     kotlin("jvm") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-2.0.2"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.3"
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.3")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.3")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.4")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.4")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.13") // 5.0.0+
 }
 ```
@@ -132,7 +133,7 @@ dependencies {
 ```kotlin
 plugins {
     kotlin("jvm") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-2.0.2"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.3"
 }
 
 repositories {
@@ -140,8 +141,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.3")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.3")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.4")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.4")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
     implementation("ch.qos.logback:logback-classic:1.5.18")
 }
