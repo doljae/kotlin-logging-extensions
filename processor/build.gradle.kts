@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.2.20-2.0.3")
+    implementation("com.google.devtools.ksp:symbol-processing-api:2.2.20-2.0.4")
 
     // kotlin-logging dependency for generated code compatibility
     compileOnly("io.github.oshai:kotlin-logging-jvm:7.0.13")
