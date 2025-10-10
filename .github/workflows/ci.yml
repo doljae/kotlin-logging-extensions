@@ -15,12 +15,12 @@ on:
       run_tests:
         description: 'Run tests'
         required: false
-        default: 'true'
+        default: true
         type: boolean
       run_security:
         description: 'Run security scan'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 # Add explicit permissions for security features
@@ -43,6 +43,8 @@ jobs:
         (
           github.actor == 'github-actions[bot]' ||
           github.actor == 'dependabot[bot]' ||
+          github.actor == 'doljae' ||
+          startsWith(github.event.pull_request.head.ref, 'release/') ||
           github.event.pull_request.head.repo.full_name == github.repository
         )
       ) ||
@@ -98,7 +100,22 @@ jobs:
     # Only run security scanning on public repositories or when explicitly enabled
     if: >
       (github.event.repository.private == false || github.event_name == 'schedule') &&
-      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true')
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true') &&
+      (
+        github.event_name == 'pull_request' ||
+        (
+          github.event_name == 'pull_request_target' &&
+          (
+            github.actor == 'github-actions[bot]' ||
+            github.actor == 'dependabot[bot]' ||
+            github.actor == 'doljae' ||
+            startsWith(github.event.pull_request.head.ref, 'release/') ||
+            github.event.pull_request.head.repo.full_name == github.repository
+          )
+        ) ||
+        github.event_name == 'push' ||
+        github.event_name == 'schedule'
+      )
     
     steps:
     - name: Checkout code
@@ -126,7 +143,22 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event.repository.private == true &&
-      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true')
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true') &&
+      (
+        github.event_name == 'pull_request' ||
+        (
+          github.event_name == 'pull_request_target' &&
+          (
+            github.actor == 'github-actions[bot]' ||
+            github.actor == 'dependabot[bot]' ||
+            github.actor == 'doljae' ||
+            startsWith(github.event.pull_request.head.ref, 'release/') ||
+            github.event.pull_request.head.repo.full_name == github.repository
+          )
+        ) ||
+        github.event_name == 'push' ||
+        github.event_name == 'schedule'
+      )
     
     steps:
     - name: Checkout code
