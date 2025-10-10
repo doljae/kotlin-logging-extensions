@@ -35,21 +35,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    # Security check for pull_request_target and manual trigger conditions
+    # Run tests for all PRs and pushes
     if: >
       github.event_name == 'pull_request' ||
-      (
-        github.event_name == 'pull_request_target' &&
-        (
-          github.actor == 'github-actions[bot]' ||
-          github.actor == 'dependabot[bot]' ||
-          github.actor == 'doljae' ||
-          startsWith(github.event.pull_request.head.ref, 'release/') ||
-          github.event.pull_request.head.repo.full_name == github.repository
-        )
-      ) ||
+      github.event_name == 'pull_request_target' ||
       github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.run_tests == 'true')
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.run_tests == true)
     
     steps:
     - name: Checkout code
@@ -100,19 +91,10 @@ jobs:
     # Only run security scanning on public repositories or when explicitly enabled
     if: >
       (github.event.repository.private == false || github.event_name == 'schedule') &&
-      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true') &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == true) &&
       (
         github.event_name == 'pull_request' ||
-        (
-          github.event_name == 'pull_request_target' &&
-          (
-            github.actor == 'github-actions[bot]' ||
-            github.actor == 'dependabot[bot]' ||
-            github.actor == 'doljae' ||
-            startsWith(github.event.pull_request.head.ref, 'release/') ||
-            github.event.pull_request.head.repo.full_name == github.repository
-          )
-        ) ||
+        github.event_name == 'pull_request_target' ||
         github.event_name == 'push' ||
         github.event_name == 'schedule'
       )
@@ -143,19 +125,10 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event.repository.private == true &&
-      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == 'true') &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.run_security == true) &&
       (
         github.event_name == 'pull_request' ||
-        (
-          github.event_name == 'pull_request_target' &&
-          (
-            github.actor == 'github-actions[bot]' ||
-            github.actor == 'dependabot[bot]' ||
-            github.actor == 'doljae' ||
-            startsWith(github.event.pull_request.head.ref, 'release/') ||
-            github.event.pull_request.head.repo.full_name == github.repository
-          )
-        ) ||
+        github.event_name == 'pull_request_target' ||
         github.event_name == 'push' ||
         github.event_name == 'schedule'
       )
