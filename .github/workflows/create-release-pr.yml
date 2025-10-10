@@ -185,7 +185,7 @@ jobs:
         echo "kotlin_version=${KOTLIN_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted Kotlin version: ${KOTLIN_VERSION}"
         
-        # Extract KSP version from processor/build.gradle.kts
+        # Extract KSP version from processor/build.gradle.kts - fix the pattern
         KSP_VERSION=$(grep 'com.google.devtools.ksp:symbol-processing-api:' processor/build.gradle.kts | sed 's/.*symbol-processing-api:\([^"]*\)".*/\1/')
         echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
         echo "📍 Extracted KSP version: ${KSP_VERSION}"
@@ -199,6 +199,11 @@ jobs:
         KOTLIN_LOGGING_DEPENDENCY=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*"\([^"]*\)".*/\1/')
         echo "kotlin_logging_dependency=${KOTLIN_LOGGING_DEPENDENCY}" >> $GITHUB_OUTPUT
         echo "📍 Extracted kotlin-logging dependency: ${KOTLIN_LOGGING_DEPENDENCY}"
+        
+        # Extract logback version from workload/build.gradle.kts
+        LOGBACK_VERSION=$(grep 'ch.qos.logback:logback-classic:' workload/build.gradle.kts | sed 's/.*logback-classic:\([^"]*\)".*/\1/')
+        echo "logback_version=${LOGBACK_VERSION}" >> $GITHUB_OUTPUT
+        echo "📍 Extracted logback version: ${LOGBACK_VERSION}"
 
     - name: Update version references
       run: |
@@ -207,6 +212,7 @@ jobs:
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
         KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
         KOTLIN_LOGGING_DEPENDENCY="${{ steps.build_versions.outputs.kotlin_logging_dependency }}"
+        LOGBACK_VERSION="${{ steps.build_versions.outputs.logback_version }}"
         
         echo "📝 Updating version references:"
         echo "  - Library version: $VERSION (user input)"
@@ -214,63 +220,138 @@ jobs:
         echo "  - KSP version: $KSP_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging-jvm version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging dependency: $KOTLIN_LOGGING_DEPENDENCY (from processor/build.gradle.kts)"
+        echo "  - logback version: $LOGBACK_VERSION (from workload/build.gradle.kts)"
         
-        # 1. Update README.md
-        echo "🔄 Updating README.md..."
-        # Update badges at the top of README
-        # For KSP badge, convert version format: 2.2.20-2.0.4 -> 2.2.20--2.0.4
-        KSP_BADGE_VERSION=$(echo $KSP_VERSION | sed 's/-/--/g')
-        sed -i "s|https://img\.shields\.io/badge/kotlin-[0-9]\+\.[0-9]\+\.[0-9]\+-blue\.svg|https://img.shields.io/badge/kotlin-$KOTLIN_VERSION-blue.svg|g" README.md
-        sed -i "s|https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg|https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg|g" README.md
-        sed -i "s|https://img\.shields\.io/badge/KSP-[0-9]\+\.[0-9]\+\.[0-9]\+--[0-9]\+\.[0-9]\+\.[0-9]\+-purple\.svg|https://img.shields.io/badge/KSP-$KSP_BADGE_VERSION-purple.svg|g" README.md
-        # Update dependency examples in README
-        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" README.md
-        sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" README.md
-        sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" README.md
-        # Update Version Compatibility table - add new version row if not exists
-        if ! grep -q "| \`$VERSION\` |" README.md; then
-          # Add new version row to the table (after the separator line, as first data row)
-          echo "| \`$VERSION\` | \`$KOTLIN_VERSION\` | \`$KSP_VERSION\` |" > new_version_row.tmp
-          sed -i "/|---------|--------|-----|/r new_version_row.tmp" README.md
-          rm new_version_row.tmp
-          echo "✅ Added new version row: $VERSION"
-        else
-          echo "ℹ️  Version $VERSION already exists in compatibility table"
-        fi
-        # Update code example versions in Version Compatibility section
-        sed -i "s/\/\/ For Kotlin [0-9]\+\.[0-9]\+\.[0-9]\+ projects:/\/\/ For Kotlin $KOTLIN_VERSION projects:/g" README.md
-        # Update all version references throughout README
-        sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" README.md
-        sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" README.md
-        sed -i "s/io\.github\.oshai:kotlin-logging-jvm:[0-9]\+\.[0-9]\+\.[0-9]\+/io.github.oshai:kotlin-logging-jvm:$KOTLIN_LOGGING_VERSION/g" README.md
+        # Create Python script for more reliable version updates
+        cat > update_versions.py << 'EOF'
+        import re
+        import sys
         
-        # 2. Update bug_report.yml (code blocks and placeholders)
-        echo "🔄 Updating bug_report.yml..."
-        # Update code block examples
-        sed -i "s/io\.github\.doljae:kotlin-logging-extensions:[0-9]\+\.[0-9]\+\.[0-9]\+\(-[0-9]\+\.[0-9]\+\.[0-9]\+\)\?/io.github.doljae:kotlin-logging-extensions:$VERSION/g" .github/ISSUE_TEMPLATE/bug_report.yml
-        sed -i "s/kotlin(\"jvm\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/kotlin(\"jvm\") version \"$KOTLIN_VERSION\"/g" .github/ISSUE_TEMPLATE/bug_report.yml
-        sed -i "s/id(\"com\.google\.devtools\.ksp\") version \"[0-9]\+\.[0-9]\+\.[0-9]\+-[0-9]\+\.[0-9]\+\.[0-9]\+\"/id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"/g" .github/ISSUE_TEMPLATE/bug_report.yml
-        # Update placeholders based on labels
-        sed -i '/label: Library Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$VERSION"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
-        sed -i '/label: Kotlin Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_VERSION"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
-        sed -i '/label: KSP Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KSP_VERSION"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
-        sed -i '/label: kotlin-logging Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_LOGGING_DEPENDENCY"'"/' .github/ISSUE_TEMPLATE/bug_report.yml
+        def update_file(file_path, replacements):
+            """Update file with multiple replacements"""
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                original_content = content
+                
+                for replacement_data in replacements:
+                    if len(replacement_data) == 3:
+                        pattern, replacement, count = replacement_data
+                        # Replace specific occurrence
+                        matches = list(re.finditer(pattern, content))
+                        if len(matches) >= count:
+                            # Replace the nth occurrence
+                            match = matches[count - 1]
+                            content = content[:match.start()] + replacement + content[match.end():]
+                    else:
+                        pattern, replacement = replacement_data
+                        content = re.sub(pattern, replacement, content)
+                
+                if content != original_content:
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    print(f"✅ Updated {file_path}")
+                    return True
+                else:
+                    print(f"ℹ️  No changes needed in {file_path}")
+                    return False
+            except Exception as e:
+                print(f"❌ Error updating {file_path}: {e}")
+                return False
         
-        # 3. Update version_compatibility.yml (placeholders only)
-        echo "🔄 Updating version_compatibility.yml..."
-        sed -i '/label: kotlin-logging-extensions Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$VERSION"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
-        sed -i '/label: Your Kotlin Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_VERSION"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
-        sed -i '/label: Your KSP Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KSP_VERSION"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
-        sed -i '/label: Your kotlin-logging Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_LOGGING_DEPENDENCY"'"/' .github/ISSUE_TEMPLATE/version_compatibility.yml
+        # Get version variables from environment
+        VERSION = sys.argv[1]
+        KOTLIN_VERSION = sys.argv[2]
+        KSP_VERSION = sys.argv[3]
+        KOTLIN_LOGGING_VERSION = sys.argv[4]
+        KOTLIN_LOGGING_DEPENDENCY = sys.argv[5]
+        LOGBACK_VERSION = sys.argv[6]
         
-        # 4. Update question.yml (placeholder only)
-        echo "🔄 Updating question.yml..."
-        sed -i '/label: Library Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$VERSION"'"/' .github/ISSUE_TEMPLATE/question.yml
-        sed -i '/label: kotlin-logging Version/,/validations:/ s/placeholder: "e\.g\., [^"]*"/placeholder: "e.g., '"$KOTLIN_LOGGING_DEPENDENCY"'"/' .github/ISSUE_TEMPLATE/question.yml
+        # README.md updates
+        print("🔄 Updating README.md...")
+        readme_replacements = [
+            # Badge updates
+            (r'https://img\.shields\.io/badge/kotlin-[0-9]+\.[0-9]+\.[0-9]+-blue\.svg', f'https://img.shields.io/badge/kotlin-{KOTLIN_VERSION}-blue.svg'),
+            (r'https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg', 'https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg'),
+            (r'https://img\.shields\.io/badge/KSP-[0-9]+\.[0-9]+\.[0-9]+--[0-9]+\.[0-9]+\.[0-9]+-purple\.svg', f'https://img.shields.io/badge/KSP-{KSP_VERSION.replace("-", "--")}-purple.svg'),
+            
+            # Dependency examples
+            (r'io\.github\.doljae:kotlin-logging-extensions:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions:{VERSION}'),
+            (r'kotlin\("jvm"\) version "[0-9]+\.[0-9]+\.[0-9]+"', f'kotlin("jvm") version "{KOTLIN_VERSION}"'),
+            (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
+            
+            # Version compatibility section
+            (r'// For Kotlin [0-9]+\.[0-9]+\.[0-9]+ projects:', f'// For Kotlin {KOTLIN_VERSION} projects:'),
+            
+            # kotlin-logging version
+            (r'io\.github\.oshai:kotlin-logging-jvm:[0-9]+\.[0-9]+\.[0-9]+', f'io.github.oshai:kotlin-logging-jvm:{KOTLIN_LOGGING_VERSION}'),
+            
+            # logback version
+            (r'ch\.qos\.logback:logback-classic:[0-9]+\.[0-9]+\.[0-9]+', f'ch.qos.logback:logback-classic:{LOGBACK_VERSION}'),
+        ]
         
-        # 5. Update gradle.properties
-        echo "🔄 Updating gradle.properties..."
-        sed -i "s/project.version=.*/project.version=$VERSION/" gradle.properties
+        update_file('README.md', readme_replacements)
+        
+        # Add new version to compatibility table if not exists
+        try:
+            with open('README.md', 'r', encoding='utf-8') as f:
+                readme_content = f.read()
+            
+            if f"| `{VERSION}` |" not in readme_content:
+                # Find separator line and add new row after it
+                pattern = r'(\|---------+\|--------+\|-----+\|)'
+                replacement = f'\\1\n| `{VERSION}` | `{KOTLIN_VERSION}` | `{KSP_VERSION}` |'
+                updated_content = re.sub(pattern, replacement, readme_content)
+                
+                if updated_content != readme_content:
+                    with open('README.md', 'w', encoding='utf-8') as f:
+                        f.write(updated_content)
+                    print(f"✅ Added new version row: {VERSION}")
+                else:
+                    print(f"ℹ️  Version {VERSION} already exists in compatibility table")
+        except Exception as e:
+            print(f"❌ Error updating compatibility table: {e}")
+        
+        # Update issue templates - use simpler approach for placeholders
+        templates = [
+            ('bug_report.yml', [
+                (r'io\.github\.doljae:kotlin-logging-extensions:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions:{VERSION}'),
+                (r'kotlin\("jvm"\) version "[0-9]+\.[0-9]+\.[0-9]+"', f'kotlin("jvm") version "{KOTLIN_VERSION}"'),
+                (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
+                (r'ch\.qos\.logback:logback-classic:[0-9]+\.[0-9]+\.[0-9]+', f'ch.qos.logback:logback-classic:{LOGBACK_VERSION}'),
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {VERSION}"', 1),  # First occurrence
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_VERSION}"', 2),  # Second occurrence
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KSP_VERSION}"', 3),  # Third occurrence
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_LOGGING_DEPENDENCY}"', 4),  # Fourth occurrence
+            ]),
+            ('version_compatibility.yml', [
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {VERSION}"', 1),
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_VERSION}"', 2),
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KSP_VERSION}"', 3),
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_LOGGING_DEPENDENCY}"', 4),
+            ]),
+            ('question.yml', [
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {VERSION}"', 1),
+                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_LOGGING_DEPENDENCY}"', 2),
+            ]),
+        ]
+        
+        for template_file, replacements in templates:
+            print(f"🔄 Updating {template_file}...")
+            update_file(f'.github/ISSUE_TEMPLATE/{template_file}', replacements)
+        
+        # Update gradle.properties
+        print("🔄 Updating gradle.properties...")
+        update_file('gradle.properties', [
+            (r'project\.version=.*', f'project.version={VERSION}')
+        ])
+        
+        print("✅ Version references updated successfully")
+        EOF
+        
+        # Run the Python script
+        python3 update_versions.py "$VERSION" "$KOTLIN_VERSION" "$KSP_VERSION" "$KOTLIN_LOGGING_VERSION" "$KOTLIN_LOGGING_DEPENDENCY" "$LOGBACK_VERSION"
         
         # Log what was updated
         echo "📋 Updated files:"
@@ -286,7 +367,7 @@ jobs:
         echo "  - KSP Version: $KSP_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
         echo "  - kotlin-logging Dependency: $KOTLIN_LOGGING_DEPENDENCY (from processor/build.gradle.kts)"
-        echo "✅ Version references updated successfully"
+        echo "  - logback Version: $LOGBACK_VERSION (from workload/build.gradle.kts)"
 
     - name: Commit version updates
       run: |
@@ -295,6 +376,7 @@ jobs:
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
         KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
         KOTLIN_LOGGING_DEPENDENCY="${{ steps.build_versions.outputs.kotlin_logging_dependency }}"
+        LOGBACK_VERSION="${{ steps.build_versions.outputs.logback_version }}"
         
         # Configure git user
         git config user.name "Seokjae Lee"
@@ -318,7 +400,8 @@ jobs:
             -m "  * Kotlin Version → $KOTLIN_VERSION" \
             -m "  * KSP Version → $KSP_VERSION" \
             -m "  * kotlin-logging-jvm Version → $KOTLIN_LOGGING_VERSION" \
-            -m "  * kotlin-logging Dependency → $KOTLIN_LOGGING_DEPENDENCY"
+            -m "  * kotlin-logging Dependency → $KOTLIN_LOGGING_DEPENDENCY" \
+            -m "  * logback Version → $LOGBACK_VERSION"
           echo "✅ Empty commit created for release branch"
         else
           # Commit changes
@@ -330,6 +413,7 @@ jobs:
             -m "  * KSP Version → $KSP_VERSION" \
             -m "  * kotlin-logging-jvm Version → $KOTLIN_LOGGING_VERSION" \
             -m "  * kotlin-logging Dependency → $KOTLIN_LOGGING_DEPENDENCY" \
+            -m "  * logback Version → $LOGBACK_VERSION" \
             -m "- Update project version in gradle.properties"
           echo "✅ Version updates committed"
           
@@ -515,6 +599,7 @@ jobs:
         KSP_VERSION="${{ steps.build_versions.outputs.ksp_version }}"
         KOTLIN_LOGGING_VERSION="${{ steps.build_versions.outputs.kotlin_logging_version }}"
         KOTLIN_LOGGING_DEPENDENCY="${{ steps.build_versions.outputs.kotlin_logging_dependency }}"
+        LOGBACK_VERSION="${{ steps.build_versions.outputs.logback_version }}"
         TAG_NAME="${{ needs.validate.outputs.tag_name }}"
         BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
         
@@ -525,6 +610,7 @@ jobs:
         echo "🔧 KSP Version: $KSP_VERSION (processor/build.gradle.kts)"
         echo "📚 kotlin-logging-jvm Version: $KOTLIN_LOGGING_VERSION (processor/build.gradle.kts)"
         echo "🔗 kotlin-logging Dependency: $KOTLIN_LOGGING_DEPENDENCY (processor/build.gradle.kts)"
+        echo "📋 logback Version: $LOGBACK_VERSION (workload/build.gradle.kts)"
         echo "🏷️ Tag: $TAG_NAME"
         echo "🌿 Branch: $BRANCH_NAME"
         echo ""
