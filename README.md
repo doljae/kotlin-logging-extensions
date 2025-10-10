@@ -42,7 +42,7 @@ Add to your `build.gradle.kts`:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-2.0.3"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.4"
 }
 
 repositories {
@@ -96,7 +96,7 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 | Library | Kotlin | KSP |
 |---------|--------|-----|
-| `2.2.20-0.0.4` | `2.2.20` | `2.2.20-2.0.3` |
+| `2.2.20-0.0.4` | `2.2.20` | `2.2.20-2.0.4` |
 | `2.2.20-0.0.3` | `2.2.20` | `2.2.20-2.0.2` |
 | `2.2.10-0.0.3` | `2.2.10` | `2.2.0-2.0.2` |
 | `2.2.0-0.0.3` | `2.2.0` | `2.2.0-2.0.2` |
@@ -113,7 +113,7 @@ That's it! The logger is automatically available with the class name (`OrderProc
 // For Kotlin 2.2.20 projects:
 plugins {
     kotlin("jvm") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-2.0.3"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.4"
 }
 
 dependencies {
@@ -133,7 +133,7 @@ dependencies {
 ```kotlin
 plugins {
     kotlin("jvm") version "2.2.20"
-    id("com.google.devtools.ksp") version "2.2.20-2.0.3"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.4"
 }
 
 repositories {
