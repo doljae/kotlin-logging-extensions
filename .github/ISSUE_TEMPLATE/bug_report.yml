@@ -28,7 +28,7 @@ body:
     attributes:
       label: Library Version
       description: Which version of kotlin-logging-extensions are you using?
-      placeholder: "e.g., 2.2.20-0.0.5"
+      placeholder: "e.g., 2.2.21-0.0.5"
     validations:
       required: true
 
@@ -37,7 +37,7 @@ body:
     attributes:
       label: Kotlin Version
       description: Which Kotlin version are you using?
-      placeholder: "e.g., 2.2.20"
+      placeholder: "e.g., 2.2.21"
     validations:
       required: true
 
@@ -46,7 +46,7 @@ body:
     attributes:
       label: KSP Version
       description: Which KSP version are you using?
-      placeholder: "e.g., 2.2.20-2.0.4"
+      placeholder: "e.g., 2.2.21-2.0.4"
     validations:
       required: true
 
@@ -107,13 +107,13 @@ body:
       render: kotlin
       placeholder: |
         plugins {
-            kotlin("jvm") version "2.2.20"
-            id("com.google.devtools.ksp") version "2.2.20-2.0.4"
+            kotlin("jvm") version "2.2.21"
+            id("com.google.devtools.ksp") version "2.2.21-2.0.4"
         }
         
         dependencies {
-            ksp("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.5")
-            implementation("io.github.doljae:kotlin-logging-extensions:2.2.20-0.0.5")
+            ksp("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.5")
+            implementation("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.5")
             implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
         }
     validations:
