@@ -2,6 +2,8 @@
 
 package examples.enterprise.service.impl
 
+import examples.util.LogUtil
+
 /**
  * Example demonstrating that kotlin-logging-extensions works seamlessly
  * even with deeply nested package structures.
@@ -36,11 +38,11 @@ class PaymentServiceImpl {
         log.debug { "Validating payment parameters" }
         
         if (amount <= 0) {
-            throw PaymentValidationException("Amount must be positive")
+            LogUtil.error(PaymentValidationException("Amount must be positive"))
         }
         
         if (paymentMethod.isBlank()) {
-            throw PaymentValidationException("Payment method is required")
+            LogUtil.error(PaymentValidationException("Payment method is required"))
         }
         
         log.debug { "Payment validation completed" }

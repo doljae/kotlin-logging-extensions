@@ -27,27 +27,40 @@ class LoggerProcessor(
     }
 
     private fun generateLogger(classDeclaration: KSClassDeclaration) {
+        val packageName = classDeclaration.packageName.asString()
+        val qualifiedName = classDeclaration.qualifiedName!!.asString()
         val className = classDeclaration.simpleName.asString()
+        val relativeName = qualifiedName.removePrefix("$packageName.")
+
+        val safePackage = wrapReservedWords(
+            target = packageName,
+            delimiter = '.',
+            reservedWords = hardKeywords,
+            quoteChar = '`',
+        )
+
+        val safeReceiver = wrapReservedWords(
+            target = relativeName,
+            delimiter = '.',
+            reservedWords = hardKeywords,
+            quoteChar = '`',
+        )
+
         val loggerCode =
             """
-            package ${classDeclaration.packageName.asString()}
+            package $safePackage
             
             import io.github.oshai.kotlinlogging.KLogger
             import io.github.oshai.kotlinlogging.KotlinLogging
             
-            val $className.log: KLogger
-                get() = KotlinLogging.logger("${classDeclaration.qualifiedName!!.asString()}")
+            val $safeReceiver.log: KLogger
+                get() = KotlinLogging.logger("$qualifiedName")
             """.trimIndent()
 
         codeGenerator
             .createNewFile(
                 Dependencies(false),
-                wrapReservedWords(
-                    target = classDeclaration.packageName.asString(),
-                    delimiter = '.',
-                    reservedWords = hardKeywords,
-                    quoteChar = '`',
-                ),
+                safePackage,
                 "${className}KotlinLoggingExtensions",
             ).bufferedWriter()
             .use { writer ->
