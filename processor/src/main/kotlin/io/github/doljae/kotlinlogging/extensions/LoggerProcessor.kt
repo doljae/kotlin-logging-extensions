@@ -57,9 +57,13 @@ class LoggerProcessor(
                 get() = KotlinLogging.logger("$qualifiedName")
             """.trimIndent()
 
+        val deps = classDeclaration.containingFile
+            ?.let { Dependencies(false, it) }
+            ?: Dependencies(false)
+
         codeGenerator
             .createNewFile(
-                Dependencies(false),
+                deps,
                 safePackage,
                 "${className}KotlinLoggingExtensions",
             ).bufferedWriter()
