@@ -1,5 +1,6 @@
 package io.github.doljae.kotlinlogging.extensions
 
+import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -18,6 +19,7 @@ class LoggerProcessor(
             resolver
                 .getNewFiles()
                 .flatMap { file -> file.declarations.filterIsInstance<KSClassDeclaration>() }
+                .filter(KSClassDeclaration::isPublic)
 
         classes.forEach { classDeclaration ->
             generateLogger(classDeclaration)
@@ -27,27 +29,44 @@ class LoggerProcessor(
     }
 
     private fun generateLogger(classDeclaration: KSClassDeclaration) {
+        val packageName = classDeclaration.packageName.asString()
+        val qualifiedName = classDeclaration.qualifiedName!!.asString()
         val className = classDeclaration.simpleName.asString()
+        val relativeName = qualifiedName.removePrefix("$packageName.")
+
+        val safePackage = wrapReservedWords(
+            target = packageName,
+            delimiter = '.',
+            reservedWords = hardKeywords,
+            quoteChar = '`',
+        )
+
+        val safeReceiver = wrapReservedWords(
+            target = relativeName,
+            delimiter = '.',
+            reservedWords = hardKeywords,
+            quoteChar = '`',
+        )
+
         val loggerCode =
             """
-            package ${classDeclaration.packageName.asString()}
+            package $safePackage
             
             import io.github.oshai.kotlinlogging.KLogger
             import io.github.oshai.kotlinlogging.KotlinLogging
             
-            val $className.log: KLogger
-                get() = KotlinLogging.logger("${classDeclaration.qualifiedName!!.asString()}")
+            val $safeReceiver.log: KLogger
+                get() = KotlinLogging.logger("$qualifiedName")
             """.trimIndent()
+
+        val deps = classDeclaration.containingFile
+            ?.let { Dependencies(false, it) }
+            ?: Dependencies(false)
 
         codeGenerator
             .createNewFile(
-                Dependencies(false),
-                wrapReservedWords(
-                    target = classDeclaration.packageName.asString(),
-                    delimiter = '.',
-                    reservedWords = hardKeywords,
-                    quoteChar = '`',
-                ),
+                deps,
+                safePackage,
                 "${className}KotlinLoggingExtensions",
             ).bufferedWriter()
             .use { writer ->
