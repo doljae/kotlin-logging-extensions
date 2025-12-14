@@ -1,5 +1,6 @@
 package io.github.doljae.kotlinlogging.extensions
 
+import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -18,6 +19,7 @@ class LoggerProcessor(
             resolver
                 .getNewFiles()
                 .flatMap { file -> file.declarations.filterIsInstance<KSClassDeclaration>() }
+                .filter(KSClassDeclaration::isPublic)
 
         classes.forEach { classDeclaration ->
             generateLogger(classDeclaration)
