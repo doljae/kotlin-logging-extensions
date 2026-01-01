@@ -34,7 +34,7 @@ dependencies {
     testImplementation(kotlin("test"))
 
     // Kotlin logging dependencies
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
     implementation("ch.qos.logback:logback-classic:1.5.21")
 
     // kotlin-logging-extensions (using project dependency for development)
