@@ -13,9 +13,8 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.6.0")
+    testImplementation("dev.zacsweers.kctfork:ksp:0.7.0")
     testImplementation("io.kotest:kotest-assertions-core:5.9.1")
-    testImplementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("com.google.devtools.ksp:symbol-processing-api:2.2.21-2.0.4")
 

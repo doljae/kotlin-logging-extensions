@@ -2,8 +2,8 @@ package io.github.doljae.kotlinlogging.extensions
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspSourcesDir
-import com.tschuchort.compiletesting.symbolProcessorProviders
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
@@ -30,7 +30,9 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                symbolProcessorProviders = listOf(LoggerProcessorProvider())
+                configureKsp(useKsp2 = true) {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
                 inheritClassPath = true
                 messageOutputStream = System.out
             }
@@ -71,7 +73,9 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                symbolProcessorProviders = listOf(LoggerProcessorProvider())
+                configureKsp(useKsp2 = true) {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
                 inheritClassPath = true
             }
 
@@ -105,7 +109,9 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                symbolProcessorProviders = listOf(LoggerProcessorProvider())
+                configureKsp(useKsp2 = true) {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
                 inheritClassPath = true
             }
 
@@ -143,7 +149,9 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                symbolProcessorProviders = listOf(LoggerProcessorProvider())
+                configureKsp(useKsp2 = true) {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
                 inheritClassPath = true
             }
 
