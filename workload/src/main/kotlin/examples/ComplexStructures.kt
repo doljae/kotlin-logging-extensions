@@ -45,6 +45,12 @@ class OuterClass {
         log.info { "Logging from OuterClass" }
     }
 
+    class SimpleInnerClass {
+        fun innerMethod() {
+            log.info { "Logging from InnerClass" }
+        }
+    }
+
     inner class InnerClass {
         fun innerMethod() {
             log.info { "Logging from InnerClass" }

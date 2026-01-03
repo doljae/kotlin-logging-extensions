@@ -9,29 +9,13 @@ version = project.property("project.version") as String
 
 repositories {
     mavenCentral()
-    
-    // GitHub Packages (optional) - requires authentication
-    // Configure using environment variables or gradle.properties:
-    // - GITHUB_USERNAME / GITHUB_TOKEN (environment variables)
-    // - githubPackagesUsername / githubPackagesPassword (gradle.properties)
-    val githubUsername = System.getenv("GITHUB_USERNAME") 
-        ?: project.findProperty("githubPackagesUsername") as String?
-    val githubToken = System.getenv("GITHUB_TOKEN") 
-        ?: project.findProperty("githubPackagesPassword") as String?
-        
-    if (githubUsername != null && githubToken != null) {
-        maven {
-            url = uri("https://maven.pkg.github.com/doljae/kotlin-logging-extensions")
-            credentials {
-                username = githubUsername
-                password = githubToken
-            }
-        }
-    }
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("io.kotest:kotest-assertions-core:5.9.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")

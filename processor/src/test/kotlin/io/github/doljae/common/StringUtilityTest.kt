@@ -1,7 +1,7 @@
 package io.github.doljae.common
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
 
 class StringUtilityTest {
     private val reservedWords =
@@ -51,7 +51,7 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -67,7 +67,7 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -83,7 +83,7 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -99,7 +99,7 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -115,7 +115,7 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -131,7 +131,7 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -147,7 +147,7 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -163,7 +163,7 @@ class StringUtilityTest {
                 quoteChar = '\'',
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 
     @Test
@@ -180,6 +180,6 @@ class StringUtilityTest {
                 quoteChar = quoteChar,
             )
 
-        assertEquals(expected, actual)
+        actual shouldBe expected
     }
 }
