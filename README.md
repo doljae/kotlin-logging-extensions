@@ -49,7 +49,6 @@ repositories {
 
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
     implementation("ch.qos.logback:logback-classic:1.5.23") // Logger implementation required
 }
@@ -120,7 +119,6 @@ plugins {
 
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14") // 5.0.0+
 }
 ```
@@ -144,8 +142,9 @@ repositories {
 
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
-
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
+    implementation("ch.qos.logback:logback-classic:1.5.23")
+}
 
 ### GitHub Packages (Alternative)
 For development or specific use cases, you can also use GitHub Packages:
