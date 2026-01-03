@@ -3,9 +3,9 @@
 [![CI](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.doljae/kotlin-logging-extensions.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![kotlin-logging](https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg)](https://github.com/oshai/kotlin-logging)
-[![KSP](https://img.shields.io/badge/KSP-2.2.21--2.0.4-purple.svg)](https://github.com/google/ksp)
+[![KSP](https://img.shields.io/badge/KSP-2.3.4-purple.svg)](https://github.com/google/ksp)
 
 **Elegant [kotlin-logging](https://github.com/oshai/kotlin-logging) extensions for zero-boilerplate logger generation in Kotlin classes using [KSP](https://github.com/google/ksp)**
 
@@ -38,11 +38,9 @@ class UserService {
 
 **Step 1: Add Dependencies**
 
-Add to your `build.gradle.kts`:
-```kotlin
 plugins {
-    kotlin("jvm") version "2.2.21"
-    id("com.google.devtools.ksp") version "2.2.21-2.0.4"
+    kotlin("jvm") version "2.3.0"
+    id("com.google.devtools.ksp") version "2.3.4"
 }
 
 repositories {
@@ -50,8 +48,8 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
     implementation("ch.qos.logback:logback-classic:1.5.23") // Logger implementation required
 }
@@ -92,10 +90,11 @@ That's it! The logger is automatically available with the class name (`OrderProc
 
 ## 📋 Version Compatibility
 
-**Choose the library version that matches your project's Kotlin version.** Our versioning follows the `KOTLIN_VERSION-LIBRARY_VERSION` pattern (same as KSP).
+**Choose the library version that matches your project's KSP version.** Starting from version 2.3.0, we follow KSP's independent versioning policy.
 
 | Library | Kotlin | KSP |
 |---------|--------|-----|
+| `2.3.0` | `2.3.0+` | `2.3.4+` |
 | `2.2.21-0.0.6` | `2.2.21` | `2.2.21-2.0.4` |
 | `2.2.21-0.0.5` | `2.2.21` | `2.2.21-2.0.4` |
 | `2.2.20-0.0.5` | `2.2.20` | `2.2.20-2.0.4` |
@@ -113,15 +112,15 @@ That's it! The logger is automatically available with the class name (`OrderProc
 3. **Use the exact KSP version** shown in the table
 
 ```kotlin
-// For Kotlin 2.2.21 projects:
+// For Kotlin 2.3.0+ projects:
 plugins {
-    kotlin("jvm") version "2.2.21"
-    id("com.google.devtools.ksp") version "2.2.21-2.0.4"
+    kotlin("jvm") version "2.3.0"
+    id("com.google.devtools.ksp") version "2.3.4"
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14") // 5.0.0+
 }
 ```
@@ -135,8 +134,8 @@ dependencies {
 ### Maven Central (Recommended)
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.2.21"
-    id("com.google.devtools.ksp") version "2.2.21-2.0.4"
+    kotlin("jvm") version "2.3.0"
+    id("com.google.devtools.ksp") version "2.3.4"
 }
 
 repositories {
@@ -144,12 +143,9 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
-    implementation("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
-    implementation("ch.qos.logback:logback-classic:1.5.23")
-}
-```
+    ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
+    implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
+
 
 ### GitHub Packages (Alternative)
 For development or specific use cases, you can also use GitHub Packages:
