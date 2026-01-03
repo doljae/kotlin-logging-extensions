@@ -55,7 +55,7 @@ body:
     attributes:
       label: kotlin-logging Version
       description: Which kotlin-logging dependency are you using?
-      placeholder: "e.g., io.github.oshai:kotlin-logging-jvm:7.0.13"
+      placeholder: "e.g., io.github.oshai:kotlin-logging-jvm:7.0.14"
     validations:
       required: true
 
