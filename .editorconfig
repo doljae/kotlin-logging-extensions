@@ -6,16 +6,44 @@ end_of_line = lf
 indent_style = space
 indent_size = 4
 insert_final_newline = true
+trim_trailing_whitespace = true
 max_line_length = 120
 
 [*.{kt,kts}]
+# Official code style for KtLint 1.0+
 ktlint_code_style = ktlint_official
-ktlint_standard_package-name = disabled
-ktlint_standard_no-empty-file = disabled
-ktlint_standard_import-ordering = enabled
+
+# Indentation
+indent_size = 4
+ij_continuation_indent_size = 4
+
+# Imports
+# Define import layout: aliases, all other imports, java.*, javax.*, kotlin.*, then static imports
+ij_kotlin_imports_layout = *,java.**,javax.**,kotlin.**,^
+# Disallow wildcard imports generally (standard practice)
+ktlint_standard_no-wildcard-imports = enabled
+
+# Trailing commas - highly recommended for cleaner diffs
 ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
-ij_kotlin_packages_to_use_import_on_demand = unset
 
-[*.yml]
+# Naming and Structure
+ktlint_standard_filename = enabled
+ktlint_standard_package-name = enabled
+ktlint_standard_class-naming = enabled
+ktlint_standard_function-naming = enabled
+ktlint_standard_property-naming = enabled
+
+# Formatting
+ktlint_standard_chain-wrapping = enabled
+ktlint_standard_final-newline = enabled
+ktlint_standard_modifier-ordering = enabled
+ktlint_standard_string-template = enabled
+ktlint_standard_no-empty-file = enabled
+
+# Spacing
+ktlint_standard_spacing-around-angle-brackets = enabled
+ktlint_standard_spacing-between-declarations-with-comments = enabled
+
+[*.{yaml,yml}]
 indent_size = 2
