@@ -26,7 +26,7 @@ The project is a multi-module Gradle project:
 - **Testing**: 
   - Framework: JUnit 5
   - Assertions: Kotest Assertions
-  - Compilation Testing: `kotlin-compile-testing-ksp`
+  - Compilation Testing: `kotlin-compile-testing-ksp` (ZacSweers fork)
 - **Logging Library**: `kotlin-logging-jvm` (v7.0.14)
 
 ## Key Directories
