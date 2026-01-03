@@ -1,0 +1,23 @@
+# Gradle build artifacts
+build/
+.gradle/
+
+# IDE settings
+.idea/
+.vscode/
+*.iml
+
+# Kotlin/Java compiled files
+*.class
+*.jar
+*.war
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Sensitive info (just in case)
+secrets/
+*.key
+*.p12
+.env

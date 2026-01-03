@@ -1,5 +1,11 @@
 # Gemini CLI Project Context
 
+> **Note**: This file serves as the primary context for the Gemini CLI agent. It defines the project structure, architecture, and developer guidelines.
+
+## Project Management
+- **Tracking Tasks**: Use the `write_todos` tool to maintain a list of active tasks, bugs, and feature requests.
+- **Status Updates**: Before starting a major task, check existing TODOs to avoid duplication. After completing a task, mark it as done.
+
 ## Project Overview
 This project, `kotlin-logging-extensions`, is a Kotlin Symbol Processing (KSP) plugin designed to automatically generate `KLogger` instances for Kotlin classes. It simplifies logging by removing the boilerplate of declaring loggers manually.
 
