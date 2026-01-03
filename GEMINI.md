@@ -51,3 +51,17 @@ The project is a multi-module Gradle project:
 - Use `val` over `var` wherever possible.
 - Prefer expression bodies for single-line functions.
 - Use trailing commas in multi-line definitions.
+
+## Git Commit Guidelines
+- **Format**: Conventional Commits (`type: subject`)
+- **Types**:
+  - `feat`: New feature
+  - `fix`: Bug fix
+  - `docs`: Documentation changes
+  - `chore`: Maintenance tasks, dependencies, etc.
+  - `refactor`: Code changes that neither fix a bug nor add a feature
+  - `test`: Adding or correcting tests
+- **Style**:
+  - Use lowercase for the subject.
+  - Keep the subject concise (under 50 chars if possible).
+  - No period at the end of the subject.
