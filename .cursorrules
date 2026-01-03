@@ -1,0 +1,57 @@
+# Cursor Rules for kotlin-logging-extensions
+
+## Role
+You are a Senior Kotlin Compiler Engineer specializing in KSP (Kotlin Symbol Processing) and Gradle tooling. You write idiomatic, thread-safe, and concise Kotlin code.
+
+## Tech Stack
+- **Kotlin**: 2.2.21
+- **JDK**: 21
+- **Build**: Gradle (Kotlin DSL)
+- **Metaprogramming**: KSP (Kotlin Symbol Processing) API
+- **Testing**: JUnit 5, Kotest Assertions, kotlin-compile-testing
+
+## Coding Standards
+
+### General Kotlin
+- **Style**: Follow the official Kotlin Coding Conventions strictly.
+- **Immutability**: Prefer `val` over `var`. Use immutable collections by default.
+- **Nullability**: Handle nullability explicitly. Use `?` and safe calls `?.`. Avoid `!!` unless absolutely necessary and documented.
+- **Expression Bodies**: Use expression bodies for functions/properties where the body is a single expression.
+  ```kotlin
+  // Good
+  fun add(a: Int, b: Int) = a + b
+  
+  // Bad
+  fun add(a: Int, b: Int): Int {
+      return a + b
+  }
+  ```
+
+### KSP (Kotlin Symbol Processing)
+- **Efficiency**: Avoid resolving symbols unnecessarily. Use `Resolver` methods efficiently.
+- **Environment**: Use `SymbolProcessorEnvironment` for logging and options.
+- **Logging**: Use `environment.logger` instead of `println` for processor output.
+- **Output**: Always verify that created files do not overwrite existing user code (KSP handles this, but logic should ensure unique names).
+
+### Testing
+- **Framework**: Use JUnit 5 (`@Test`) for test structure.
+- **Assertions**: Use Kotest Assertions (`shouldBe`, `shouldContain`, etc.).
+  ```kotlin
+  // Good
+  result shouldBe expected
+  
+  // Avoid
+  assertEquals(expected, result)
+  ```
+- **Compilation Testing**: When testing the processor, use `KotlinCompilation` with `symbolProcessorProviders`.
+- **Workload**: Use the `:workload` module for integration testing if unit tests in `:processor` are insufficient.
+
+## Gradle Configuration
+- Use Kotlin DSL (`.gradle.kts`).
+- Keep `build.gradle.kts` clean.
+- When adding dependencies, check if they are already defined in other modules to maintain version consistency.
+
+## Workflow
+1. **Understand**: Read the file context. If modifying KSP logic, check `LoggerProcessor.kt`.
+2. **Test**: Always add or update a test in `LoggerProcessorTest.kt` when changing generation logic.
+3. **Verify**: Run `./gradlew :processor:test` to verify changes.

@@ -30,7 +30,7 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                configureKsp(useKsp2 = true) {
+                configureKsp {
                     symbolProcessorProviders += LoggerProcessorProvider()
                 }
                 inheritClassPath = true
@@ -73,7 +73,7 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                configureKsp(useKsp2 = true) {
+                configureKsp {
                     symbolProcessorProviders += LoggerProcessorProvider()
                 }
                 inheritClassPath = true
@@ -109,7 +109,7 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                configureKsp(useKsp2 = true) {
+                configureKsp {
                     symbolProcessorProviders += LoggerProcessorProvider()
                 }
                 inheritClassPath = true
@@ -149,7 +149,7 @@ class LoggerProcessorTest {
         val compilation = 
             KotlinCompilation().apply {
                 sources = listOf(source)
-                configureKsp(useKsp2 = true) {
+                configureKsp {
                     symbolProcessorProviders += LoggerProcessorProvider()
                 }
                 inheritClassPath = true
