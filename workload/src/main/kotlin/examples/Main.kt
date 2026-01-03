@@ -39,6 +39,9 @@ fun main() {
     demonstrateDeepPackageStructure()
     println()
     
+    demonstrateComplexStructures()
+    println()
+    
     println("=".repeat(60))
     println("✨ All examples completed! Check the logs above.")
     println("✨ Notice how each class automatically has 'log' available!")
@@ -146,4 +149,39 @@ private fun demonstrateDeepPackageStructure() {
     } catch (e: Exception) {
         println("Payment service error: ${e.message}")
     }
-} 
+}
+
+private fun demonstrateComplexStructures() {
+    println("🏗️ COMPLEX STRUCTURES EXAMPLE")
+    println("-".repeat(30))
+
+    // 1. Singleton
+    SingletonService.doSomething()
+
+    // 2. Companion Object
+    val classWithCompanion = ClassWithCompanion()
+    classWithCompanion.instanceMethod()
+    ClassWithCompanion.staticMethod()
+
+    // 3. Inner Class
+    val outer = OuterClass()
+    outer.outerMethod()
+    val inner = outer.InnerClass()
+    inner.innerMethod()
+
+    // 4. Sealed Class
+    val addOp = AddOperation(5)
+    addOp.logBase() // Base class method
+    addOp.perform()
+    
+    ResetOperation.logBase()
+    ResetOperation.perform()
+
+    // 5. Enum Class
+    ProcessingState.RUNNING.logState()
+
+    // 6. Abstract Class
+    val worker = ConcreteWorker()
+    worker.commonWork()
+    worker.specificWork()
+}

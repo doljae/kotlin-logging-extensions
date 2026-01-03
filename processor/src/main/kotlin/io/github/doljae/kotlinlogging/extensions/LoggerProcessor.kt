@@ -1,12 +1,16 @@
 package io.github.doljae.kotlinlogging.extensions
 
+import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.Visibility
 import io.github.doljae.common.StringUtility.wrapReservedWords
 
 class LoggerProcessor(
@@ -17,7 +21,11 @@ class LoggerProcessor(
         val classes =
             resolver
                 .getNewFiles()
-                .flatMap { file -> file.declarations.filterIsInstance<KSClassDeclaration>() }
+                .flatMap { file ->
+                    file.declarations.flatMap { declaration ->
+                        findAllClasses(declaration)
+                    }
+                }
 
         classes.forEach { classDeclaration ->
             generateLogger(classDeclaration)
@@ -26,33 +34,78 @@ class LoggerProcessor(
         return emptyList()
     }
 
+    private fun findAllClasses(declaration: KSDeclaration): Sequence<KSClassDeclaration> {
+        return sequence {
+            if (declaration is KSClassDeclaration) {
+                yield(declaration)
+                declaration.declarations.forEach {
+                    yieldAll(findAllClasses(it))
+                }
+            }
+        }
+    }
+
     private fun generateLogger(classDeclaration: KSClassDeclaration) {
-        val className = classDeclaration.simpleName.asString()
+        if (classDeclaration.qualifiedName == null) return
+        if (classDeclaration.classKind == ClassKind.ENUM_ENTRY) return
+
+        val visibility = getVisibilityModifier(classDeclaration) ?: return
+        
+        val rawPackageName = classDeclaration.packageName.asString()
+        val qualifiedName = classDeclaration.qualifiedName!!.asString()
+        val className = if (rawPackageName.isEmpty()) {
+            qualifiedName
+        } else {
+            qualifiedName.substring(rawPackageName.length + 1)
+        }
+        
+        val fileName = "${className.replace('.', '_')}KotlinLoggingExtensions"
+
+        val safePackageName = wrapReservedWords(
+            target = rawPackageName,
+            delimiter = '.',
+            reservedWords = hardKeywords,
+            quoteChar = '`',
+        )
+
         val loggerCode =
             """
-            package ${classDeclaration.packageName.asString()}
+            package $safePackageName
             
             import io.github.oshai.kotlinlogging.KLogger
             import io.github.oshai.kotlinlogging.KotlinLogging
             
-            val $className.log: KLogger
-                get() = KotlinLogging.logger("${classDeclaration.qualifiedName!!.asString()}")
+            ${visibility}val $className.log: KLogger
+                get() = KotlinLogging.logger("$qualifiedName")
             """.trimIndent()
 
         codeGenerator
             .createNewFile(
-                Dependencies(false),
-                wrapReservedWords(
-                    target = classDeclaration.packageName.asString(),
-                    delimiter = '.',
-                    reservedWords = hardKeywords,
-                    quoteChar = '`',
-                ),
-                "${className}KotlinLoggingExtensions",
+                Dependencies(false, classDeclaration.containingFile!!),
+                rawPackageName,
+                fileName,
             ).bufferedWriter()
             .use { writer ->
                 writer.write(loggerCode)
             }
+    }
+
+    private fun getVisibilityModifier(classDeclaration: KSClassDeclaration): String? {
+        var current: KSDeclaration? = classDeclaration
+        var isInternal = false
+        
+        while (current is KSClassDeclaration) {
+            when (current.getVisibility()) {
+                Visibility.PRIVATE -> return "private "
+                Visibility.PROTECTED -> return null // Cannot generate top-level extension for protected class
+                Visibility.LOCAL -> return null
+                Visibility.INTERNAL -> isInternal = true
+                else -> {}
+            }
+            current = current.parentDeclaration
+        }
+        
+        return if (isInternal) "internal " else ""
     }
 
     companion object {
