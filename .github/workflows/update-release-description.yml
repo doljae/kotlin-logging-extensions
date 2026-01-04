@@ -3,7 +3,7 @@ name: Update Release Workflow Description
 on:
   pull_request:
     types: [closed]
-    branches: [main]
+    branches: [main, 2.2.x, 2.3.x]
   workflow_dispatch:
     inputs:
       version:
@@ -76,29 +76,55 @@ jobs:
           if [ -n "$LATEST_VERSION" ] && [ "$LATEST_VERSION" = "$EXPECTED_VERSION" ]; then
             echo "📋 Using release version: ${LATEST_VERSION}"
             
-            # Extract version parts for next version suggestions
-            CURRENT_KOTLIN=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
-            CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
-            
-            # Extract library version parts (MAJOR.MINOR.PATCH)
-            LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
-            LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
-            LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
-            
-            # Calculate next versions
-            NEXT_PATCH="${CURRENT_KOTLIN}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
-            NEXT_MINOR="${CURRENT_KOTLIN}-${LIB_MAJOR}.$((LIB_MINOR + 1)).0"
-            
-            # Get current Kotlin version from build.gradle.kts
-            BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-            
-            # Create new description with suggested versions
-            SUGGESTED_TEXT="${NEXT_PATCH} (patch), ${NEXT_MINOR} (minor)"
-            
-            # Check if Kotlin version has been updated
-            if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
-              KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
-              SUGGESTED_TEXT="${SUGGESTED_TEXT}, ${KOTLIN_UPDATE} (Kotlin update)"
+            # Check if using SemVer (X.Y.Z) or KSP style (X.Y.Z-A.B.C)
+            if [[ $LATEST_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+               # SemVer Style
+               MAJOR=$(echo "$LATEST_VERSION" | cut -d'.' -f1)
+               MINOR=$(echo "$LATEST_VERSION" | cut -d'.' -f2)
+               PATCH=$(echo "$LATEST_VERSION" | cut -d'.' -f3)
+
+               NEXT_PATCH="${MAJOR}.${MINOR}.$((PATCH + 1))"
+               
+               # Get current Kotlin version from build.gradle.kts
+               BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+               
+               SUGGESTED_TEXT="${NEXT_PATCH} (patch)"
+               
+               # If Kotlin version update is detected
+               KOTLIN_MAJOR_MINOR="${BUILD_KOTLIN_VERSION%.*}"
+               if [[ "$KOTLIN_MAJOR_MINOR" != "$MAJOR.$MINOR" ]]; then
+                    SUGGESTED_TEXT="${SUGGESTED_TEXT}, ${KOTLIN_MAJOR_MINOR}.0 (Kotlin update)"
+               fi
+               
+            else
+               # Old KSP Style
+               CURRENT_KOTLIN=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
+               CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
+             
+               # Extract library version parts (MAJOR.MINOR.PATCH)
+               LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
+               LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
+               LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
+               
+               # Calculate next versions
+               NEXT_PATCH="${CURRENT_KOTLIN}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
+               NEXT_MINOR="${CURRENT_KOTLIN}-${LIB_MAJOR}.$((LIB_MINOR + 1)).0"
+               
+               # Get current Kotlin version from build.gradle.kts
+               BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+               
+               # Create new description with suggested versions
+               SUGGESTED_TEXT="${NEXT_PATCH} (patch), ${NEXT_MINOR} (minor)"
+               
+               # Check if Kotlin version has been updated
+               if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
+                 KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
+                 SUGGESTED_TEXT="${SUGGESTED_TEXT}, ${KOTLIN_UPDATE} (Kotlin update)"
+                 
+                 # Also suggest migrating to new SemVer style on Kotlin update
+                 KOTLIN_MAJOR_MINOR=$(echo "$BUILD_KOTLIN_VERSION" | cut -d'.' -f1,2)
+                 SUGGESTED_TEXT="${SUGGESTED_TEXT}, ${KOTLIN_MAJOR_MINOR}.0 (New Style)"
+               fi
             fi
             
             # Use sed to update the description lines in the workflow file
@@ -182,7 +208,7 @@ jobs:
         PR_URL=$(gh pr create \
           --title "chore: update release workflow description with v${LATEST_VERSION}" \
           --body-file pr_description.md \
-          --base main \
+          --base "${{ github.event.pull_request.base.ref || 'main' }}" \
           --head "${BRANCH_NAME}" \
           --assignee doljae \
           --reviewer doljae)

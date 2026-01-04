@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - 2.1.x
+      - 2.2.x
+      - 2.3.x
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -38,11 +40,11 @@ jobs:
         LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
         
         # Check for Release PR merge pattern: "Release v[VERSION] (#[PR_NUMBER])"
-        if [[ $LAST_COMMIT_MSG =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+\ \(\#[0-9]+\)$ ]]; then
+        if [[ $LAST_COMMIT_MSG =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?\ \(\#[0-9]+\)$ ]]; then
           echo "is-release=true" >> $GITHUB_OUTPUT
           echo "✅ This is a Release PR merge commit: $LAST_COMMIT_MSG"
         # Also check for direct version update commit pattern (fallback)
-        elif [[ $LAST_COMMIT_MSG =~ ^chore:\ update\ version\ references\ to\ [0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        elif [[ $LAST_COMMIT_MSG =~ ^chore:\ update\ version\ references\ to\ [0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
           echo "is-release=true" >> $GITHUB_OUTPUT
           echo "✅ This is a direct version update commit: $LAST_COMMIT_MSG"
         else
@@ -57,11 +59,11 @@ jobs:
         LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
         
         # Try to extract version from Release PR merge commit message first
-        if [[ $LAST_COMMIT_MSG =~ Release\ v([0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+)\ \(\#[0-9]+\) ]]; then
+        if [[ $LAST_COMMIT_MSG =~ Release\ v([0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?)\ \(\#[0-9]+\) ]]; then
           VERSION="${BASH_REMATCH[1]}"
           echo "✅ Extracted version from Release PR merge commit: ${VERSION}"
         # Fallback to version update commit message
-        elif [[ $LAST_COMMIT_MSG =~ chore:\ update\ version\ references\ to\ ([0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        elif [[ $LAST_COMMIT_MSG =~ chore:\ update\ version\ references\ to\ ([0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?) ]]; then
           VERSION="${BASH_REMATCH[1]}"
           echo "✅ Extracted version from version update commit: ${VERSION}"
         # Last fallback to gradle.properties
@@ -72,7 +74,7 @@ jobs:
         
         TAG_NAME="v${VERSION}"
         
-        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
           echo "❌ Error: Invalid version format: $VERSION"
           exit 1
         fi
@@ -218,7 +220,7 @@ jobs:
         echo "   - kotlin-logging badge: $KOTLIN_LOGGING_BADGE (from README.md)"
         
         # Get the previous tag
-        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -2 | tail -1)
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$' | head -2 | tail -1)
         CURRENT_TAG="${{ needs.check-release.outputs.tag_name }}"
         
         echo "Generating release notes from ${PREVIOUS_TAG} to ${CURRENT_TAG}"

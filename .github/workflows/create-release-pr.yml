@@ -5,11 +5,16 @@ on:
     inputs:
       version:
         description: |
-          Release version (KSP format: KOTLIN_VERSION-LIB_VERSION)
+          Release version (SemVer X.Y.Z or KSP format X.Y.Z-A.B.C)
           
-          Current: 2.2.20-0.0.4
-          Suggested: 2.2.20-0.0.5 (patch), 2.2.20-0.1.0 (minor)
+          Current: 2.2.20-0.0.5 (Old) or 2.3.0 (New)
+          Suggested: 2.3.0, 2.3.1 (New Style)
         required: true
+        type: string
+      base_branch:
+        description: 'Target branch for release (e.g., main, 2.2.x, 2.3.x)'
+        required: true
+        default: 'main'
         type: string
 
 permissions:
@@ -48,55 +53,73 @@ jobs:
         VERSION="${{ steps.version.outputs.version }}"
         
         # Show current latest version for reference
-        LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+        LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$' | head -1)
         if [ -n "$LATEST_TAG" ]; then
           LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
           echo "📋 Current latest version: ${LATEST_VERSION}"
-          
-          # Extract current version parts for suggestions
-          CURRENT_KOTLIN=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
-          CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
           
           # Get current Kotlin version from build.gradle.kts
           BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
           echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
           
-          # Extract library version parts (MAJOR.MINOR.PATCH)
-          LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
-          LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
-          LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
-          
-          # Suggest next possible versions
-          NEXT_PATCH="${CURRENT_KOTLIN}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
-          NEXT_MINOR="${CURRENT_KOTLIN}-${LIB_MAJOR}.$((LIB_MINOR + 1)).0"
-          NEXT_MAJOR="${CURRENT_KOTLIN}-$((LIB_MAJOR + 1)).0.0"
-          
           echo "💡 Suggested next versions:"
-          echo "   📦 Patch update: ${NEXT_PATCH}"
-          echo "   🔧 Minor update: ${NEXT_MINOR}"
-          echo "   🚀 Major update: ${NEXT_MAJOR}"
           
-          # Check if Kotlin version has been updated
-          if [ "$CURRENT_KOTLIN" != "$BUILD_KOTLIN_VERSION" ]; then
-            KOTLIN_UPDATE="${BUILD_KOTLIN_VERSION}-0.0.1"
-            echo "   ⚡ Kotlin version update: ${KOTLIN_UPDATE} (recommended for new Kotlin ${BUILD_KOTLIN_VERSION})"
+          # Check if latest version is SemVer (X.Y.Z) or KSP style (X.Y.Z-A.B.C)
+          if [[ $LATEST_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            # Current style is SemVer (e.g., 2.3.0)
+            MAJOR=$(echo "$LATEST_VERSION" | cut -d'.' -f1)
+            MINOR=$(echo "$LATEST_VERSION" | cut -d'.' -f2)
+            PATCH=$(echo "$LATEST_VERSION" | cut -d'.' -f3)
+            
+            NEXT_PATCH="${MAJOR}.${MINOR}.$((PATCH + 1))"
+            # If migrating to new Kotlin version (e.g. 2.4.x), start at 2.4.0
+            NEXT_KOTLIN_START="${BUILD_KOTLIN_VERSION%.*}.0" 
+            
+            echo "   📦 Next Patch: ${NEXT_PATCH}"
+            if [[ ! "$NEXT_KOTLIN_START" == "$MAJOR.$MINOR.0" ]]; then
+                 echo "   🚀 New Kotlin Version: ${NEXT_KOTLIN_START} (if applicable)"
+            fi
+            
           else
-            echo "   ⚡ For future Kotlin version: NEW_KOTLIN_VERSION-0.0.1"
+            # Current style is Old KSP style (e.g., 2.2.20-1.0.0)
+            echo "   ⚠️  Detected Old Version Style."
+            
+            # Suggest converting to New SemVer Style
+            # e.g., Kotlin 2.3.20 -> Suggest 2.3.0
+            KOTLIN_MAJOR_MINOR=$(echo "$BUILD_KOTLIN_VERSION" | cut -d'.' -f1,2)
+            NEW_STYLE_START="${KOTLIN_MAJOR_MINOR}.0"
+            
+            echo "   🚀 Switch to New Style: ${NEW_STYLE_START}"
+            
+            # Also suggest old style increment for compatibility
+            CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
+            LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
+            LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
+            LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
+            CURRENT_KOTLIN_PART=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
+            
+            NEXT_OLD_PATCH="${CURRENT_KOTLIN_PART}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
+            echo "   📦 Old Style Patch: ${NEXT_OLD_PATCH}"
           fi
           echo ""
         else
           echo "📋 No previous releases found - this will be the first release!"
           BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
           echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
-          echo "💡 Suggested first version: ${BUILD_KOTLIN_VERSION}-0.0.1"
+          
+          # Suggest SemVer style for first release
+          KOTLIN_MAJOR_MINOR=$(echo "$BUILD_KOTLIN_VERSION" | cut -d'.' -f1,2)
+          echo "💡 Suggested first version: ${KOTLIN_MAJOR_MINOR}.0"
           echo ""
         fi
         
-        # Validate input version format
-        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "❌ Error: Version must be in KSP format KOTLIN_VERSION-LIB_VERSION"
+        # Validate input version format (Allow both old KSP format and new SemVer format)
+        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
+          echo "❌ Error: Version validation failed."
           echo "   Input version: ${VERSION}"
-          echo "   Expected format: KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.20-0.0.5)"
+          echo "   Expected formats:"
+          echo "     1. SemVer (New): KOTLIN_MAJOR.KOTLIN_MINOR.PATCH (e.g., 2.3.0, 2.3.1)"
+          echo "     2. KSP format (Old): KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.20-0.0.5)"
           if [ -n "$LATEST_TAG" ]; then
             echo "   Use one of the suggested versions above or follow the same pattern"
           fi
@@ -174,8 +197,14 @@ jobs:
     - name: Create release branch
       run: |
         BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
+        BASE_BRANCH="${{ github.event.inputs.base_branch }}"
+        
+        echo "🌿 Base branch: ${BASE_BRANCH}"
+        git checkout "${BASE_BRANCH}"
+        git pull origin "${BASE_BRANCH}"
+        
         git checkout -b "${BRANCH_NAME}"
-        echo "✅ Created release branch: ${BRANCH_NAME}"
+        echo "✅ Created release branch: ${BRANCH_NAME} from ${BASE_BRANCH}"
         
     - name: Extract build script versions
       id: build_versions
@@ -573,11 +602,11 @@ jobs:
         EOF
         
         # Create PR using GitHub CLI (preserves all commits in branch)
-        echo "🔄 Creating Pull Request from branch ${BRANCH_NAME} to main..."
+        echo "🔄 Creating Pull Request from branch ${BRANCH_NAME} to ${{ github.event.inputs.base_branch }}..."
         PR_URL=$(gh pr create \
           --title "Release ${TAG_NAME}" \
           --body-file pr_body.md \
-          --base main \
+          --base "${{ github.event.inputs.base_branch }}" \
           --head "${BRANCH_NAME}" \
           --assignee doljae \
           --reviewer doljae)
