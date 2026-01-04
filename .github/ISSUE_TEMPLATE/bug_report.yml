@@ -1,5 +1,5 @@
 name: 🐛 Bug Report
-description: Report a bug or unexpected behavior
+description: Report a bug or unexpected behavior of the library
 title: "[Bug] "
 labels: ["bug"]
 body:
@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thank you for taking the time to report a bug! Please fill out this form to help us understand and reproduce the issue.
-        
+
         **⚠️ Important**: This library is highly dependent on Kotlin and KSP versions. Please ensure you're using the correct versions before reporting.
 
   - type: checkboxes
@@ -95,7 +95,7 @@ body:
     attributes:
       label: Actual Behavior
       description: What actually happened
-      placeholder: Compilation fails with error "Unresolved reference: log"
+      placeholder: 'Compilation fails with error "Unresolved reference: log"'
     validations:
       required: true
 
@@ -110,7 +110,7 @@ body:
             kotlin("jvm") version "2.3.0"
             id("com.google.devtools.ksp") version "2.3.4"
         }
-        
+
         dependencies {
             ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
             implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
@@ -136,4 +136,4 @@ body:
       description: Any other context about the problem
       placeholder: Add any other context, screenshots, or relevant information
     validations:
-      required: false 
+      required: false
