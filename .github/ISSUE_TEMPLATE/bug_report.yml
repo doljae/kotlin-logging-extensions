@@ -28,7 +28,7 @@ body:
     attributes:
       label: Library Version
       description: Which version of kotlin-logging-extensions are you using?
-      placeholder: "e.g., 2.2.21-0.0.6"
+      placeholder: "e.g., 2.3.0 or 2.2.21-0.0.6"
     validations:
       required: true
 
@@ -112,8 +112,8 @@ body:
         }
         
         dependencies {
-            ksp("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
-            implementation("io.github.doljae:kotlin-logging-extensions:2.2.21-0.0.6")
+            ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
+            implementation("io.github.doljae:kotlin-logging-extensions:2.3.0")
             implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
         }
     validations:

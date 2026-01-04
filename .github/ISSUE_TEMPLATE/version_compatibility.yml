@@ -15,7 +15,7 @@ body:
     attributes:
       label: kotlin-logging-extensions Version
       description: Which version are you using?
-      placeholder: "e.g., 2.2.21-0.0.6"
+      placeholder: "e.g., 2.3.0 or 2.2.21-0.0.6"
     validations:
       required: true
 

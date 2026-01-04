@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - 2.1.x
+      - 2.2.x
+      - 2.3.x
     paths-ignore:
       - '**.md'
       - 'docs/**'
