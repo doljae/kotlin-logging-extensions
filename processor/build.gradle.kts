@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:6.0.1"))
+    testImplementation(platform("org.junit:junit-bom:6.0.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     // Maintained fork of kotlin-compile-testing
     testImplementation("dev.zacsweers.kctfork:ksp:0.12.1")
