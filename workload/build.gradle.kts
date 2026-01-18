@@ -19,7 +19,7 @@ dependencies {
 
     // Kotlin logging dependencies
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
-    implementation("ch.qos.logback:logback-classic:1.5.23")
+    implementation("ch.qos.logback:logback-classic:1.5.25")
 
     // kotlin-logging-extensions (using project dependency for development)
     ksp(project(":processor"))
