@@ -10,14 +10,15 @@
 **Elegant [kotlin-logging](https://github.com/oshai/kotlin-logging) extensions for zero-boilerplate logger generation in
 Kotlin classes using [KSP](https://github.com/google/ksp)**
 
-**Write `log.info { }` in any class without boilerplate!**
+**Write `log.info { }` in annotated classes without boilerplate!**
 
 ## 🚀 Quick Start
 
 ### What It Does
 
-Automatically generates logger extensions for every Kotlin class during compilation. No manual logger declarations
-needed - just use `log` directly in any class.
+Generates logger extensions at compile time for classes annotated with `@AutoLog`.
+No manual logger declarations needed in opted-in classes.
+(`@GenerateLogger` is still supported for backward compatibility, but deprecated.)
 
 ```kotlin
 // ❌ Before: Manual logger in every class
@@ -30,6 +31,7 @@ class UserService {
 }
 
 // ✅ After: Just use log directly
+@AutoLog
 class UserService {
     fun createUser() {
         log.info { "Creating user" }  // Auto-generated!
@@ -54,15 +56,25 @@ repositories {
 }
 
 dependencies {
+    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.0") // for @AutoLog
     ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
     implementation("ch.qos.logback:logback-classic:1.5.23") // Logger implementation required
 }
+
+ksp {
+    // Optional package scan mode
+    arg("kotlinloggingextensions.mode", "PackageScan")
+    arg("kotlinloggingextensions.targets", "com.example.*,com.sample.*")
+}
 ```
 
-**Step 2: Use `log` in Any Class**
+**Step 2: Annotate Classes With `@AutoLog`**
 
 ```kotlin
+import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+@AutoLog
 class OrderProcessor {
     fun processOrder(id: String) {
         log.info { "Processing order: $id" }
@@ -87,11 +99,17 @@ After writing your code, run KSP to generate the logger extensions:
 
 This will generate the `log` property and resolve any compilation errors in your IDE.
 
-That's it! The logger is automatically available with the class name (`OrderProcessor` in this example).
+That's it! The logger is generated for opted-in classes using the fully qualified class name (`OrderProcessor` in this example).
+
+Package-based auto-generation and `@AutoLog` can be used together.
+Generation applies when either condition matches.
+Targets support `*` as a package wildcard suffix (for example, `com.example.*`).
 
 ## ✨ Features
 
 - **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
+- **✅ Explicit Opt-In**: Generate `log` only for classes annotated with `@AutoLog`
+- **📂 Package Scope Option**: Configure package scanning via `mode` + `targets` in `build.gradle.kts`
 - **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead
 - **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
 - **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
@@ -130,6 +148,7 @@ plugins {
 }
 
 dependencies {
+    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.0")
     ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14") // 5.0.0+
 }
@@ -157,6 +176,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.0")
     ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
     implementation("ch.qos.logback:logback-classic:1.5.23")

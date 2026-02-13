@@ -12,7 +12,7 @@ import examples.enterprise.service.impl.PaymentServiceImpl
  * - Deep package structure with fully qualified logger names
  * 
  * All example classes (UserService, OrderProcessor, DataRepository, PaymentServiceImpl) 
- * now use the auto-generated `log` property with calls like:
+ * now use the auto-generated `log` property (via @AutoLog) with calls like:
  * - log.info { "message" }
  * - log.debug { "debug info" }
  * - log.error(exception) { "error message" }
@@ -44,7 +44,7 @@ fun main() {
     
     println("=".repeat(60))
     println("✨ All examples completed! Check the logs above.")
-    println("✨ Notice how each class automatically has 'log' available!")
+    println("✨ Notice how each @AutoLog class has 'log' available!")
     println("=".repeat(60))
 }
 

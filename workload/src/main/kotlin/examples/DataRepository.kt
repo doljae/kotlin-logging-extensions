@@ -2,12 +2,14 @@
 
 package examples
 
+import io.github.doljae.kotlinlogging.extensions.AutoLog
 import kotlin.random.Random
 
 /**
  * Example of a data access layer demonstrating database operation logging
  * and error handling with auto-generated logger.
  */
+@AutoLog
 class DataRepository {
 
     private val cache = mutableMapOf<String, Any>()

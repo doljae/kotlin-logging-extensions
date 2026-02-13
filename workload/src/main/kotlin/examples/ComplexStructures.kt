@@ -2,6 +2,8 @@
 
 package examples
 
+import io.github.doljae.kotlinlogging.extensions.AutoLog
+
 /**
  * Demonstrates the usage of the auto-generated `log` property in various
  * complex Kotlin class structures:
@@ -16,6 +18,7 @@ package examples
 /**
  * 1. Singleton Object
  */
+@AutoLog
 object SingletonService {
     fun doSomething() {
         log.info { "Logging from SingletonService (object)" }
@@ -25,11 +28,13 @@ object SingletonService {
 /**
  * 2. Class with Companion Object
  */
+@AutoLog
 class ClassWithCompanion {
     fun instanceMethod() {
         log.info { "Logging from ClassWithCompanion instance" }
     }
 
+    @AutoLog
     companion object {
         fun staticMethod() {
             log.info { "Logging from ClassWithCompanion companion object" }
@@ -40,17 +45,20 @@ class ClassWithCompanion {
 /**
  * 3. Class with Inner Class
  */
+@AutoLog
 class OuterClass {
     fun outerMethod() {
         log.info { "Logging from OuterClass" }
     }
 
+    @AutoLog
     class SimpleInnerClass {
         fun innerMethod() {
             log.info { "Logging from InnerClass" }
         }
     }
 
+    @AutoLog
     inner class InnerClass {
         fun innerMethod() {
             log.info { "Logging from InnerClass" }
@@ -63,18 +71,21 @@ class OuterClass {
 /**
  * 4. Sealed Class Hierarchy
  */
+@AutoLog
 sealed class BaseOperation {
     fun logBase() {
         log.info { "Logging from BaseOperation (sealed class)" }
     }
 }
 
+@AutoLog
 class AddOperation(val value: Int) : BaseOperation() {
     fun perform() {
         log.info { "Logging from AddOperation: adding $value" }
     }
 }
 
+@AutoLog
 object ResetOperation : BaseOperation() {
     fun perform() {
         log.info { "Logging from ResetOperation (object extending sealed)" }
@@ -84,6 +95,7 @@ object ResetOperation : BaseOperation() {
 /**
  * 5. Enum Class
  */
+@AutoLog
 enum class ProcessingState {
     IDLE,
     RUNNING,
@@ -97,6 +109,7 @@ enum class ProcessingState {
 /**
  * 6. Abstract Class
  */
+@AutoLog
 abstract class AbstractWorker {
     fun commonWork() {
         log.info { "Logging from AbstractWorker common logic" }
@@ -105,6 +118,7 @@ abstract class AbstractWorker {
     abstract fun specificWork()
 }
 
+@AutoLog
 class ConcreteWorker : AbstractWorker() {
     override fun specificWork() {
         log.info { "Logging from ConcreteWorker specific logic" }

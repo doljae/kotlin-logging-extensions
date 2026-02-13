@@ -18,8 +18,10 @@ class InnerClassSupportTest {
             "NestedClasses.kt",
             """
             package com.example
+            import io.github.doljae.kotlinlogging.extensions.AutoLog
 
             class Outer {
+                @AutoLog
                 class Nested {
                     fun foo() {}
                 }
@@ -58,8 +60,10 @@ class InnerClassSupportTest {
                 "NestedGenericClasses.kt",
                 """
                 package com.example
+                import io.github.doljae.kotlinlogging.extensions.AutoLog
 
                 class Outer<T> {
+                    @AutoLog
                     class Nested<U>
                 }
                 """.trimIndent(),

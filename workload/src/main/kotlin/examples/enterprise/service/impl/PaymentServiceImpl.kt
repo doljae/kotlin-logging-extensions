@@ -2,6 +2,8 @@
 
 package examples.enterprise.service.impl
 
+import io.github.doljae.kotlinlogging.extensions.AutoLog
+
 /**
  * Example demonstrating that kotlin-logging-extensions works seamlessly
  * even with deeply nested package structures.
@@ -11,6 +13,7 @@ package examples.enterprise.service.impl
  * The auto-generated logger will use the fully qualified class name:
  * "examples.enterprise.service.impl.PaymentServiceImpl"
  */
+@AutoLog
 class PaymentServiceImpl {
 
     fun processPayment(amount: Double, paymentMethod: String): PaymentResult {

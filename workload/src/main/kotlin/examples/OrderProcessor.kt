@@ -2,6 +2,7 @@
 
 package examples
 
+import io.github.doljae.kotlinlogging.extensions.AutoLog
 import kotlin.random.Random
 import kotlin.time.measureTime
 
@@ -9,6 +10,7 @@ import kotlin.time.measureTime
  * Example of an order processing service demonstrating performance logging
  * and business workflow tracking with auto-generated logger.
  */
+@AutoLog
 class OrderProcessor {
 
     fun processOrder(orderId: String, items: List<OrderItem>): OrderResult {
