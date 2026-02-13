@@ -50,6 +50,7 @@ class LoggerProcessor(
         if (classDeclaration.classKind == ClassKind.ENUM_ENTRY) return
 
         val visibility = getVisibilityModifier(classDeclaration) ?: return
+        val receiverDeclaration = buildReceiverDeclaration(classDeclaration)
         
         val rawPackageName = classDeclaration.packageName.asString()
         val qualifiedName = classDeclaration.qualifiedName!!.asString()
@@ -75,7 +76,7 @@ class LoggerProcessor(
             import io.github.oshai.kotlinlogging.KLogger
             import io.github.oshai.kotlinlogging.KotlinLogging
             
-            ${visibility}val $className.log: KLogger
+            ${visibility}val ${receiverDeclaration.typeParameters}${receiverDeclaration.receiverType}.log: KLogger
                 get() = KotlinLogging.logger("$qualifiedName")
             """.trimIndent()
 
@@ -107,6 +108,53 @@ class LoggerProcessor(
         
         return if (isInternal) "internal " else ""
     }
+
+    private fun buildReceiverDeclaration(classDeclaration: KSClassDeclaration): ReceiverDeclaration {
+        val classChain =
+            generateSequence(classDeclaration as KSDeclaration?) { it.parentDeclaration }
+                .filterIsInstance<KSClassDeclaration>()
+                .toList()
+                .asReversed()
+
+        val usedTypeParameterNames = mutableMapOf<String, Int>()
+        val declaredTypeParameters = mutableListOf<String>()
+        val receiverSegments =
+            classChain.map { declaration ->
+                val receiverTypeParameters =
+                    declaration.typeParameters.map { typeParameter ->
+                        val baseName = typeParameter.name.asString()
+                        val index = usedTypeParameterNames.getOrDefault(baseName, 0) + 1
+                        usedTypeParameterNames[baseName] = index
+                        val uniqueName = if (index == 1) baseName else "$baseName$index"
+                        declaredTypeParameters += uniqueName
+                        uniqueName
+                    }
+
+                val simpleName = declaration.simpleName.asString()
+                if (receiverTypeParameters.isEmpty()) {
+                    simpleName
+                } else {
+                    "$simpleName<${receiverTypeParameters.joinToString(", ")}>"
+                }
+            }
+
+        val typeParameters =
+            if (declaredTypeParameters.isEmpty()) {
+                ""
+            } else {
+                "<${declaredTypeParameters.joinToString(", ")}> "
+            }
+
+        return ReceiverDeclaration(
+            typeParameters = typeParameters,
+            receiverType = receiverSegments.joinToString("."),
+        )
+    }
+
+    private data class ReceiverDeclaration(
+        val typeParameters: String,
+        val receiverType: String,
+    )
 
     companion object {
         // Ref: https://kotlinlang.org/docs/keyword-reference.html

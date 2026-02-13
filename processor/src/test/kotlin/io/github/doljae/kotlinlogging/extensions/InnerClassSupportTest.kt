@@ -50,4 +50,40 @@ class InnerClassSupportTest {
         content shouldContain "val Outer.Nested.log: KLogger"
         content shouldContain "KotlinLogging.logger(\"com.example.Outer.Nested\")"
     }
+
+    @Test
+    fun `should generate log extension for nested generic class`() {
+        val source =
+            SourceFile.kotlin(
+                "NestedGenericClasses.kt",
+                """
+                package com.example
+
+                class Outer<T> {
+                    class Nested<U>
+                }
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                inheritClassPath = true
+            }
+
+        compilation.compile()
+
+        val generatedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "Outer_NestedKotlinLoggingExtensions.kt"
+            }
+
+        generatedFile?.exists() shouldBe true
+        val content = generatedFile?.readText() ?: ""
+        content shouldContain "val <T, U> Outer<T>.Nested<U>.log: KLogger"
+        content shouldContain "KotlinLogging.logger(\"com.example.Outer.Nested\")"
+    }
 }

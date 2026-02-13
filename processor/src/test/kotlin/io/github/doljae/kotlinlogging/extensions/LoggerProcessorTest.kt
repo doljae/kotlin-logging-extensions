@@ -94,6 +94,39 @@ class LoggerProcessorTest {
     }
 
     @Test
+    fun `should generate log extension for generic class`() {
+        val source =
+            SourceFile.kotlin(
+                "GenericClass.kt",
+                """
+                package com.example
+
+                class GenericClass<T>(private val value: T)
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                inheritClassPath = true
+            }
+
+        compilation.compile()
+
+        val generatedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "GenericClassKotlinLoggingExtensions.kt"
+            }
+
+        generatedFile?.exists() shouldBe true
+        generatedFile?.readText() shouldContain "val <T> GenericClass<T>.log: KLogger"
+        generatedFile?.readText() shouldContain "KotlinLogging.logger(\"com.example.GenericClass\")"
+    }
+
+    @Test
     fun `should handle multiple classes in one file`() {
         val source = 
             SourceFile.kotlin(
