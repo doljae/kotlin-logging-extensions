@@ -14,12 +14,12 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:6.0.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.kotest:kotest-assertions-core:6.0.7")
+    testImplementation("io.kotest:kotest-assertions-core:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
-    implementation("ch.qos.logback:logback-classic:1.5.25")
+    implementation("ch.qos.logback:logback-classic:1.5.29")
 
     // kotlin-logging-extensions (using project dependency for development)
     ksp(project(":processor"))

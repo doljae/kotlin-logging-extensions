@@ -20,9 +20,9 @@ The project is a multi-module Gradle project:
 3. The generated code uses `io.github.oshai.kotlin-logging.KotlinLogging` to instantiate the logger.
 
 ## Tech Stack
-- **Language**: Kotlin (v2.3.0)
+- **Language**: Kotlin (v2.3.10)
 - **Build System**: Gradle (Kotlin DSL)
-- **Compiler Plugin**: KSP (Kotlin Symbol Processing) v2.3.4
+- **Compiler Plugin**: KSP (Kotlin Symbol Processing) v2.3.5
 - **Testing**: 
   - Framework: JUnit 5
   - Assertions: Kotest Assertions
