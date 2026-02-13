@@ -214,6 +214,23 @@ cd kotlin-logging-extensions
 ./gradlew ktlintCheck
 ```
 
+## 🤖 AI Agent Guide
+
+This repository includes Codex-native AI agent configuration:
+
+- Root rules: `AGENTS.md`
+- Scoped rules:
+  - `processor/AGENTS.md`
+  - `workload/AGENTS.md`
+- Skill definitions: `.agents/skills/*`
+
+Core specialist skills:
+- `ksp-module-router`
+- `ksp-logger-generator-maintainer`
+- `workload-regression-maintainer`
+- `release-compatibility-maintainer`
+- `reference-quality-maintainer`
+
 ## 🤝 Contributing
 
 1. Fork and create a feature branch

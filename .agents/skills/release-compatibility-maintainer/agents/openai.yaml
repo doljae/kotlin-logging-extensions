@@ -1,0 +1,2 @@
+description: Maintain Kotlin/KSP/kotlin-logging compatibility and release-facing documentation with verified build results.
+allow_implicit_invocation: false
