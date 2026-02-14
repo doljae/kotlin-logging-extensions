@@ -6,7 +6,7 @@ enum class LoggerGenerationMode {
     ;
 
     companion object {
-        fun fromOption(optionValue: String?): LoggerGenerationMode {
+        fun fromOptionOrNull(optionValue: String?): LoggerGenerationMode? {
             val normalizedValue =
                 optionValue
                     ?.trim()
@@ -15,9 +15,14 @@ enum class LoggerGenerationMode {
                     ?.lowercase()
 
             return when (normalizedValue) {
+                "annotation", "annotationonly" -> ANNOTATION_ONLY
                 "packagescan" -> PACKAGE_SCAN
-                else -> ANNOTATION_ONLY
+                else -> null
             }
+        }
+
+        fun fromOption(optionValue: String?): LoggerGenerationMode {
+            return fromOptionOrNull(optionValue) ?: ANNOTATION_ONLY
         }
     }
 }

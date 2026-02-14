@@ -507,6 +507,41 @@ class LoggerProcessorTest {
     }
 
     @Test
+    fun `should parse annotation only mode regardless of casing and separators`() {
+        val source =
+            SourceFile.kotlin(
+                "AnnotationOnlyModeClass.kt",
+                """
+                package com.example.annotationonly
+
+                class AnnotationOnlyModeClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "annotation_only",
+                    )
+                inheritClassPath = true
+            }
+
+        compilation.compile()
+
+        val generatedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "AnnotationOnlyModeClassKotlinLoggingExtensions.kt"
+            }
+
+        generatedFile shouldBe null
+    }
+
+    @Test
     fun `should apply exact package target only to exact package`() {
         val exactPackageSource =
             SourceFile.kotlin(
@@ -589,6 +624,56 @@ class LoggerProcessorTest {
             }
 
         generatedFile?.exists() shouldBe true
+    }
+
+    @Test
+    fun `should normalize and ignore invalid package target patterns`() {
+        val normalizedTargetSource =
+            SourceFile.kotlin(
+                "NormalizedTargetClass.kt",
+                """
+                package com.example.normalized
+
+                class NormalizedTargetClass
+                """.trimIndent(),
+            )
+        val invalidTargetSource =
+            SourceFile.kotlin(
+                "InvalidTargetClass.kt",
+                """
+                package com.example.invalid
+
+                class InvalidTargetClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(normalizedTargetSource, invalidTargetSource)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "PackageScan",
+                        LoggerProcessor.PACKAGE_SCAN_TARGETS_OPTION_KEY to "com.example.normalized..*,invalid*pattern,com.example.normalized.",
+                    )
+                inheritClassPath = true
+            }
+
+        compilation.compile()
+
+        val normalizedGeneratedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "NormalizedTargetClassKotlinLoggingExtensions.kt"
+            }
+        val invalidGeneratedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "InvalidTargetClassKotlinLoggingExtensions.kt"
+            }
+
+        normalizedGeneratedFile?.exists() shouldBe true
+        invalidGeneratedFile shouldBe null
     }
 
     @Test
