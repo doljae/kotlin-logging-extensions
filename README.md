@@ -105,6 +105,12 @@ Package-based auto-generation and `@AutoLog` can be used together.
 Generation applies when either condition matches.
 Targets support `*` as a package wildcard suffix (for example, `com.example.*`).
 
+Mode and target configuration rules:
+- Supported mode values: `AnnotationOnly`, `PackageScan` (case/`_`/`-` insensitive)
+- If `kotlinloggingextensions.targets` (or legacy `kotlinloggingextensions.autoGeneratePackagePrefixes`) is set,
+  package scanning is enabled automatically.
+- Invalid target entries are ignored. Use `com.example` or `com.example.*` format.
+
 ## ✨ Features
 
 - **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
