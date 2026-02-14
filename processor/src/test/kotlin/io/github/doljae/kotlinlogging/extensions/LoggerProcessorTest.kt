@@ -460,7 +460,7 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
 
         val generatedFile =
             compilation.kspSourcesDir.walkTopDown().find {
@@ -468,6 +468,44 @@ class LoggerProcessorTest {
             }
 
         generatedFile?.exists() shouldBe true
+        result.messages shouldContain "Package scan targets take precedence and PackageScan mode will be used"
+    }
+
+    @Test
+    fun `should warn and fall back to annotation only for unsupported mode option`() {
+        val source =
+            SourceFile.kotlin(
+                "UnsupportedModeClass.kt",
+                """
+                package com.example.unsupported
+
+                class UnsupportedModeClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "NotSupported",
+                    )
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        val generatedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "UnsupportedModeClassKotlinLoggingExtensions.kt"
+            }
+
+        generatedFile shouldBe null
+        result.messages shouldContain "Unsupported value 'NotSupported'"
+        result.messages shouldContain "Falling back to AnnotationOnly"
     }
 
     @Test
@@ -674,6 +712,44 @@ class LoggerProcessorTest {
 
         normalizedGeneratedFile?.exists() shouldBe true
         invalidGeneratedFile shouldBe null
+    }
+
+    @Test
+    fun `should warn when package scan mode has no valid targets`() {
+        val source =
+            SourceFile.kotlin(
+                "NoValidTargetClass.kt",
+                """
+                package com.example.invalid
+
+                class NoValidTargetClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "PackageScan",
+                        LoggerProcessor.PACKAGE_SCAN_TARGETS_OPTION_KEY to "invalid*pattern",
+                    )
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        val generatedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "NoValidTargetClassKotlinLoggingExtensions.kt"
+            }
+
+        generatedFile shouldBe null
+        result.messages shouldContain "Ignoring invalid package target 'invalid*pattern'"
+        result.messages shouldContain "Package scan mode is enabled but no valid targets were configured"
     }
 
     @Test
