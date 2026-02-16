@@ -18,7 +18,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.01")
     implementation("ch.qos.logback:logback-classic:1.5.29")
 
     // kotlin-logging-extensions (using project dependency for development)
