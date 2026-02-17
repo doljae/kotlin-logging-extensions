@@ -8,8 +8,8 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 class LoggerProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         val options = environment.options
-        val generationMode = resolveGenerationMode(options, environment.logger)
         val packageScanTargetPatterns = resolvePackageScanTargetPatterns(options, environment.logger)
+        val generationMode = resolveGenerationMode(options, packageScanTargetPatterns, environment.logger)
 
         if (generationMode == LoggerGenerationMode.PACKAGE_SCAN && packageScanTargetPatterns.isEmpty()) {
             environment.logger.warn(
@@ -26,11 +26,14 @@ class LoggerProcessorProvider : SymbolProcessorProvider {
         )
     }
 
-    private fun resolveGenerationMode(options: Map<String, String>, logger: KSPLogger): LoggerGenerationMode {
+    private fun resolveGenerationMode(
+        options: Map<String, String>,
+        packageScanTargetPatterns: Set<String>,
+        logger: KSPLogger,
+    ): LoggerGenerationMode {
         val configuredMode = options[LoggerProcessor.GENERATION_MODE_OPTION_KEY]
         val parsedConfiguredMode = LoggerGenerationMode.fromOptionOrNull(configuredMode)
-        val hasConfiguredPackageTargets = options[LoggerProcessor.PACKAGE_SCAN_TARGETS_OPTION_KEY]?.isNotBlank() == true
-        val hasLegacyPackagePrefixes = options[LoggerProcessor.LEGACY_PACKAGE_PREFIXES_OPTION_KEY]?.isNotBlank() == true
+        val hasConfiguredPackageTargets = packageScanTargetPatterns.isNotEmpty()
 
         if (configuredMode != null && parsedConfiguredMode == null) {
             logger.warn(
@@ -40,7 +43,7 @@ class LoggerProcessorProvider : SymbolProcessorProvider {
         }
 
         return when {
-            hasConfiguredPackageTargets || hasLegacyPackagePrefixes -> {
+            hasConfiguredPackageTargets -> {
                 if (parsedConfiguredMode == LoggerGenerationMode.ANNOTATION_ONLY) {
                     logger.warn(
                         "${LoggerProcessor.PACKAGE_SCAN_TARGETS_OPTION_KEY} (or legacy prefixes) was configured while " +

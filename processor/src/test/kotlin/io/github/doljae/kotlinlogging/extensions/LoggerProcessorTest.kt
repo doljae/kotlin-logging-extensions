@@ -7,6 +7,7 @@ import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 
@@ -469,6 +470,45 @@ class LoggerProcessorTest {
 
         generatedFile?.exists() shouldBe true
         result.messages shouldContain "Package scan targets take precedence and PackageScan mode will be used"
+    }
+
+    @Test
+    fun `should not force package scan when configured targets are invalid`() {
+        val source =
+            SourceFile.kotlin(
+                "InvalidTargetsWithAnnotationOnlyModeClass.kt",
+                """
+                package com.example.invalid
+
+                class InvalidTargetsWithAnnotationOnlyModeClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "AnnotationOnly",
+                        LoggerProcessor.PACKAGE_SCAN_TARGETS_OPTION_KEY to "invalid*pattern",
+                    )
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        val generatedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "InvalidTargetsWithAnnotationOnlyModeClassKotlinLoggingExtensions.kt"
+            }
+
+        generatedFile shouldBe null
+        result.messages shouldContain "Ignoring invalid package target 'invalid*pattern'"
+        result.messages shouldNotContain "Package scan targets take precedence and PackageScan mode will be used"
+        result.messages shouldNotContain "Package scan mode is enabled but no valid targets were configured"
     }
 
     @Test
