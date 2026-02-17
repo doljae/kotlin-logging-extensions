@@ -108,7 +108,7 @@ Targets support `*` as a package wildcard suffix (for example, `com.example.*`).
 Mode and target configuration rules:
 - Supported mode values: `AnnotationOnly`, `PackageScan` (case/`_`/`-` insensitive)
 - If `kotlinloggingextensions.targets` (or legacy `kotlinloggingextensions.autoGeneratePackagePrefixes`) is set,
-  package scanning is enabled automatically.
+  package scanning is enabled automatically only when at least one valid target remains after normalization.
 - Invalid target entries are ignored. Use `com.example` or `com.example.*` format.
 
 ## ✨ Features
