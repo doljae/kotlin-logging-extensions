@@ -12,14 +12,14 @@ repositories {
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:6.0.2"))
+    testImplementation(platform("org.junit:junit-bom:6.0.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.kotest:kotest-assertions-core:6.1.3")
+    testImplementation("io.kotest:kotest-assertions-core:6.1.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
-    implementation("io.github.oshai:kotlin-logging-jvm:7.0.14")
-    implementation("ch.qos.logback:logback-classic:1.5.29")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.01")
+    implementation("ch.qos.logback:logback-classic:1.5.32")
 
     // Access AutoLog annotation in source code
     compileOnly(project(":processor"))

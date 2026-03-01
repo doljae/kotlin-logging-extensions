@@ -22,12 +22,12 @@ The project is a multi-module Gradle project:
 ## Tech Stack
 - **Language**: Kotlin (v2.3.10)
 - **Build System**: Gradle (Kotlin DSL)
-- **Compiler Plugin**: KSP (Kotlin Symbol Processing) v2.3.5
+- **Compiler Plugin**: KSP (Kotlin Symbol Processing) v2.3.6
 - **Testing**: 
   - Framework: JUnit 5
   - Assertions: Kotest Assertions
   - Compilation Testing: `kotlin-compile-testing-ksp` (ZacSweers fork)
-- **Logging Library**: `kotlin-logging-jvm` (v7.0.14)
+- **Logging Library**: `kotlin-logging-jvm` (v8.0.01)
 
 ## Key Directories
 - `processor/src/main/kotlin`: KSP Processor implementation (`LoggerProcessor`, `LoggerProcessorProvider`).
