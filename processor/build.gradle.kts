@@ -20,7 +20,7 @@ dependencies {
     implementation("com.google.devtools.ksp:symbol-processing-api:2.3.6")
 
     // kotlin-logging dependency for generated code compatibility
-    compileOnly("io.github.oshai:kotlin-logging-jvm:8.0.01")
+    compileOnly("io.github.oshai:kotlin-logging-jvm:8.0.02")
 }
 
 tasks.test {
