@@ -1,0 +1,23 @@
+name: 'Setup Gradle'
+description: 'Standardized JDK and Gradle setup for this project'
+inputs:
+  java-version:
+    description: 'JDK version to use'
+    default: '21'
+  cache:
+    description: 'Whether to enable caching'
+    default: 'gradle'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+        cache: ${{ inputs.cache }}
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      shell: bash
