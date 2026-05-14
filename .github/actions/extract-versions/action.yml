@@ -1,0 +1,35 @@
+name: 'Extract Project Versions'
+description: 'Extracts Kotlin, KSP, and other dependency versions from build scripts'
+outputs:
+  kotlin_version:
+    description: 'Kotlin version'
+    value: ${{ steps.extract.outputs.kotlin_version }}
+  ksp_version:
+    description: 'KSP version'
+    value: ${{ steps.extract.outputs.ksp_version }}
+  kotlin_logging_version:
+    description: 'kotlin-logging version'
+    value: ${{ steps.extract.outputs.kotlin_logging_version }}
+  logback_version:
+    description: 'Logback version'
+    value: ${{ steps.extract.outputs.logback_version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract versions
+      id: extract
+      run: |
+        KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+        if [ -z "$KSP_VERSION" ]; then
+          KSP_VERSION=$(grep 'com.google.devtools.ksp:symbol-processing-api:' processor/build.gradle.kts | sed 's/.*symbol-processing-api:\([^"]*\)".*/\1/')
+        fi
+        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
+        LOGBACK_VERSION=$(grep 'ch.qos.logback:logback-classic:' workload/build.gradle.kts | sed 's/.*logback-classic:\([^"]*\)".*/\1/')
+        
+        echo "kotlin_version=$KOTLIN_VERSION" >> $GITHUB_OUTPUT
+        echo "ksp_version=$KSP_VERSION" >> $GITHUB_OUTPUT
+        echo "kotlin_logging_version=$KOTLIN_LOGGING_VERSION" >> $GITHUB_OUTPUT
+        echo "logback_version=$LOGBACK_VERSION" >> $GITHUB_OUTPUT
+      shell: bash
