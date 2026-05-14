@@ -153,35 +153,13 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       
-    - name: Set up JDK 21
-      uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        
-    - name: Cache Gradle packages
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Setup Gradle
+      uses: ./.github/actions/setup-gradle
       
-    - name: Run tests
-      run: ./gradlew test
-      
-    - name: Run ktlint check
-      run: ./gradlew ktlintCheck
-      
-    - name: Build artifacts
-      run: ./gradlew build
+    - name: Build and Test
+      run: ./gradlew build ktlintCheck test
 
   create-pr:
     runs-on: ubuntu-latest
@@ -189,7 +167,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -199,40 +177,13 @@ jobs:
         BRANCH_NAME="${{ needs.validate.outputs.branch_name }}"
         BASE_BRANCH="${{ github.event.inputs.base_branch }}"
         
-        echo "🌿 Base branch: ${BASE_BRANCH}"
         git checkout "${BASE_BRANCH}"
         git pull origin "${BASE_BRANCH}"
-        
         git checkout -b "${BRANCH_NAME}"
-        echo "✅ Created release branch: ${BRANCH_NAME} from ${BASE_BRANCH}"
         
     - name: Extract build script versions
       id: build_versions
-      run: |
-        # Extract Kotlin version from build.gradle.kts
-        KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-        echo "kotlin_version=${KOTLIN_VERSION}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted Kotlin version: ${KOTLIN_VERSION}"
-        
-        # Extract KSP version from processor/build.gradle.kts - fix the pattern
-        KSP_VERSION=$(grep 'com.google.devtools.ksp:symbol-processing-api:' processor/build.gradle.kts | sed 's/.*symbol-processing-api:\([^"]*\)".*/\1/')
-        echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted KSP version: ${KSP_VERSION}"
-        
-        # Extract kotlin-logging-jvm version from processor/build.gradle.kts
-        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
-        echo "kotlin_logging_version=${KOTLIN_LOGGING_VERSION}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted kotlin-logging-jvm version: ${KOTLIN_LOGGING_VERSION}"
-        
-        # Extract full kotlin-logging dependency from processor/build.gradle.kts
-        KOTLIN_LOGGING_DEPENDENCY=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*"\([^"]*\)".*/\1/')
-        echo "kotlin_logging_dependency=${KOTLIN_LOGGING_DEPENDENCY}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted kotlin-logging dependency: ${KOTLIN_LOGGING_DEPENDENCY}"
-        
-        # Extract logback version from workload/build.gradle.kts
-        LOGBACK_VERSION=$(grep 'ch.qos.logback:logback-classic:' workload/build.gradle.kts | sed 's/.*logback-classic:\([^"]*\)".*/\1/')
-        echo "logback_version=${LOGBACK_VERSION}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted logback version: ${LOGBACK_VERSION}"
+      uses: ./.github/actions/extract-versions
 
     - name: Update version references
       run: |
