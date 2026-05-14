@@ -3,7 +3,7 @@
 [![CI](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.doljae/kotlin-logging-extensions.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![kotlin-logging](https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg)](https://github.com/oshai/kotlin-logging)
 [![KSP](https://img.shields.io/badge/KSP-2.3.4-purple.svg)](https://github.com/google/ksp)
 
@@ -47,7 +47,7 @@ Add to your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.3.0"
+    kotlin("jvm") version "2.3.21"
     id("com.google.devtools.ksp") version "2.3.4"
 }
 
@@ -56,9 +56,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.0") // for @AutoLog
-    ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    implementation("io.github.oshai:kotlin-logging-jvm:8.0.01")
+    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.1") // for @AutoLog
+    ksp("io.github.doljae:kotlin-logging-extensions:2.3.1")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.02")
     implementation("ch.qos.logback:logback-classic:1.5.32") // Logger implementation required
 }
 
@@ -128,6 +128,7 @@ independent versioning policy.
 
 | Library        | Kotlin   | KSP            |
 |----------------|----------|----------------|
+| `2.3.1` | `2.3.21` | `2.3.8` |
 | `2.3.0`        | `2.3.0+` | `2.3.4+`       |
 | `2.2.21-0.0.6` | `2.2.21` | `2.2.21-2.0.4` |
 | `2.2.21-0.0.5` | `2.2.21` | `2.2.21-2.0.4` |
@@ -149,14 +150,14 @@ independent versioning policy.
 ```kotlin
 // For Kotlin 2.3.0+ projects:
 plugins {
-    kotlin("jvm") version "2.3.0"
+    kotlin("jvm") version "2.3.21"
     id("com.google.devtools.ksp") version "2.3.4"
 }
 
 dependencies {
-    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    implementation("io.github.oshai:kotlin-logging-jvm:8.0.01") // 5.0.0+
+    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.1")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.3.1")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.02") // 5.0.0+
 }
 ```
 
@@ -173,7 +174,7 @@ or [Log4j2](https://logging.apache.org/log4j/2.x/).
 
 ```kotlin
 plugins {
-    kotlin("jvm") version "2.3.0"
+    kotlin("jvm") version "2.3.21"
     id("com.google.devtools.ksp") version "2.3.4"
 }
 
@@ -182,9 +183,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    ksp("io.github.doljae:kotlin-logging-extensions:2.3.0")
-    implementation("io.github.oshai:kotlin-logging-jvm:8.0.01")
+    compileOnly("io.github.doljae:kotlin-logging-extensions:2.3.1")
+    ksp("io.github.doljae:kotlin-logging-extensions:2.3.1")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.02")
     implementation("ch.qos.logback:logback-classic:1.5.32")
 }
 ```
