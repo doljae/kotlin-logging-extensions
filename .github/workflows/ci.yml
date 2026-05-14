@@ -44,7 +44,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
       
@@ -55,7 +55,7 @@ jobs:
       run: ./gradlew build ktlintCheck test
       
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: test-results
@@ -78,12 +78,12 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
       
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.29.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -91,7 +91,7 @@ jobs:
         output: 'trivy-results.sarif'
         
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
@@ -111,12 +111,12 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
       
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.29.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -124,7 +124,7 @@ jobs:
         output: 'trivy-results.json'
         
     - name: Upload security scan results as artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: security-results
