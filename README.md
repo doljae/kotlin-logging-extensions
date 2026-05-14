@@ -254,11 +254,9 @@ idea {
         val mainGenerated = file("build/generated/ksp/main/kotlin")
         val testGenerated = file("build/generated/ksp/test/kotlin")
         
-        sourceDirs.add(mainGenerated)
-        generatedSourceDirs.add(mainGenerated)
-        
-        testSourceDirs.add(testGenerated)
-        generatedSourceDirs.add(testGenerated)
+        sourceDirs = sourceDirs + mainGenerated
+        testSources.from(testGenerated)
+        generatedSourceDirs = generatedSourceDirs + mainGenerated + testGenerated
     }
 }
 ```
