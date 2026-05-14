@@ -223,6 +223,48 @@ export GITHUB_TOKEN="your-personal-access-token"
 **Solution**: Automatic logger generation that "just works" - inspired by Lombok's elegance, built with Kotlin's KSP
 power.
 
+## 🛠️ Troubleshooting & IDE Support
+
+### IDE Symbols are Red
+Since KSP generates code during compilation, your IDE might not immediately "see" the `log` property. To fix this:
+
+1. **Build the project**: Run `./gradlew build` or `./gradlew kspKotlin`.
+2. **Configure Source Sets**: Add the KSP generated directory to your Kotlin source sets in `build.gradle.kts`:
+
+```kotlin
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+    sourceSets.test {
+        kotlin.srcDir("build/generated/ksp/test/kotlin")
+    }
+}
+```
+
+3. **IntelliJ Integration**: If using IntelliJ IDEA, apply the `idea` plugin to mark these as generated source roots:
+
+```kotlin
+plugins {
+    id("idea")
+}
+
+idea {
+    module {
+        val mainGenerated = file("build/generated/ksp/main/kotlin")
+        val testGenerated = file("build/generated/ksp/test/kotlin")
+        
+        sourceDirs.add(mainGenerated)
+        generatedSourceDirs.add(mainGenerated)
+        
+        testSourceDirs.add(testGenerated)
+        generatedSourceDirs.add(testGenerated)
+    }
+}
+```
+
+4. **Reload Gradle**: Click the "Reload All Gradle Projects" button in the Gradle tool window.
+
 ## 🛠️ Development
 
 ### Build from Source

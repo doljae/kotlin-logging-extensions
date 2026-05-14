@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     id("com.google.devtools.ksp")
+    id("idea")
     application
 }
 
@@ -34,6 +35,27 @@ tasks.test {
 
 kotlin {
     jvmToolchain(21)
+
+    // Register KSP generated directories as source roots for IntelliJ visibility
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+    sourceSets.test {
+        kotlin.srcDir("build/generated/ksp/test/kotlin")
+    }
+}
+
+idea {
+    module {
+        val mainGenerated = file("build/generated/ksp/main/kotlin")
+        val testGenerated = file("build/generated/ksp/test/kotlin")
+
+        sourceDirs.add(mainGenerated)
+        generatedSourceDirs.add(mainGenerated)
+
+        testSourceDirs.add(testGenerated)
+        generatedSourceDirs.add(testGenerated)
+    }
 }
 
 application {
