@@ -12,7 +12,6 @@ on:
       - 'docs/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/workflows/**'
-  # Allow manual trigger
   workflow_dispatch:
 
 permissions:
@@ -30,415 +29,88 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       with:
         fetch-depth: 2
         
     - name: Check if this is a release commit
       id: check
       run: |
-        # Check if the last commit is a release commit
         LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-        
-        # Check for Release PR merge pattern: "Release v[VERSION] (#[PR_NUMBER])"
         if [[ $LAST_COMMIT_MSG =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?\ \(\#([0-9]+)\)$ ]]; then
           echo "is-release=true" >> $GITHUB_OUTPUT
-          PR_NUMBER="${BASH_REMATCH[2]}"
-          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-          echo "✅ This is a Release PR merge commit: $LAST_COMMIT_MSG (PR #${PR_NUMBER})"
-        # Also check for direct version update commit pattern (fallback)
+          echo "pr_number=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
         elif [[ $LAST_COMMIT_MSG =~ ^chore:\ update\ version\ references\ to\ [0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
           echo "is-release=true" >> $GITHUB_OUTPUT
           echo "pr_number=" >> $GITHUB_OUTPUT
-          echo "✅ This is a direct version update commit: $LAST_COMMIT_MSG"
         else
           echo "is-release=false" >> $GITHUB_OUTPUT
-          echo "pr_number=" >> $GITHUB_OUTPUT
-          echo "ℹ️ This is not a release commit: $LAST_COMMIT_MSG"
         fi
         
-    - name: Extract version from commit message or gradle.properties
+    - name: Extract version
       id: extract
       if: steps.check.outputs.is-release == 'true'
       run: |
-        LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-        
-        # Try to extract version from Release PR merge commit message first
-        if [[ $LAST_COMMIT_MSG =~ Release\ v([0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?)\ \(\#[0-9]+\) ]]; then
-          VERSION="${BASH_REMATCH[1]}"
-          echo "✅ Extracted version from Release PR merge commit: ${VERSION}"
-        # Fallback to version update commit message
-        elif [[ $LAST_COMMIT_MSG =~ chore:\ update\ version\ references\ to\ ([0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?) ]]; then
-          VERSION="${BASH_REMATCH[1]}"
-          echo "✅ Extracted version from version update commit: ${VERSION}"
-        # Last fallback to gradle.properties
-        else
-          VERSION=$(grep "project.version=" gradle.properties | cut -d'=' -f2)
-          echo "✅ Extracted version from gradle.properties: ${VERSION}"
-        fi
-        
-        TAG_NAME="v${VERSION}"
-        
-        if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
-          echo "❌ Error: Invalid version format: $VERSION"
-          exit 1
-        fi
-        
-        echo "version=${VERSION}" >> $GITHUB_OUTPUT
-        echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-        echo "✅ Final version: ${VERSION}, tag: ${TAG_NAME}"
+        VERSION=$(grep "project.version=" gradle.properties | cut -d'=' -f2)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag_name=v$VERSION" >> $GITHUB_OUTPUT
 
   test:
     runs-on: ubuntu-latest
     needs: check-release
     if: needs.check-release.outputs.is-release == 'true'
-    
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
-      
-    - name: Set up JDK 21
-      uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        
-    - name: Cache Gradle packages
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      
-    - name: Run tests
-      run: ./gradlew test
-      
-    - name: Run ktlint check
-      run: ./gradlew ktlintCheck
-      
-    - name: Build for release
-      run: ./gradlew build
+      uses: actions/checkout@v4
+    - name: Setup Gradle
+      uses: ./.github/actions/setup-gradle
+    - name: Build and Test
+      run: ./gradlew build ktlintCheck test
 
   publish:
     runs-on: ubuntu-latest
     needs: [check-release, test]
     if: needs.check-release.outputs.is-release == 'true'
-    
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        
-    - name: Set up JDK 21
-      uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        
-    - name: Cache Gradle packages
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      
-    - name: Upload to Maven Central Staging
+    - name: Setup Gradle
+      uses: ./.github/actions/setup-gradle
+    - name: Publish
       env:
         ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
         ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
         ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
-      run: |
-        echo "📤 Uploading ${{ needs.check-release.outputs.tag_name }} to Maven Central staging repository..."
-        ./gradlew publishToMavenCentral --no-configuration-cache
-        echo "✅ Uploaded to staging repository successfully!"
-      
-    - name: Publish to GitHub Packages
-      env:
-        GITHUB_USERNAME: ${{ github.actor }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "📦 Publishing ${{ needs.check-release.outputs.tag_name }} to GitHub Packages..."
-        ./gradlew publishAllPublicationsToGithubPackagesRepository
-        echo "✅ Published to GitHub Packages successfully!"
+        ./gradlew publishToMavenCentral publishAllPublicationsToGithubPackagesRepository --no-configuration-cache
 
   release:
     runs-on: ubuntu-latest
     needs: [check-release, test, publish]
     if: needs.check-release.outputs.is-release == 'true'
-    
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        
-    - name: Create and push tag
+    - name: Create tag
       run: |
         TAG_NAME="${{ needs.check-release.outputs.tag_name }}"
-        
-        # Check if tag already exists
-        if git rev-parse --verify "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
-          echo "⚠️ Tag ${TAG_NAME} already exists, skipping tag creation"
-        else
-          echo "Creating tag ${TAG_NAME}..."
-          
-          # Configure git user
+        if ! git rev-parse --verify "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          # Create annotated tag
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "${TAG_NAME}" -m "Release ${TAG_NAME}"
-          
-          # Push tag to origin
           git push origin "${TAG_NAME}"
-          echo "✅ Tag ${TAG_NAME} created and pushed successfully!"
         fi
-        
-    - name: Generate release notes
-      id: release_notes
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        PR_NUMBER="${{ needs.check-release.outputs.pr_number }}"
-        
-        # Initialize Release Notes file
-        > release_notes.md
-        
-        if [ -n "$PR_NUMBER" ]; then
-          echo "📝 Generating release notes from PR #${PR_NUMBER} body..."
-          
-          # Fetch PR body
-          gh pr view "$PR_NUMBER" --json body --jq .body > release_notes_raw.md
-          
-          if [ -s release_notes_raw.md ]; then
-            # Process the body:
-            # 1. Remove the "Release v..." header if it exists
-            # 2. Remove "After Merge" section and everything after it
-            
-            # Remove title line if it starts with "## 🚀 Release"
-            sed '/^## 🚀 Release/d' release_notes_raw.md > release_notes_tmp.md && mv release_notes_tmp.md release_notes_raw.md
-            
-            # Remove everything from "### 🔄 After Merge" to the end
-            sed -n '/### 🔄 After Merge/q;p' release_notes_raw.md > release_notes_clean.md
-            
-            # Use the cleaned content
-            cat release_notes_clean.md > release_notes.md
-            
-            echo "✅ Successfully extracted release notes from PR body"
-          else
-            echo "⚠️ Fetched PR body is empty, falling back to commit history..."
-            PR_NUMBER="" # Force fallback
-          fi
-        fi
-        
-        # Fallback to commit history if PR_NUMBER is empty or body fetch failed
-        if [ -z "$PR_NUMBER" ] || [ ! -s release_notes.md ]; then
-          echo "📝 Generating release notes from commit history (Fallback)..."
-          
-          # Extract build script versions for release notes
-          echo "📍 Extracting build script versions..."
-          KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-          KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-          KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
-          KOTLIN_LOGGING_BADGE=$(grep 'kotlin--logging.*svg' README.md | sed 's/.*kotlin--logging-\([^-]*\)-.*.svg.*/\1/')
-          
-          echo "✅ Extracted versions:"
-          echo "   - Kotlin: $KOTLIN_VERSION (from root build.gradle.kts)"
-          echo "   - KSP: $KSP_VERSION (from root build.gradle.kts)"  
-          echo "   - kotlin-logging-jvm: $KOTLIN_LOGGING_VERSION (from processor/build.gradle.kts)"
-          echo "   - kotlin-logging badge: $KOTLIN_LOGGING_BADGE (from README.md)"
-          
-          # Get the previous tag
-          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$' | head -2 | tail -1)
-          CURRENT_TAG="${{ needs.check-release.outputs.tag_name }}"
-          
-          echo "Generating release notes from ${PREVIOUS_TAG} to ${CURRENT_TAG}"
-          
-          # Cache for GitHub API results to avoid duplicate calls
-          declare -A EMAIL_TO_USERNAME_CACHE
-          
-          # Function to get GitHub username from commit author info
-          get_github_username() {
-            local author_name="$1"
-            local author_email="$2"
-            
-            if [[ "$author_name" == *"[bot]" ]]; then echo "${author_name%\[bot\]}"; return; fi
-            if [[ "$author_email" =~ ^([0-9]+\+)?([^@]+)@users\.noreply\.github\.com$ ]]; then echo "${BASH_REMATCH[2]}"; return; fi
-            if [[ "$author_email" =~ ^([^@]+)@github\.com$ ]]; then echo "${BASH_REMATCH[1]}"; return; fi
-            case "$author_email" in "seok9211@naver.com") echo "doljae"; return ;; esac
-            
-            if [[ -n "${EMAIL_TO_USERNAME_CACHE[$author_email]}" ]]; then echo "${EMAIL_TO_USERNAME_CACHE[$author_email]}"; return; fi
-            
-            API_RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/search/users?q=${author_email}" 2>/dev/null)
-            USERNAME=$(echo "$API_RESPONSE" | jq -r '.items[0].login // empty' 2>/dev/null)
-            
-            if [[ -n "$USERNAME" && "$USERNAME" != "null" ]]; then
-              EMAIL_TO_USERNAME_CACHE[$author_email]="$USERNAME"
-              echo "$USERNAME"
-            else
-              EMAIL_TO_USERNAME_CACHE[$author_email]="$author_name"
-              echo "$author_name"
-            fi
-          }
-          
-          if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ]; then
-            echo "🎉 **Initial Release**" > release_notes.md
-            echo "" >> release_notes.md
-            echo "This is the first release of kotlin-logging-extensions!" >> release_notes.md
-            echo "" >> release_notes.md
-            echo "## 🚀 Features" >> release_notes.md
-            echo "- Automatic logger generation for Kotlin classes using KSP" >> release_notes.md
-            echo "- Zero boilerplate - just use \`log.info { }\` in any class" >> release_notes.md
-          else
-            echo "## 🔄 Changes since ${PREVIOUS_TAG}" > release_notes.md
-            echo "" >> release_notes.md
-            
-            ALL_COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"%s (%h)	%an	%ae" --no-merges)
-            FEATURES_FIXES=""
-            VERSION_DEPS=""
-            DOCS_MAINTENANCE=""
-            declare -A CONTRIBUTORS
-            
-            while IFS= read -r line; do
-              if [ -n "$line" ]; then
-                COMMIT_MSG=$(echo "$line" | cut -d$'\t' -f1)
-                AUTHOR_NAME=$(echo "$line" | cut -d$'\t' -f2)
-                AUTHOR_EMAIL=$(echo "$line" | cut -d$'\t' -f3)
-                
-                if [[ "$AUTHOR_NAME" != "github-actions[bot]" ]]; then
-                  GITHUB_USERNAME=$(get_github_username "$AUTHOR_NAME" "$AUTHOR_EMAIL")
-                  CONTRIBUTORS["$GITHUB_USERNAME"]="$AUTHOR_EMAIL"
-                fi
-                
-                if [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || ([[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]]) && ([[ "$COMMIT_MSG" == *update* ]] || [[ "$COMMIT_MSG" == *upgrade* ]] || [[ "$COMMIT_MSG" == *bump* ]]) && ([[ "$COMMIT_MSG" == *dependency* ]] || [[ "$COMMIT_MSG" == *dependencies* ]] || [[ "$COMMIT_MSG" == *deps* ]] || [[ "$COMMIT_MSG" == *version* ]] || [[ "$COMMIT_MSG" == *kotlin* ]] || [[ "$COMMIT_MSG" == *ksp* ]] || [[ "$COMMIT_MSG" == *gradle* ]]); then
-                  VERSION_DEPS="${VERSION_DEPS}- ${COMMIT_MSG}"$'\n'
-                elif [[ "$COMMIT_MSG" == feat:* ]] || [[ "$COMMIT_MSG" == fix:* ]] || [[ "$COMMIT_MSG" == perf:* ]] || [[ "$COMMIT_MSG" == refactor:* ]]; then
-                  FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
-                elif [[ "$COMMIT_MSG" == docs:* ]] || [[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]] || [[ "$COMMIT_MSG" == style:* ]] || [[ "$COMMIT_MSG" == test:* ]]; then
-                  DOCS_MAINTENANCE="${DOCS_MAINTENANCE}- ${COMMIT_MSG}"$'\n'
-                else
-                  FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
-                fi
-              fi
-            done <<< "$ALL_COMMITS"
-            
-            if [ -n "$FEATURES_FIXES" ] || [ -n "$VERSION_DEPS" ] || [ -n "$DOCS_MAINTENANCE" ]; then
-              if [ -n "$FEATURES_FIXES" ]; then echo "### 🚀 Features & Fixes" >> release_notes.md; echo "$FEATURES_FIXES" >> release_notes.md; fi
-              if [ -n "$VERSION_DEPS" ]; then echo "### 📦 Dependencies & Versions" >> release_notes.md; echo "$VERSION_DEPS" >> release_notes.md; fi
-              if [ -n "$DOCS_MAINTENANCE" ]; then echo "### 📚 Documentation & Maintenance" >> release_notes.md; echo "$DOCS_MAINTENANCE" >> release_notes.md; fi
-            else
-              echo "### 📝 Changes" >> release_notes.md; echo "- Minor improvements and updates" >> release_notes.md; echo "" >> release_notes.md;
-            fi
-            
-            if [ ${#CONTRIBUTORS[@]} -gt 0 ]; then
-              echo "### 👥 Contributors" >> release_notes.md
-              echo "" >> release_notes.md
-              echo "Thanks to all the contributors who made this release possible:" >> release_notes.md
-              echo "" >> release_notes.md
-              for contributor in $(printf '%s\n' "${!CONTRIBUTORS[@]}" | sort); do
-                echo "- @${contributor}" >> release_notes.md
-              done
-              echo "" >> release_notes.md
-            fi
-          fi
-          
-          echo "## ⚡ Version Compatibility" >> release_notes.md
-          echo "- **Kotlin**: $KOTLIN_VERSION" >> release_notes.md
-          echo "- **KSP**: $KSP_VERSION" >> release_notes.md
-          echo "- **kotlin-logging**: $KOTLIN_LOGGING_BADGE" >> release_notes.md
-          echo "" >> release_notes.md
-          
-          echo "## 📦 Installation" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "\`\`\`kotlin" >> release_notes.md
-          echo "plugins {" >> release_notes.md
-          echo "    kotlin(\"jvm\") version \"$KOTLIN_VERSION\"" >> release_notes.md
-          echo "    id(\"com.google.devtools.ksp\") version \"$KSP_VERSION\"" >> release_notes.md
-          echo "}" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "dependencies {" >> release_notes.md
-          echo "    ksp(\"io.github.doljae:kotlin-logging-extensions:${{ needs.check-release.outputs.version }}\")" >> release_notes.md
-          echo "    implementation(\"io.github.doljae:kotlin-logging-extensions:${{ needs.check-release.outputs.version }}\")" >> release_notes.md
-          echo "    implementation(\"io.github.oshai:kotlin-logging-jvm:$KOTLIN_LOGGING_VERSION\")" >> release_notes.md
-          echo "}" >> release_notes.md
-          echo "\`\`\`" >> release_notes.md
-          echo "" >> release_notes.md
-          
-          echo "## 🔗 Links" >> release_notes.md
-          echo "- 📚 [Documentation](https://github.com/doljae/kotlin-logging-extensions/blob/main/README.md)" >> release_notes.md
-          echo "- 📦 [Maven Central](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.check-release.outputs.version }})" >> release_notes.md
-          if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$CURRENT_TAG" ]; then
-            echo "- 🔄 [Full Changelog](https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${CURRENT_TAG})" >> release_notes.md
-          fi
-        fi
-        
-        # Set output for GitHub release
-        echo 'release_notes<<EOF' >> $GITHUB_OUTPUT
-        cat release_notes.md >> $GITHUB_OUTPUT
-        echo 'EOF' >> $GITHUB_OUTPUT
-        
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v3
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ needs.check-release.outputs.tag_name }}
         name: Release ${{ needs.check-release.outputs.tag_name }}
-        body: ${{ steps.release_notes.outputs.release_notes }}
-        draft: false
-        prerelease: false
-        generate_release_notes: false
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Release summary
-      run: |
-        echo "🎉 Auto Release ${{ needs.check-release.outputs.tag_name }} completed successfully!"
-        echo ""
-        echo "✅ Created and pushed git tag: ${{ needs.check-release.outputs.tag_name }}"
-        echo "✅ Uploaded to Maven Central staging repository"
-        echo "✅ Published to GitHub Packages"
-        echo "✅ Created GitHub Release with release notes"
-        echo ""
-        echo "🔗 Links:"
-        echo "   - GitHub Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.check-release.outputs.tag_name }}"
-        echo "   - Sonatype Staging: https://oss.sonatype.org/#stagingRepositories"
-        echo "   - Maven Central: https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions/${{ needs.check-release.outputs.version }}"
-        echo ""
-        echo "⚠️  MANUAL ACTION REQUIRED:"
-        echo "   Complete Maven Central publishing at https://oss.sonatype.org/"
-
-    - name: Extract build script versions
-      id: build_versions
-      run: |
-        # Extract Kotlin version from build.gradle.kts
-        KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-        echo "kotlin_version=${KOTLIN_VERSION}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted Kotlin version: ${KOTLIN_VERSION}"
-        
-        # Extract KSP version from build.gradle.kts  
-        KSP_VERSION=$(grep 'id("com.google.devtools.ksp") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-        echo "ksp_version=${KSP_VERSION}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted KSP version: ${KSP_VERSION}"
-        
-        # Extract kotlin-logging-jvm version from processor/build.gradle.kts
-        KOTLIN_LOGGING_VERSION=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*kotlin-logging-jvm:\([^"]*\)".*/\1/')
-        echo "kotlin_logging_version=${KOTLIN_LOGGING_VERSION}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted kotlin-logging-jvm version: ${KOTLIN_LOGGING_VERSION}"
-        
-        # Extract full kotlin-logging dependency from processor/build.gradle.kts
-        KOTLIN_LOGGING_DEPENDENCY=$(grep 'io.github.oshai:kotlin-logging-jvm:' processor/build.gradle.kts | sed 's/.*"\([^"]*\)".*/\1/')
-        echo "kotlin_logging_dependency=${KOTLIN_LOGGING_DEPENDENCY}" >> $GITHUB_OUTPUT
-        echo "📍 Extracted kotlin-logging dependency: ${KOTLIN_LOGGING_DEPENDENCY}" 
