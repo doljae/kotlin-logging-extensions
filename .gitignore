@@ -317,3 +317,7 @@ gradle-local.properties
 # binary
 
 **/bin
+
+# Build reports
+.build-report/
+
