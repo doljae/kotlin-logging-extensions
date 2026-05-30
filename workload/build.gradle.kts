@@ -20,7 +20,7 @@ dependencies {
 
     // Kotlin logging dependencies
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.03")
-    implementation("ch.qos.logback:logback-classic:1.5.32")
+    implementation("ch.qos.logback:logback-classic:1.5.33")
 
     // Access AutoLog annotation in source code
     compileOnly(project(":processor"))
