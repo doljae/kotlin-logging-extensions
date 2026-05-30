@@ -17,10 +17,10 @@ dependencies {
     testImplementation("dev.zacsweers.kctfork:ksp:0.12.1")
     testImplementation("io.kotest:kotest-assertions-core:6.1.11")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.8")
+    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.9")
 
     // kotlin-logging dependency for generated code compatibility
-    compileOnly("io.github.oshai:kotlin-logging-jvm:8.0.03")
+    compileOnly("io.github.oshai:kotlin-logging-jvm:8.0.4")
 }
 
 tasks.test {

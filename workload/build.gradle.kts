@@ -19,8 +19,8 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
-    implementation("io.github.oshai:kotlin-logging-jvm:8.0.03")
-    implementation("ch.qos.logback:logback-classic:1.5.32")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
+    implementation("ch.qos.logback:logback-classic:1.5.33")
 
     // Access AutoLog annotation in source code
     compileOnly(project(":processor"))
