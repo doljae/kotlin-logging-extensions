@@ -62,14 +62,16 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.32") // Logger implementation required
 }
 
-ksp {
-    // Optional package scan mode
-    arg("kotlinloggingextensions.mode", "PackageScan")
-    arg("kotlinloggingextensions.targets", "com.example.*,com.sample.*")
-}
+// Optional: enable PackageScan mode (see below for details)
+// ksp {
+//     arg("kotlinloggingextensions.mode", "PackageScan")
+//     arg("kotlinloggingextensions.targets", "com.example.*,com.sample.*")
+// }
 ```
 
-**Step 2: Annotate Classes With `@AutoLog`**
+**Step 2: Choose your mode — annotation or package scan**
+
+**Option A: Annotate individual classes with `@AutoLog`** (annotation-only mode, default)
 
 ```kotlin
 import io.github.doljae.kotlinlogging.extensions.AutoLog
@@ -89,6 +91,36 @@ class OrderProcessor {
 }
 ```
 
+**Option B: Generate loggers for entire packages — no annotation needed** (PackageScan mode)
+
+Configure target packages in `build.gradle.kts`:
+
+```kotlin
+ksp {
+    arg("kotlinloggingextensions.mode", "PackageScan")
+    arg("kotlinloggingextensions.targets", "com.example.service.*,com.example.repository.*")
+}
+```
+
+Every class in the configured packages gets a `log` property automatically:
+
+```kotlin
+// No @AutoLog needed — just use log directly in any class within the target package
+class PaymentService {
+    fun processPayment(id: String) {
+        log.info { "Processing payment: $id" }
+    }
+}
+
+class OrderRepository {
+    fun findById(id: String) {
+        log.debug { "Querying order: $id" }
+    }
+}
+```
+
+Both modes can be combined — a class gets a logger if **either** condition matches (annotation or package match).
+
 **Step 3: Generate Logger Code**
 
 After writing your code, run KSP to generate the logger extensions:
@@ -99,23 +131,22 @@ After writing your code, run KSP to generate the logger extensions:
 
 This will generate the `log` property and resolve any compilation errors in your IDE.
 
-That's it! The logger is generated for opted-in classes using the fully qualified class name (`OrderProcessor` in this example).
+That's it! The logger is generated using the fully qualified class name as the logger name.
 
-Package-based auto-generation and `@AutoLog` can be used together.
-Generation applies when either condition matches.
-Targets support `*` as a package wildcard suffix (for example, `com.example.*`).
+### Package Scan Mode — Target Rules
 
-Mode and target configuration rules:
-- Supported mode values: `AnnotationOnly`, `PackageScan` (case/`_`/`-` insensitive)
-- If `kotlinloggingextensions.targets` (or legacy `kotlinloggingextensions.autoGeneratePackagePrefixes`) is set,
-  package scanning is enabled automatically only when at least one valid target remains after normalization.
-- Invalid target entries are ignored. Use `com.example` or `com.example.*` format.
+- `com.example` — exact package match only
+- `com.example.*` — matches `com.example` and all sub-packages
+- Multiple targets: comma-separated (e.g., `com.example.*,com.other.*`)
+- Invalid target entries are silently ignored
+- Supported mode values: `AnnotationOnly` (default), `PackageScan` (case/`_`/`-` insensitive)
+- If `kotlinloggingextensions.targets` is set without `mode`, package scanning is enabled automatically when at least one valid target exists
 
 ## ✨ Features
 
 - **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
 - **✅ Explicit Opt-In**: Generate `log` only for classes annotated with `@AutoLog`
-- **📂 Package Scope Option**: Configure package scanning via `mode` + `targets` in `build.gradle.kts`
+- **📂 Package Scan Mode**: Generate loggers for entire packages without any annotation — configure `mode=PackageScan` and `targets` in `build.gradle.kts`
 - **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead
 - **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
 - **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
@@ -283,20 +314,8 @@ cd kotlin-logging-extensions
 
 ## 🤖 AI Agent Guide
 
-This repository includes Codex-native AI agent configuration:
-
-- Root rules: `AGENTS.md`
-- Scoped rules:
-  - `processor/AGENTS.md`
-  - `workload/AGENTS.md`
-- Skill definitions: `.agents/skills/*`
-
-Core specialist skills:
-- `ksp-module-router`
-- `ksp-logger-generator-maintainer`
-- `workload-regression-maintainer`
-- `release-compatibility-maintainer`
-- `reference-quality-maintainer`
+Project instructions for Claude Code and Codex are in `CLAUDE.md` / `AGENTS.md` (identical).
+Full context: [`docs/project-instructions.md`](docs/project-instructions.md).
 
 ## 🤝 Contributing
 
