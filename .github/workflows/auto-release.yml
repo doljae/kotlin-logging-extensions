@@ -29,7 +29,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 2
         
@@ -61,7 +61,7 @@ jobs:
     if: needs.check-release.outputs.is-release == 'true'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup Gradle
       uses: ./.github/actions/setup-gradle
     - name: Build and Test
@@ -73,7 +73,7 @@ jobs:
     if: needs.check-release.outputs.is-release == 'true'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
     - name: Setup Gradle
@@ -94,7 +94,7 @@ jobs:
     if: needs.check-release.outputs.is-release == 'true'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
     - name: Create tag
