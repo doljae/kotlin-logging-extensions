@@ -15,7 +15,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     // Maintained fork of kotlin-compile-testing
     testImplementation("dev.zacsweers.kctfork:ksp:0.13.0")
-    testImplementation("io.kotest:kotest-assertions-core:6.2.1")
+    testImplementation("io.kotest:kotest-assertions-core:6.2.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("com.google.devtools.ksp:symbol-processing-api:2.3.9")
 
