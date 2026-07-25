@@ -154,8 +154,12 @@ That's it! The logger is generated using the fully qualified class name as the l
 
 ## 📋 Version Compatibility
 
-**Choose the library version that matches your project's KSP version.** Starting from version 2.3.0, we follow KSP's
-independent versioning policy.
+**Choose the library version whose `Kotlin` column matches your project's Kotlin version.**
+
+Since [KSP 2.3.0](https://github.com/google/ksp/releases/tag/2.3.0), the KSP version is no longer tied to the Kotlin
+compiler version — KSP2 is a standalone tool built on the stable compiler APIs rather than a compiler plugin. This is
+why a single KSP version (`2.3.10`) serves both the Kotlin 2.3.x and 2.4.x lines. Pick the library release built for
+your Kotlin line; use the KSP version shown next to it.
 
 | Library        | Kotlin   | KSP            |
 |----------------|----------|----------------|
@@ -175,11 +179,11 @@ independent versioning policy.
 ### How to Use
 
 1. **Check your Kotlin version** in `build.gradle.kts`
-2. **Pick the matching library version** from the table above
-3. **Use the exact KSP version** shown in the table
+2. **Pick the library version whose `Kotlin` column matches your line** from the table above
+3. **Use the KSP version** shown next to it
 
 ```kotlin
-// For Kotlin 2.3.0+ projects:
+// For Kotlin 2.3.x projects:
 plugins {
     kotlin("jvm") version "2.3.21"
     id("com.google.devtools.ksp") version "2.3.4"
