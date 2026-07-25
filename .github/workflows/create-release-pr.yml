@@ -254,12 +254,12 @@ jobs:
             # Badge updates
             (r'https://img\.shields\.io/badge/kotlin-[0-9]+\.[0-9]+\.[0-9]+-blue\.svg', f'https://img.shields.io/badge/kotlin-{KOTLIN_VERSION}-blue.svg'),
             (r'https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg', 'https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg'),
-            (r'https://img\.shields\.io/badge/KSP-[0-9]+\.[0-9]+\.[0-9]+--[0-9]+\.[0-9]+\.[0-9]+-purple\.svg', f'https://img.shields.io/badge/KSP-{KSP_VERSION.replace("-", "--")}-purple.svg'),
+            (r'https://img\.shields\.io/badge/KSP-[0-9]+\.[0-9]+\.[0-9]+(--[0-9]+\.[0-9]+\.[0-9]+)?-purple\.svg', f'https://img.shields.io/badge/KSP-{KSP_VERSION.replace("-", "--")}-purple.svg'),
             
             # Dependency examples
             (r'io\.github\.doljae:kotlin-logging-extensions:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions:{VERSION}'),
             (r'kotlin\("jvm"\) version "[0-9]+\.[0-9]+\.[0-9]+"', f'kotlin("jvm") version "{KOTLIN_VERSION}"'),
-            (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
+            (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
             
             # Version compatibility section
             (r'// For Kotlin [0-9]+\.[0-9]+\.[0-9]+ projects:', f'// For Kotlin {KOTLIN_VERSION} projects:'),
@@ -298,7 +298,7 @@ jobs:
             ('bug_report.yml', [
                 (r'io\.github\.doljae:kotlin-logging-extensions:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions:{VERSION}'),
                 (r'kotlin\("jvm"\) version "[0-9]+\.[0-9]+\.[0-9]+"', f'kotlin("jvm") version "{KOTLIN_VERSION}"'),
-                (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
+                (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
                 (r'ch\.qos\.logback:logback-classic:[0-9]+\.[0-9]+\.[0-9]+', f'ch.qos.logback:logback-classic:{LOGBACK_VERSION}'),
                 (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {VERSION}"', 1),  # First occurrence
                 (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_VERSION}"', 2),  # Second occurrence
@@ -412,7 +412,7 @@ jobs:
       id: release_notes
       run: |
         # Get the previous tag
-        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$' | head -1)
         CURRENT_VERSION="${{ needs.validate.outputs.version }}"
         
         echo "Generating release notes since ${PREVIOUS_TAG}"

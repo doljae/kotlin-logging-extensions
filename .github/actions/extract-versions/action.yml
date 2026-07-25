@@ -13,6 +13,9 @@ outputs:
   logback_version:
     description: 'Logback version'
     value: ${{ steps.extract.outputs.logback_version }}
+  kotlin_logging_dependency:
+    description: 'Full kotlin-logging-jvm dependency coordinate'
+    value: ${{ steps.extract.outputs.kotlin_logging_dependency }}
 
 runs:
   using: "composite"
@@ -32,4 +35,5 @@ runs:
         echo "ksp_version=$KSP_VERSION" >> $GITHUB_OUTPUT
         echo "kotlin_logging_version=$KOTLIN_LOGGING_VERSION" >> $GITHUB_OUTPUT
         echo "logback_version=$LOGBACK_VERSION" >> $GITHUB_OUTPUT
+        echo "kotlin_logging_dependency=io.github.oshai:kotlin-logging-jvm:$KOTLIN_LOGGING_VERSION" >> $GITHUB_OUTPUT
       shell: bash
