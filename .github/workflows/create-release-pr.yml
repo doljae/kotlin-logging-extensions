@@ -262,7 +262,8 @@ jobs:
             (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
             
             # Version compatibility section
-            (r'// For Kotlin [0-9]+\.[0-9]+\.[0-9]+ projects:', f'// For Kotlin {KOTLIN_VERSION} projects:'),
+            # Refers to the Kotlin minor line (e.g. 2.3.x), not the exact build version
+            (r'// For Kotlin [0-9]+\.[0-9]+\.(x|[0-9]+) projects:', f'// For Kotlin {".".join(KOTLIN_VERSION.split(".")[:2])}.x projects:'),
             
             # kotlin-logging version
             (r'io\.github\.oshai:kotlin-logging-jvm:[0-9]+\.[0-9]+\.[0-9]+', f'io.github.oshai:kotlin-logging-jvm:{KOTLIN_LOGGING_VERSION}'),
