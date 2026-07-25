@@ -13,6 +13,15 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/workflows/**'
   workflow_dispatch:
+    inputs:
+      force:
+        description: |
+          Release the version currently in gradle.properties, ignoring the
+          commit-message check. Use to retry a release whose publish step
+          failed after the release commit already landed on the branch.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -37,7 +46,12 @@ jobs:
       id: check
       run: |
         LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-        if [[ $LAST_COMMIT_MSG =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?\ \(\#([0-9]+)\)$ ]]; then
+        if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+          # Manual retry: the release commit may already be several commits back,
+          # so fall back to whatever version gradle.properties currently declares.
+          echo "is-release=true" >> $GITHUB_OUTPUT
+          echo "pr_number=" >> $GITHUB_OUTPUT
+        elif [[ $LAST_COMMIT_MSG =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?\ \(\#([0-9]+)\)$ ]]; then
           echo "is-release=true" >> $GITHUB_OUTPUT
           echo "pr_number=${BASH_REMATCH[2]}" >> $GITHUB_OUTPUT
         elif [[ $LAST_COMMIT_MSG =~ ^chore:\ update\ version\ references\ to\ [0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
@@ -78,15 +92,23 @@ jobs:
         fetch-depth: 0
     - name: Setup Gradle
       uses: ./.github/actions/setup-gradle
-    - name: Publish
+    # These two publications must stay in separate steps. processor/build.gradle.kts
+    # only calls signAllPublications() when GITHUB_TOKEN is absent, so exporting that
+    # token here would silently upload unsigned artifacts to Maven Central.
+    - name: Upload to Maven Central Staging
       env:
         ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
         ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
         ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+      run: |
+        ./gradlew publishToMavenCentral --no-configuration-cache
+    - name: Publish to GitHub Packages
+      env:
+        GITHUB_USERNAME: ${{ github.actor }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        ./gradlew publishToMavenCentral publishAllPublicationsToGithubPackagesRepository --no-configuration-cache
+        ./gradlew publishAllPublicationsToGithubPackagesRepository --no-configuration-cache
 
   release:
     runs-on: ubuntu-latest
