@@ -29,9 +29,9 @@ print_error() {
 # Function to validate version format
 validate_version() {
     local version=$1
-    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        print_error "Version must be in KSP format: KOTLIN_VERSION-LIB_VERSION"
-        print_error "Example: 2.1.21-0.0.1 (Kotlin 2.1.21, Library version 0.0.1)"
+    # SemVer (current, e.g. 2.3.2) or legacy KOTLIN-LIB format (e.g. 2.2.21-0.0.6)
+    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
+        print_error "Version must be SemVer (e.g. 2.3.2) or legacy KOTLIN_VERSION-LIB_VERSION (e.g. 2.2.21-0.0.6)"
         exit 1
     fi
 }
@@ -89,35 +89,35 @@ check_github_cli() {
 
 # Function to suggest next version
 suggest_next_version() {
-    local latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
-    
+    local latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+    local build_kotlin=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
+
     if [[ -z $latest_tag ]]; then
         echo
-        print_info "No previous releases found"
-        print_info "Suggested first version: 2.1.21-0.0.1 (current Kotlin version + initial lib version)"
+        print_info "No SemVer releases found"
+        print_info "Suggested first version: ${build_kotlin%.*}.0"
         echo
         return
     fi
-    
+
     local version=${latest_tag#v}
-    local kotlin_version=${version%-*}
-    local lib_version=${version#*-}
-    
     local IFS='.'
-    read -ra LIB_PARTS <<< "$lib_version"
-    local lib_major=${LIB_PARTS[0]}
-    local lib_minor=${LIB_PARTS[1]}
-    local lib_patch=${LIB_PARTS[2]}
-    
+    read -ra PARTS <<< "$version"
+    local major=${PARTS[0]}
+    local minor=${PARTS[1]}
+    local patch=${PARTS[2]}
+    unset IFS
+
     echo
     print_info "Current latest version: $version"
-    print_info "Kotlin version: $kotlin_version, Library version: $lib_version"
+    print_info "build.gradle.kts Kotlin version: $build_kotlin"
     print_info ""
     print_info "Suggestions:"
-    print_info "  Patch (bug fixes): $kotlin_version-$lib_major.$lib_minor.$((lib_patch + 1))"
-    print_info "  Minor (new features): $kotlin_version-$lib_major.$((lib_minor + 1)).0"
-    print_info "  Major (breaking changes): $kotlin_version-$((lib_major + 1)).0.0"
-    print_info "  Kotlin upgrade: 2.1.21-$lib_version (if Kotlin version changed)"
+    print_info "  Patch (deps, fixes): $major.$minor.$((patch + 1))"
+    # A Kotlin minor-line bump starts a new library minor line, e.g. Kotlin 2.4.x -> 2.4.0
+    if [[ "${build_kotlin%.*}" != "$major.$minor" ]]; then
+        print_info "  Kotlin ${build_kotlin} line: ${build_kotlin%.*}.0"
+    fi
     echo
 }
 
@@ -177,7 +177,7 @@ main() {
     if tag_exists "$tag"; then
         print_error "Tag $tag already exists."
         print_info "Existing tags:"
-        git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+$' | head -5
+        git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$' | head -5
         exit 1
     fi
     
