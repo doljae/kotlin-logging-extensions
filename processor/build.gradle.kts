@@ -17,7 +17,7 @@ dependencies {
     testImplementation("dev.zacsweers.kctfork:ksp:0.13.0")
     testImplementation("io.kotest:kotest-assertions-core:6.2.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.10")
+    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.11")
 
     // kotlin-logging dependency for generated code compatibility
     compileOnly("io.github.oshai:kotlin-logging-jvm:8.0.4")
