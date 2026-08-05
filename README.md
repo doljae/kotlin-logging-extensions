@@ -10,15 +10,14 @@
 **Elegant [kotlin-logging](https://github.com/oshai/kotlin-logging) extensions for zero-boilerplate logger generation in
 Kotlin classes using [KSP](https://github.com/google/ksp)**
 
-**Write `log.info { }` in annotated classes without boilerplate!**
+**Write `log.info { }` in any class without boilerplate!**
 
 ## 🚀 Quick Start
 
 ### What It Does
 
-Generates logger extensions at compile time for classes annotated with `@AutoLog`.
-No manual logger declarations needed in opted-in classes.
-(`@GenerateLogger` is still supported for backward compatibility, but deprecated.)
+Generates a `log` extension at compile time for every class in your project. No annotations, no
+configuration — add the processor and `log` is there.
 
 ```kotlin
 // ❌ Before: Manual logger in every class
@@ -31,7 +30,6 @@ class UserService {
 }
 
 // ✅ After: Just use log directly
-@AutoLog
 class UserService {
     fun createUser() {
         log.info { "Creating user" }  // Auto-generated!
@@ -56,27 +54,17 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.github.doljae:kotlin-logging-extensions:2.4.0") // for @AutoLog
     ksp("io.github.doljae:kotlin-logging-extensions:2.4.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("ch.qos.logback:logback-classic:1.6.0") // Logger implementation required
 }
-
-// Optional: enable PackageScan mode (see below for details)
-// ksp {
-//     arg("kotlinloggingextensions.mode", "PackageScan")
-//     arg("kotlinloggingextensions.targets", "com.example.*,com.sample.*")
-// }
 ```
 
-**Step 2: Choose your mode — annotation or package scan**
+**Step 2: Use `log`**
 
-**Option A: Annotate individual classes with `@AutoLog`** (annotation-only mode, default)
+Nothing to annotate, nothing to configure:
 
 ```kotlin
-import io.github.doljae.kotlinlogging.extensions.AutoLog
-
-@AutoLog
 class OrderProcessor {
     fun processOrder(id: String) {
         log.info { "Processing order: $id" }
@@ -91,36 +79,6 @@ class OrderProcessor {
 }
 ```
 
-**Option B: Generate loggers for entire packages — no annotation needed** (PackageScan mode)
-
-Configure target packages in `build.gradle.kts`:
-
-```kotlin
-ksp {
-    arg("kotlinloggingextensions.mode", "PackageScan")
-    arg("kotlinloggingextensions.targets", "com.example.service.*,com.example.repository.*")
-}
-```
-
-Every class in the configured packages gets a `log` property automatically:
-
-```kotlin
-// No @AutoLog needed — just use log directly in any class within the target package
-class PaymentService {
-    fun processPayment(id: String) {
-        log.info { "Processing payment: $id" }
-    }
-}
-
-class OrderRepository {
-    fun findById(id: String) {
-        log.debug { "Querying order: $id" }
-    }
-}
-```
-
-Both modes can be combined — a class gets a logger if **either** condition matches (annotation or package match).
-
 **Step 3: Generate Logger Code**
 
 After writing your code, run KSP to generate the logger extensions:
@@ -133,20 +91,60 @@ This will generate the `log` property and resolve any compilation errors in your
 
 That's it! The logger is generated using the fully qualified class name as the logger name.
 
-### Package Scan Mode — Target Rules
+### Scoping Generation
+
+By default every class gets a `log` extension. If you want to narrow that, set a mode in
+`build.gradle.kts`.
+
+**Limit to specific packages** — `PackageScan`:
+
+```kotlin
+ksp {
+    arg("kotlinloggingextensions.mode", "PackageScan")
+    arg("kotlinloggingextensions.targets", "com.example.service.*,com.example.repository.*")
+}
+```
+
+Target rules:
 
 - `com.example` — exact package match only
 - `com.example.*` — matches `com.example` and all sub-packages
 - Multiple targets: comma-separated (e.g., `com.example.*,com.other.*`)
-- Invalid target entries are silently ignored
-- Supported mode values: `AnnotationOnly` (default), `PackageScan` (case/`_`/`-` insensitive)
+- Invalid target entries are ignored with a warning
 - If `kotlinloggingextensions.targets` is set without `mode`, package scanning is enabled automatically when at least one valid target exists
+
+**Limit to explicitly marked classes** — `AnnotationOnly`:
+
+```kotlin
+ksp {
+    arg("kotlinloggingextensions.mode", "AnnotationOnly")
+}
+```
+
+```kotlin
+dependencies {
+    compileOnly("io.github.doljae:kotlin-logging-extensions:2.4.0") // for @AutoLog
+}
+```
+
+```kotlin
+import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+@AutoLog
+class OrderProcessor {
+    fun processOrder(id: String) {
+        log.info { "Processing order: $id" }
+    }
+}
+```
+
+`@AutoLog` also works in `PackageScan` mode, where a class gets a logger if **either** condition
+matches. Mode values are case/`_`/`-` insensitive: `All` (default), `PackageScan`, `AnnotationOnly`.
 
 ## ✨ Features
 
-- **🔧 Zero Boilerplate**: No logger declarations needed - just use `log.info { }`
-- **✅ Explicit Opt-In**: Generate `log` only for classes annotated with `@AutoLog`
-- **📂 Package Scan Mode**: Generate loggers for entire packages without any annotation — configure `mode=PackageScan` and `targets` in `build.gradle.kts`
+- **🔧 Zero Boilerplate**: No logger declarations, no annotations, no configuration — just use `log.info { }`
+- **🎚️ Scope It When You Want To**: Narrow generation to specific packages (`PackageScan`) or to explicitly marked classes (`AnnotationOnly`)
 - **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead
 - **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
 - **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library

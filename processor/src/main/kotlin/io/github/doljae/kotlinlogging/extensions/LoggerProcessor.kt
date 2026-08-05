@@ -18,7 +18,7 @@ import io.github.doljae.common.StringUtility.wrapReservedWords
 class LoggerProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
-    private val generationMode: LoggerGenerationMode = LoggerGenerationMode.ANNOTATION_ONLY,
+    private val generationMode: LoggerGenerationMode = LoggerGenerationMode.ALL,
     private val packageScanTargetPatterns: Set<String> = emptySet(),
 ) : SymbolProcessor {
     /**
@@ -74,6 +74,10 @@ class LoggerProcessor(
     }
 
     private fun KSClassDeclaration.shouldAutoLog(): Boolean {
+        if (generationMode == LoggerGenerationMode.ALL) {
+            return true
+        }
+
         if (hasLoggerGenerationAnnotation()) {
             return true
         }

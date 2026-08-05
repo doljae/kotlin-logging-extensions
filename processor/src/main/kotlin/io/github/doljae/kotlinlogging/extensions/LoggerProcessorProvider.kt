@@ -38,7 +38,7 @@ class LoggerProcessorProvider : SymbolProcessorProvider {
         if (configuredMode != null && parsedConfiguredMode == null) {
             logger.warn(
                 "Unsupported value '$configuredMode' for ${LoggerProcessor.GENERATION_MODE_OPTION_KEY}. " +
-                    "Supported values: AnnotationOnly, PackageScan. Falling back to AnnotationOnly.",
+                    "Supported values: All, AnnotationOnly, PackageScan. Falling back to All.",
             )
         }
 
@@ -54,7 +54,8 @@ class LoggerProcessorProvider : SymbolProcessorProvider {
                 LoggerGenerationMode.PACKAGE_SCAN
             }
             parsedConfiguredMode != null -> parsedConfiguredMode
-            else -> LoggerGenerationMode.ANNOTATION_ONLY
+            // Nothing configured: generate for every class, so that adding the plugin is enough.
+            else -> LoggerGenerationMode.ALL
         }
     }
 
