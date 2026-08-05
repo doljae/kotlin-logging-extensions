@@ -5,6 +5,7 @@ import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
+import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -52,10 +53,7 @@ class LoggerProcessorTest {
         compilation.kspSourcesDir.walkTopDown().forEach { println(it.absolutePath) }
 
         // Verify that the file was generated
-        val generatedFile = 
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "SimpleClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("SimpleClass")
 
         generatedFile?.exists() shouldBe true
         generatedFile?.readText() shouldContain "val SimpleClass.log: KLogger"
@@ -88,10 +86,7 @@ class LoggerProcessorTest {
         val result = compilation.compile()
         // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        val generatedFile = 
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "DeepClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("DeepClass")
 
         generatedFile?.exists() shouldBe true
         generatedFile?.readText() shouldContain "package com.example.deeply.nested"
@@ -124,10 +119,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "GenericClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("<T> GenericClass<T>")
 
         generatedFile?.exists() shouldBe true
         generatedFile?.readText() shouldContain "val <T> GenericClass<T>.log: KLogger"
@@ -162,14 +154,8 @@ class LoggerProcessorTest {
         val result = compilation.compile()
         // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        val generatedFileA = 
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ClassAKotlinLoggingExtensions.kt"
-            }
-        val generatedFileB = 
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ClassBKotlinLoggingExtensions.kt"
-            }
+        val generatedFileA = compilation.generatedExtensionsFileContaining("ClassA")
+        val generatedFileB = compilation.generatedExtensionsFileContaining("ClassB")
 
         generatedFileA?.exists() shouldBe true
         generatedFileB?.exists() shouldBe true
@@ -204,10 +190,7 @@ class LoggerProcessorTest {
         val result = compilation.compile()
         // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        val generatedFile = 
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ReservedClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("ReservedClass")
 
         generatedFile?.exists() shouldBe true
         generatedFile?.readText() shouldContain "package com.example.`fun`"
@@ -238,10 +221,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "NoAnnotationClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("NoAnnotationClass")
 
         generatedFile shouldBe null
     }
@@ -275,10 +255,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ClassWithLogPropertyKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("ClassWithLogProperty")
 
         generatedFile shouldBe null
     }
@@ -314,10 +291,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ClassWithCompanionLogPropertyKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("ClassWithCompanionLogProperty")
 
         generatedFile shouldBe null
     }
@@ -350,10 +324,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "PackageScopedClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("PackageScopedClass")
 
         generatedFile?.exists() shouldBe true
         generatedFile?.readText() shouldContain "val PackageScopedClass.log: KLogger"
@@ -388,10 +359,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "OutsidePackageClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("OutsidePackageClass")
 
         generatedFile shouldBe null
     }
@@ -426,10 +394,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "AnnotatedOutsidePackageClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("AnnotatedOutsidePackageClass")
 
         generatedFile?.exists() shouldBe true
         generatedFile?.readText() shouldContain "val AnnotatedOutsidePackageClass.log: KLogger"
@@ -463,10 +428,7 @@ class LoggerProcessorTest {
 
         val result = compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ModeIgnoredClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("ModeIgnoredClass")
 
         generatedFile?.exists() shouldBe true
         result.messages shouldContain "Package scan targets take precedence and PackageScan mode will be used"
@@ -500,10 +462,7 @@ class LoggerProcessorTest {
 
         val result = compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "InvalidTargetsWithAnnotationOnlyModeClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("InvalidTargetsWithAnnotationOnlyModeClass")
 
         generatedFile shouldBe null
         result.messages shouldContain "Ignoring invalid package target 'invalid*pattern'"
@@ -538,10 +497,7 @@ class LoggerProcessorTest {
 
         val result = compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "UnsupportedModeClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("UnsupportedModeClass")
 
         generatedFile shouldBe null
         result.messages shouldContain "Unsupported value 'NotSupported'"
@@ -576,10 +532,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "NormalizedModeClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("NormalizedModeClass")
 
         generatedFile?.exists() shouldBe true
     }
@@ -611,10 +564,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "AnnotationOnlyModeClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("AnnotationOnlyModeClass")
 
         generatedFile shouldBe null
     }
@@ -656,14 +606,8 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val exactPackageGeneratedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ExactPackageClassKotlinLoggingExtensions.kt"
-            }
-        val subPackageGeneratedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "SubPackageClassKotlinLoggingExtensions.kt"
-            }
+        val exactPackageGeneratedFile = compilation.generatedExtensionsFileContaining("ExactPackageClass")
+        val subPackageGeneratedFile = compilation.generatedExtensionsFileContaining("SubPackageClass")
 
         exactPackageGeneratedFile?.exists() shouldBe true
         subPackageGeneratedFile shouldBe null
@@ -696,10 +640,7 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "LegacyOptionClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("LegacyOptionClass")
 
         generatedFile?.exists() shouldBe true
     }
@@ -741,14 +682,8 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val normalizedGeneratedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "NormalizedTargetClassKotlinLoggingExtensions.kt"
-            }
-        val invalidGeneratedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "InvalidTargetClassKotlinLoggingExtensions.kt"
-            }
+        val normalizedGeneratedFile = compilation.generatedExtensionsFileContaining("NormalizedTargetClass")
+        val invalidGeneratedFile = compilation.generatedExtensionsFileContaining("InvalidTargetClass")
 
         normalizedGeneratedFile?.exists() shouldBe true
         invalidGeneratedFile shouldBe null
@@ -782,10 +717,7 @@ class LoggerProcessorTest {
 
         val result = compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "NoValidTargetClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("NoValidTargetClass")
 
         generatedFile shouldBe null
         result.messages shouldContain "Ignoring invalid package target 'invalid*pattern'"
@@ -817,12 +749,82 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "LegacyAnnotationClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("LegacyAnnotationClass")
 
         generatedFile?.exists() shouldBe true
+    }
+
+    @Test
+    fun `should emit one file per package regardless of how many classes it holds`() {
+        val sources =
+            listOf(
+                SourceFile.kotlin(
+                    "ServiceClasses.kt",
+                    """
+                    package com.example.service
+                    import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+                    @AutoLog
+                    class OrderService
+                    @AutoLog
+                    class PaymentService
+                    """.trimIndent(),
+                ),
+                SourceFile.kotlin(
+                    "UserService.kt",
+                    """
+                    package com.example.service
+                    import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+                    @AutoLog
+                    class UserService
+                    """.trimIndent(),
+                ),
+                SourceFile.kotlin(
+                    "OrderRepository.kt",
+                    """
+                    package com.example.repository
+                    import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+                    @AutoLog
+                    class OrderRepository
+                    """.trimIndent(),
+                ),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                this.sources = sources
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                inheritClassPath = true
+            }
+
+        compilation.compile()
+
+        // Four classes across three source files, but only two packages.
+        val generatedFiles = compilation.generatedExtensionsFiles()
+        generatedFiles.map { it.name } shouldBe
+            listOf("KotlinLoggingExtensions.kt", "KotlinLoggingExtensions.kt")
+
+        val serviceFile = compilation.generatedExtensionsFileContaining("OrderService")
+        val serviceContent = serviceFile?.readText() ?: ""
+
+        // All three service classes share one file, sorted by qualified name.
+        serviceContent shouldContain "val OrderService.log: KLogger"
+        serviceContent shouldContain "val PaymentService.log: KLogger"
+        serviceContent shouldContain "val UserService.log: KLogger"
+        serviceContent.indexOf("val OrderService.log") shouldBeLessThan
+            serviceContent.indexOf("val PaymentService.log")
+
+        // Imports are emitted once for the whole file, not once per class.
+        serviceContent.split("import io.github.oshai.kotlinlogging.KLogger").size shouldBe 2
+
+        // A different package gets its own file.
+        serviceContent shouldNotContain "val OrderRepository.log"
+        compilation.generatedExtensionsFileContaining("OrderRepository")?.readText() shouldContain
+            "package com.example.repository"
     }
 
     @Test
@@ -853,10 +855,7 @@ class LoggerProcessorTest {
 
         val result = compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "ShadowedClassKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("ShadowedClass")
 
         // Generation must not be skipped: top-level functions in the file still resolve to the
         // top-level property, so its presence is not a signal to leave the class without a logger.

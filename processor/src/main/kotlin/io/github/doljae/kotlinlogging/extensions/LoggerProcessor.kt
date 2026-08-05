@@ -10,6 +10,7 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Visibility
 import io.github.doljae.common.StringUtility.wrapReservedWords
@@ -20,6 +21,14 @@ class LoggerProcessor(
     private val generationMode: LoggerGenerationMode = LoggerGenerationMode.ANNOTATION_ONLY,
     private val packageScanTargetPatterns: Set<String> = emptySet(),
 ) : SymbolProcessor {
+    /**
+     * Counts how many files have already been written for a package. A package is normally written
+     * once, but [process] may run over several rounds, and [CodeGenerator.createNewFile] cannot write
+     * the same path twice. A package seen again in a later round therefore gets a numbered file rather
+     * than losing its extensions.
+     */
+    private val writtenFilesPerPackage = mutableMapOf<String, Int>()
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val classes =
             resolver
@@ -36,9 +45,13 @@ class LoggerProcessor(
                     classDeclaration.hasDeclaredLogProperty()
                 }
 
-        classes.forEach { classDeclaration ->
-            generateLogger(classDeclaration)
-        }
+        classes
+            .mapNotNull { classDeclaration -> buildExtension(classDeclaration) }
+            .groupBy { extension -> extension.packageName }
+            .toSortedMap()
+            .forEach { (packageName, extensions) ->
+                writePackageFile(packageName, extensions)
+            }
 
         return emptyList()
     }
@@ -131,54 +144,88 @@ class LoggerProcessor(
         )
     }
 
-    private fun generateLogger(classDeclaration: KSClassDeclaration) {
-        if (classDeclaration.qualifiedName == null) return
-        if (classDeclaration.classKind == ClassKind.ENUM_ENTRY) return
+    private fun buildExtension(classDeclaration: KSClassDeclaration): LoggerExtension? {
+        val qualifiedName = classDeclaration.qualifiedName?.asString() ?: return null
+        if (classDeclaration.classKind == ClassKind.ENUM_ENTRY) return null
 
-        val visibility = getVisibilityModifier(classDeclaration) ?: return
+        val visibility = getVisibilityModifier(classDeclaration) ?: return null
+        val containingFile = classDeclaration.containingFile ?: return null
 
         warnIfTopLevelLogIsShadowed(classDeclaration)
 
         val receiverDeclaration = buildReceiverDeclaration(classDeclaration)
-        
-        val rawPackageName = classDeclaration.packageName.asString()
-        val qualifiedName = classDeclaration.qualifiedName!!.asString()
-        val className = if (rawPackageName.isEmpty()) {
-            qualifiedName
-        } else {
-            qualifiedName.substring(rawPackageName.length + 1)
-        }
-        
-        val fileName = "${className.replace('.', '_')}KotlinLoggingExtensions"
 
-        val safePackageName = wrapReservedWords(
-            target = rawPackageName,
-            delimiter = '.',
-            reservedWords = hardKeywords,
-            quoteChar = '`',
+        return LoggerExtension(
+            packageName = classDeclaration.packageName.asString(),
+            qualifiedName = qualifiedName,
+            containingFile = containingFile,
+            declaration =
+                """
+                ${visibility}val ${receiverDeclaration.typeParameters}${receiverDeclaration.receiverType}.log: KLogger
+                    get() = KotlinLogging.logger("$qualifiedName")
+                """.trimIndent(),
         )
+    }
 
-        val loggerCode =
-            """
-            package $safePackageName
-            
-            import io.github.oshai.kotlinlogging.KLogger
-            import io.github.oshai.kotlinlogging.KotlinLogging
-            
-            ${visibility}val ${receiverDeclaration.typeParameters}${receiverDeclaration.receiverType}.log: KLogger
-                get() = KotlinLogging.logger("$qualifiedName")
-            """.trimIndent()
+    /**
+     * Writes every extension of a package into a single file. The extension must live in the target
+     * class's own package so that `log` resolves without an import, and a Kotlin file declares exactly
+     * one package — so one file per package is the smallest number of files reachable without forcing
+     * users to add imports.
+     */
+    private fun writePackageFile(packageName: String, extensions: List<LoggerExtension>) {
+        // Sorted so that identical sources always produce byte-identical output.
+        val sortedExtensions = extensions.sortedBy { extension -> extension.qualifiedName }
+
+        val safePackageName =
+            wrapReservedWords(
+                target = packageName,
+                delimiter = '.',
+                reservedWords = hardKeywords,
+                quoteChar = '`',
+            )
+
+        val fileContent =
+            buildString {
+                if (safePackageName.isNotEmpty()) {
+                    appendLine("package $safePackageName")
+                    appendLine()
+                }
+                appendLine("import io.github.oshai.kotlinlogging.KLogger")
+                appendLine("import io.github.oshai.kotlinlogging.KotlinLogging")
+                sortedExtensions.forEach { extension ->
+                    appendLine()
+                    appendLine(extension.declaration)
+                }
+            }.trimEnd()
+
+        val writeCount = writtenFilesPerPackage.merge(packageName, 1, Int::plus)!!
+        val fileName =
+            if (writeCount == 1) GENERATED_FILE_NAME else "$GENERATED_FILE_NAME$writeCount"
 
         codeGenerator
             .createNewFile(
-                Dependencies(false, classDeclaration.containingFile!!),
-                rawPackageName,
+                // Aggregating: this file holds extensions from every source file in the package, so any
+                // source change must regenerate it. An isolating dependency would drop the entries of
+                // files that were not themselves reprocessed.
+                Dependencies(
+                    aggregating = true,
+                    sources = sortedExtensions.map { it.containingFile }.distinct().toTypedArray(),
+                ),
+                packageName,
                 fileName,
             ).bufferedWriter()
             .use { writer ->
-                writer.write(loggerCode)
+                writer.write(fileContent)
             }
     }
+
+    private data class LoggerExtension(
+        val packageName: String,
+        val qualifiedName: String,
+        val containingFile: KSFile,
+        val declaration: String,
+    )
 
     private fun getVisibilityModifier(classDeclaration: KSClassDeclaration): String? {
         var current: KSDeclaration? = classDeclaration
@@ -250,6 +297,9 @@ class LoggerProcessor(
         public const val PACKAGE_SCAN_TARGETS_OPTION_KEY: String = "kotlinloggingextensions.targets"
         public const val LEGACY_PACKAGE_PREFIXES_OPTION_KEY: String =
             "kotlinloggingextensions.autoGeneratePackagePrefixes"
+
+        /** Base name of the per-package generated file. */
+        public const val GENERATED_FILE_NAME: String = "KotlinLoggingExtensions"
         private val LOGGER_GENERATION_ANNOTATIONS =
             setOf(
                 "io.github.doljae.kotlinlogging.extensions.AutoLog",
