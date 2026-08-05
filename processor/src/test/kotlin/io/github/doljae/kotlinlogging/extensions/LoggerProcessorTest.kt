@@ -824,4 +824,71 @@ class LoggerProcessorTest {
 
         generatedFile?.exists() shouldBe true
     }
+
+    @Test
+    fun `should warn but still generate when a top-level log is shadowed`() {
+        val source =
+            SourceFile.kotlin(
+                "ShadowedClass.kt",
+                """
+                package com.example
+                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.oshai.kotlinlogging.KotlinLogging
+
+                val log = KotlinLogging.logger("TOP_LEVEL")
+
+                @AutoLog
+                class ShadowedClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        val generatedFile =
+            compilation.kspSourcesDir.walkTopDown().find {
+                it.name == "ShadowedClassKotlinLoggingExtensions.kt"
+            }
+
+        // Generation must not be skipped: top-level functions in the file still resolve to the
+        // top-level property, so its presence is not a signal to leave the class without a logger.
+        generatedFile?.exists() shouldBe true
+        result.messages shouldContain "Top-level 'log' in this file is shadowed inside ShadowedClass"
+    }
+
+    @Test
+    fun `should not warn about shadowing when the file has no top-level log`() {
+        val source =
+            SourceFile.kotlin(
+                "UnshadowedClass.kt",
+                """
+                package com.example
+                import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+                @AutoLog
+                class UnshadowedClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        result.messages shouldNotContain "is shadowed inside"
+    }
 }
