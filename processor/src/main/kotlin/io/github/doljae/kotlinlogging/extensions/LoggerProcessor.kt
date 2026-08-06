@@ -12,6 +12,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Visibility
 import io.github.doljae.common.StringUtility.wrapReservedWords
 
@@ -157,15 +158,13 @@ class LoggerProcessor(
 
         warnIfTopLevelLogIsShadowed(classDeclaration)
 
-        val receiverDeclaration = buildReceiverDeclaration(classDeclaration)
-
         return LoggerExtension(
             packageName = classDeclaration.packageName.asString(),
             qualifiedName = qualifiedName,
             containingFile = containingFile,
             declaration =
                 """
-                ${visibility}val ${receiverDeclaration.typeParameters}${receiverDeclaration.receiverType}.log: KLogger
+                ${visibility}val ${buildReceiverType(classDeclaration)}.log: KLogger
                     get() = KotlinLogging.logger("$qualifiedName")
                 """.trimIndent(),
         )
@@ -231,70 +230,68 @@ class LoggerProcessor(
         val declaration: String,
     )
 
+    /**
+     * The visibility the generated extension must carry, or `null` when no extension can be generated
+     * for this class.
+     *
+     * Extensions live in a separate per-package file, so the receiver has to be visible from another
+     * file: a `private` class is not (file-private at top level, class-private when nested), and
+     * neither is a `protected` or local one. Generating for those produces a file that does not
+     * compile, so they are skipped instead. `internal` anywhere in the chain caps the extension at
+     * `internal`.
+     */
     private fun getVisibilityModifier(classDeclaration: KSClassDeclaration): String? {
         var current: KSDeclaration? = classDeclaration
         var isInternal = false
-        
+
         while (current is KSClassDeclaration) {
             when (current.getVisibility()) {
-                Visibility.PRIVATE -> return "private "
-                Visibility.PROTECTED -> return null // Cannot generate top-level extension for protected class
+                Visibility.PRIVATE -> return null
+                Visibility.PROTECTED -> return null
                 Visibility.LOCAL -> return null
                 Visibility.INTERNAL -> isInternal = true
                 else -> {}
             }
             current = current.parentDeclaration
         }
-        
+
         return if (isInternal) "internal " else ""
     }
 
-    private fun buildReceiverDeclaration(classDeclaration: KSClassDeclaration): ReceiverDeclaration {
+    /**
+     * The receiver as it must be written in the generated file — `Outer.Nested`, `Generic<*>`,
+     * `Outer<*>.Inner<*>`.
+     *
+     * Type parameters are star-projected instead of being redeclared on the extension. Redeclaring
+     * them means restating their bounds too, and a bound the extension does not repeat is a compile
+     * error (`class Box<T : Any>` rejects an unbounded `T`). Every instantiation is a subtype of the
+     * star projection, so `log` still resolves on `Box<String>` and inside the class body.
+     *
+     * Type arguments belong to a qualifier only when the segment to its right is an `inner` class; a
+     * plain nested class is referenced through the bare outer name, and spelling the arguments there
+     * is an error rather than a redundancy. Kotlin forbids a non-inner class inside an `inner` one, so
+     * a qualifier can never need arguments that a segment further right has already dropped.
+     */
+    private fun buildReceiverType(classDeclaration: KSClassDeclaration): String {
         val classChain =
             generateSequence(classDeclaration as KSDeclaration?) { it.parentDeclaration }
                 .filterIsInstance<KSClassDeclaration>()
                 .toList()
                 .asReversed()
 
-        val usedTypeParameterNames = mutableMapOf<String, Int>()
-        val declaredTypeParameters = mutableListOf<String>()
-        val receiverSegments =
-            classChain.map { declaration ->
-                val receiverTypeParameters =
-                    declaration.typeParameters.map { typeParameter ->
-                        val baseName = typeParameter.name.asString()
-                        val index = usedTypeParameterNames.getOrDefault(baseName, 0) + 1
-                        usedTypeParameterNames[baseName] = index
-                        val uniqueName = if (index == 1) baseName else "$baseName$index"
-                        declaredTypeParameters += uniqueName
-                        uniqueName
-                    }
+        return classChain
+            .mapIndexed { index, declaration ->
+                val nextIsInner = classChain.getOrNull(index + 1)?.modifiers?.contains(Modifier.INNER) == true
+                val carriesTypeArguments = index == classChain.lastIndex || nextIsInner
 
                 val simpleName = declaration.simpleName.asString()
-                if (receiverTypeParameters.isEmpty()) {
-                    simpleName
+                if (carriesTypeArguments && declaration.typeParameters.isNotEmpty()) {
+                    "$simpleName<${declaration.typeParameters.joinToString(", ") { "*" }}>"
                 } else {
-                    "$simpleName<${receiverTypeParameters.joinToString(", ")}>"
+                    simpleName
                 }
-            }
-
-        val typeParameters =
-            if (declaredTypeParameters.isEmpty()) {
-                ""
-            } else {
-                "<${declaredTypeParameters.joinToString(", ")}> "
-            }
-
-        return ReceiverDeclaration(
-            typeParameters = typeParameters,
-            receiverType = receiverSegments.joinToString("."),
-        )
+            }.joinToString(".")
     }
-
-    private data class ReceiverDeclaration(
-        val typeParameters: String,
-        val receiverType: String,
-    )
 
     companion object {
         public const val GENERATION_MODE_OPTION_KEY: String = "kotlinloggingextensions.mode"

@@ -38,7 +38,7 @@ class InnerClassSupportTest {
         }
 
         val result = compilation.compile()
-        // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("Outer.Nested")
 
@@ -76,13 +76,15 @@ class InnerClassSupportTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
 
-        val generatedFile = compilation.generatedExtensionsFileContaining("<T, U> Outer<T>.Nested<U>")
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+
+        val generatedFile = compilation.generatedExtensionsFileContaining("Outer.Nested<*>")
 
         generatedFile?.exists() shouldBe true
         val content = generatedFile?.readText() ?: ""
-        content shouldContain "val <T, U> Outer<T>.Nested<U>.log: KLogger"
+        content shouldContain "val Outer.Nested<*>.log: KLogger"
         content shouldContain "KotlinLogging.logger(\"com.example.Outer.Nested\")"
     }
 }
