@@ -124,3 +124,50 @@ class ConcreteWorker : AbstractWorker() {
         log.info { "Logging from ConcreteWorker specific logic" }
     }
 }
+
+/**
+ * 7. Bounded Generic Class
+ *
+ * The generated receiver is star-projected, so the bound below never has to be restated.
+ */
+@AutoLog
+class BoundedCache<K : Any, V : Comparable<V>> {
+    private val entries = mutableMapOf<K, V>()
+
+    fun put(key: K, value: V) {
+        entries[key] = value
+        log.info { "Cached $key" }
+    }
+}
+
+/**
+ * 8. Generic Outer With Nested And Inner Classes
+ */
+@AutoLog
+class GenericHolder<T : Any> {
+    @AutoLog
+    class Nested<U : Any> {
+        fun work() {
+            log.info { "Logging from GenericHolder.Nested" }
+        }
+    }
+
+    @AutoLog
+    inner class Inner {
+        fun work() {
+            log.info { "Logging from GenericHolder.Inner" }
+        }
+    }
+}
+
+/**
+ * 9. Private Class
+ *
+ * Nothing is generated: the extension would live in another file, which cannot name a private class.
+ */
+@AutoLog
+private class PrivateWorker {
+    fun work(): String = "no generated log here"
+}
+
+internal fun usePrivateWorker(): String = PrivateWorker().work()

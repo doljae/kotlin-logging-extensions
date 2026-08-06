@@ -78,11 +78,11 @@ class InnerClassSupportTest {
 
         compilation.compile()
 
-        val generatedFile = compilation.generatedExtensionsFileContaining("<T, U> Outer<T>.Nested<U>")
+        val generatedFile = compilation.generatedExtensionsFileContaining("Outer.Nested<*>")
 
         generatedFile?.exists() shouldBe true
         val content = generatedFile?.readText() ?: ""
-        content shouldContain "val <T, U> Outer<T>.Nested<U>.log: KLogger"
+        content shouldContain "val Outer.Nested<*>.log: KLogger"
         content shouldContain "KotlinLogging.logger(\"com.example.Outer.Nested\")"
     }
 }

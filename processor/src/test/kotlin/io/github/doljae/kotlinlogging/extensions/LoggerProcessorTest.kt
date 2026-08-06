@@ -1,5 +1,10 @@
 package io.github.doljae.kotlinlogging.extensions
 
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.KSAnnotated
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
@@ -119,10 +124,10 @@ class LoggerProcessorTest {
 
         compilation.compile()
 
-        val generatedFile = compilation.generatedExtensionsFileContaining("<T> GenericClass<T>")
+        val generatedFile = compilation.generatedExtensionsFileContaining("GenericClass<*>")
 
         generatedFile?.exists() shouldBe true
-        generatedFile?.readText() shouldContain "val <T> GenericClass<T>.log: KLogger"
+        generatedFile?.readText() shouldContain "val GenericClass<*>.log: KLogger"
         generatedFile?.readText() shouldContain "KotlinLogging.logger(\"com.example.GenericClass\")"
     }
 
@@ -933,5 +938,56 @@ class LoggerProcessorTest {
         val result = compilation.compile()
 
         result.messages shouldNotContain "is shadowed inside"
+    }
+
+    @Test
+    fun `should number the package file when the package is written again in a later round`() {
+        // Another processor contributing a class in a later round is the only way a package gets
+        // written twice. CodeGenerator.createNewFile cannot reuse a path, so without the per-package
+        // counter this either fails the build or drops the late class's extension.
+        val lateClassProvider =
+            SymbolProcessorProvider { environment ->
+                object : SymbolProcessor {
+                    private var hasGenerated = false
+
+                    override fun process(resolver: Resolver): List<KSAnnotated> {
+                        if (hasGenerated) return emptyList()
+                        hasGenerated = true
+                        environment.codeGenerator
+                            .createNewFile(Dependencies(aggregating = false), "com.example", "LateClass")
+                            .bufferedWriter()
+                            .use { writer -> writer.write("package com.example\n\nclass LateClass\n") }
+                        return emptyList()
+                    }
+                }
+            }
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources =
+                    listOf(
+                        SourceFile.kotlin(
+                            "FirstRoundClass.kt",
+                            """
+                            package com.example
+
+                            class FirstRoundClass
+                            """.trimIndent(),
+                        ),
+                    )
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                    symbolProcessorProviders += lateClassProvider
+                }
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        compilation.generatedExtensionsFileContaining("FirstRoundClass")?.name shouldBe
+            "KotlinLoggingExtensions.kt"
+        compilation.generatedExtensionsFileContaining("LateClass")?.name shouldBe
+            "KotlinLoggingExtensions2.kt"
     }
 }

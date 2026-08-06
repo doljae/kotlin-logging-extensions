@@ -82,4 +82,29 @@ class ComplexStructuresTest {
         abstractLogger shouldNotBe null
         abstractLogger.name shouldBe "examples.AbstractWorker"
     }
+
+    @Test
+    fun `Bounded generic class has log property on every instantiation`() {
+        val stringKeyed = BoundedCache<String, Int>()
+        val intKeyed = BoundedCache<Int, String>()
+
+        // One star-projected extension serves both instantiations, and both name the same logger.
+        stringKeyed.log.name shouldBe "examples.BoundedCache"
+        intKeyed.log.name shouldBe "examples.BoundedCache"
+    }
+
+    @Test
+    fun `Nested and inner classes of a generic outer have log properties`() {
+        val outer = GenericHolder<String>()
+
+        outer.log.name shouldBe "examples.GenericHolder"
+        GenericHolder.Nested<Int>().log.name shouldBe "examples.GenericHolder.Nested"
+        outer.Inner().log.name shouldBe "examples.GenericHolder.Inner"
+    }
+
+    @Test
+    fun `Private class is skipped but still usable`() {
+        // No extension exists for it — the point is that its file still compiles.
+        usePrivateWorker() shouldBe "no generated log here"
+    }
 }

@@ -21,6 +21,10 @@ dependencies {
 
     // kotlin-logging dependency for generated code compatibility
     compileOnly("io.github.oshai:kotlin-logging-jvm:8.0.4")
+
+    // Also on the test classpath: kotlin-compile-testing inherits it, which is what lets the tests
+    // compile the generated extensions instead of only reading them as text.
+    testImplementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
 }
 
 tasks.test {
