@@ -103,11 +103,42 @@ class LoggerProcessor(
             ?: false
     }
 
+    /**
+     * A generated `log` extension wins over a top-level `log` in the same file: inside the class the
+     * implicit receiver sits at an inner scope level than the file scope, so the extension is found
+     * first and the top-level property is never reached. This is silent — no ambiguity, no warning
+     * from the compiler — so report it here.
+     *
+     * Generation is still correct and must not be skipped: top-level functions in the same file have
+     * no implicit receiver and keep resolving to the top-level property, so a top-level `log` is not a
+     * signal that the file's classes want no logger.
+     */
+    private fun warnIfTopLevelLogIsShadowed(classDeclaration: KSClassDeclaration) {
+        val hasTopLevelLog =
+            classDeclaration.containingFile
+                ?.declarations
+                ?.filterIsInstance<KSPropertyDeclaration>()
+                ?.any { property -> property.simpleName.asString() == "log" }
+                ?: false
+
+        if (!hasTopLevelLog) return
+
+        logger.warn(
+            "Top-level 'log' in this file is shadowed inside ${classDeclaration.simpleName.asString()}: " +
+                "'log' there resolves to the generated extension, not the top-level property. " +
+                "Rename one of them if that is not intended.",
+            classDeclaration,
+        )
+    }
+
     private fun generateLogger(classDeclaration: KSClassDeclaration) {
         if (classDeclaration.qualifiedName == null) return
         if (classDeclaration.classKind == ClassKind.ENUM_ENTRY) return
 
         val visibility = getVisibilityModifier(classDeclaration) ?: return
+
+        warnIfTopLevelLogIsShadowed(classDeclaration)
+
         val receiverDeclaration = buildReceiverDeclaration(classDeclaration)
         
         val rawPackageName = classDeclaration.packageName.asString()
