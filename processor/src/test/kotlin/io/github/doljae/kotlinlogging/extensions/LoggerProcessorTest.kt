@@ -199,7 +199,7 @@ class LoggerProcessorTest {
     }
 
     @Test
-    fun `should not generate log extension for class without AutoLog annotation`() {
+    fun `should not generate log extension for unannotated class in annotation only mode`() {
         val source =
             SourceFile.kotlin(
                 "NoAnnotationClass.kt",
@@ -216,6 +216,10 @@ class LoggerProcessorTest {
                 configureKsp {
                     symbolProcessorProviders += LoggerProcessorProvider()
                 }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "AnnotationOnly",
+                    )
                 inheritClassPath = true
             }
 
@@ -471,7 +475,7 @@ class LoggerProcessorTest {
     }
 
     @Test
-    fun `should warn and fall back to annotation only for unsupported mode option`() {
+    fun `should warn and fall back to all for unsupported mode option`() {
         val source =
             SourceFile.kotlin(
                 "UnsupportedModeClass.kt",
@@ -499,9 +503,10 @@ class LoggerProcessorTest {
 
         val generatedFile = compilation.generatedExtensionsFileContaining("UnsupportedModeClass")
 
-        generatedFile shouldBe null
+        // Falling back to the default mode means the class still gets an extension.
+        generatedFile?.exists() shouldBe true
         result.messages shouldContain "Unsupported value 'NotSupported'"
-        result.messages shouldContain "Falling back to AnnotationOnly"
+        result.messages shouldContain "Falling back to All"
     }
 
     @Test
@@ -752,6 +757,75 @@ class LoggerProcessorTest {
         val generatedFile = compilation.generatedExtensionsFileContaining("LegacyAnnotationClass")
 
         generatedFile?.exists() shouldBe true
+    }
+
+    @Test
+    fun `should generate for every class when nothing is configured`() {
+        val source =
+            SourceFile.kotlin(
+                "UnconfiguredClasses.kt",
+                """
+                package com.example.unconfigured
+
+                class PlainClass
+                internal class InternalClass
+                data class DataClass(val id: String)
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        // No @AutoLog, no mode, no targets — adding the processor is enough.
+        compilation.generatedExtensionsFileContaining("PlainClass")?.exists() shouldBe true
+        compilation.generatedExtensionsFileContaining("DataClass")?.exists() shouldBe true
+        compilation.generatedExtensionsFileContaining("InternalClass")?.readText() shouldContain
+            "internal val InternalClass.log: KLogger"
+
+        result.messages shouldNotContain "Unsupported value"
+    }
+
+    @Test
+    fun `should still honour AutoLog when annotation only mode is configured`() {
+        val source =
+            SourceFile.kotlin(
+                "MixedClasses.kt",
+                """
+                package com.example.mixed
+                import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+                @AutoLog
+                class OptedInClass
+                class PlainClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "AnnotationOnly",
+                    )
+                inheritClassPath = true
+            }
+
+        compilation.compile()
+
+        // The one-line escape hatch out of the new default.
+        compilation.generatedExtensionsFileContaining("OptedInClass")?.exists() shouldBe true
+        compilation.generatedExtensionsFileContaining("PlainClass") shouldBe null
     }
 
     @Test

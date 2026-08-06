@@ -1,7 +1,13 @@
 package io.github.doljae.kotlinlogging.extensions
 
 enum class LoggerGenerationMode {
+    /** Every class gets a `log` extension. The default when nothing is configured. */
+    ALL,
+
+    /** Only classes annotated with `@AutoLog`. */
     ANNOTATION_ONLY,
+
+    /** Only classes in the configured package targets, plus any annotated with `@AutoLog`. */
     PACKAGE_SCAN,
     ;
 
@@ -15,14 +21,11 @@ enum class LoggerGenerationMode {
                     ?.lowercase()
 
             return when (normalizedValue) {
+                "all", "projectwide" -> ALL
                 "annotation", "annotationonly" -> ANNOTATION_ONLY
                 "packagescan" -> PACKAGE_SCAN
                 else -> null
             }
-        }
-
-        fun fromOption(optionValue: String?): LoggerGenerationMode {
-            return fromOptionOrNull(optionValue) ?: ANNOTATION_ONLY
         }
     }
 }
