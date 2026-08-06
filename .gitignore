@@ -321,3 +321,6 @@ gradle-local.properties
 # Build reports
 .build-report/
 
+# macOS
+.DS_Store
+
