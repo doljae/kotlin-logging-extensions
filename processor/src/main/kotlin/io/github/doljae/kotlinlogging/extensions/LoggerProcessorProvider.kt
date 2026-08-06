@@ -14,7 +14,7 @@ class LoggerProcessorProvider : SymbolProcessorProvider {
         if (generationMode == LoggerGenerationMode.PACKAGE_SCAN && packageScanTargetPatterns.isEmpty()) {
             environment.logger.warn(
                 "Package scan mode is enabled but no valid targets were configured. " +
-                    "Only classes annotated with @AutoLog (or deprecated @GenerateLogger) will get log extensions.",
+                    "Only classes annotated with @AutoLog will get log extensions.",
             )
         }
 

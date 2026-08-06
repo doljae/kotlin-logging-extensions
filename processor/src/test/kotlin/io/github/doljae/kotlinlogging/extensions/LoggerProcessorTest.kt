@@ -730,36 +730,6 @@ class LoggerProcessorTest {
     }
 
     @Test
-    fun `should support deprecated GenerateLogger annotation for backward compatibility`() {
-        val source =
-            SourceFile.kotlin(
-                "LegacyAnnotationClass.kt",
-                """
-                package com.example
-                import io.github.doljae.kotlinlogging.extensions.GenerateLogger
-
-                @GenerateLogger
-                class LegacyAnnotationClass
-                """.trimIndent(),
-            )
-
-        val compilation =
-            KotlinCompilation().apply {
-                sources = listOf(source)
-                configureKsp {
-                    symbolProcessorProviders += LoggerProcessorProvider()
-                }
-                inheritClassPath = true
-            }
-
-        compilation.compile()
-
-        val generatedFile = compilation.generatedExtensionsFileContaining("LegacyAnnotationClass")
-
-        generatedFile?.exists() shouldBe true
-    }
-
-    @Test
     fun `should generate for every class when nothing is configured`() {
         val source =
             SourceFile.kotlin(

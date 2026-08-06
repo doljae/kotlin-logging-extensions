@@ -69,7 +69,7 @@ class LoggerProcessor(
 
     private fun KSClassDeclaration.hasLoggerGenerationAnnotation(): Boolean {
         return annotations.any { annotation ->
-            annotation.annotationType.resolve().declaration.qualifiedName?.asString() in LOGGER_GENERATION_ANNOTATIONS
+            annotation.annotationType.resolve().declaration.qualifiedName?.asString() == LOGGER_GENERATION_ANNOTATION
         }
     }
 
@@ -304,11 +304,7 @@ class LoggerProcessor(
 
         /** Base name of the per-package generated file. */
         public const val GENERATED_FILE_NAME: String = "KotlinLoggingExtensions"
-        private val LOGGER_GENERATION_ANNOTATIONS =
-            setOf(
-                "io.github.doljae.kotlinlogging.extensions.AutoLog",
-                "io.github.doljae.kotlinlogging.extensions.GenerateLogger",
-            )
+        private const val LOGGER_GENERATION_ANNOTATION = "io.github.doljae.kotlinlogging.extensions.AutoLog"
 
         // Ref: https://kotlinlang.org/docs/keyword-reference.html
         private val hardKeywords =
