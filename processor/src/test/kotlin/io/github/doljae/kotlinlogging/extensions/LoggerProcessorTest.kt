@@ -9,7 +9,6 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspProcessorOptions
-import com.tschuchort.compiletesting.kspSourcesDir
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -44,20 +43,12 @@ class LoggerProcessorTest {
                     symbolProcessorProviders += LoggerProcessorProvider()
                 }
                 inheritClassPath = true
-                messageOutputStream = System.out
             }
 
         val result = compilation.compile()
 
-        // Compilation might fail due to Kotlin metadata version mismatch in test environment
-        // but we only care if the KSP processor generated the file correctly.
-        // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        // Debug: print all generated files
-        println("Generated files:")
-        compilation.kspSourcesDir.walkTopDown().forEach { println(it.absolutePath) }
-
-        // Verify that the file was generated
         val generatedFile = compilation.generatedExtensionsFileContaining("SimpleClass")
 
         generatedFile?.exists() shouldBe true
@@ -89,7 +80,7 @@ class LoggerProcessorTest {
             }
 
         val result = compilation.compile()
-        // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("DeepClass")
 
@@ -122,7 +113,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("GenericClass<*>")
 
@@ -157,7 +150,7 @@ class LoggerProcessorTest {
             }
 
         val result = compilation.compile()
-        // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFileA = compilation.generatedExtensionsFileContaining("ClassA")
         val generatedFileB = compilation.generatedExtensionsFileContaining("ClassB")
@@ -193,7 +186,7 @@ class LoggerProcessorTest {
             }
 
         val result = compilation.compile()
-        // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("ReservedClass")
 
@@ -228,7 +221,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("NoAnnotationClass")
 
@@ -262,7 +257,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("ClassWithLogProperty")
 
@@ -298,7 +295,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("ClassWithCompanionLogProperty")
 
@@ -331,7 +330,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("PackageScopedClass")
 
@@ -366,7 +367,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("OutsidePackageClass")
 
@@ -401,7 +404,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("AnnotatedOutsidePackageClass")
 
@@ -540,7 +545,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("NormalizedModeClass")
 
@@ -572,7 +579,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("AnnotationOnlyModeClass")
 
@@ -614,7 +623,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val exactPackageGeneratedFile = compilation.generatedExtensionsFileContaining("ExactPackageClass")
         val subPackageGeneratedFile = compilation.generatedExtensionsFileContaining("SubPackageClass")
@@ -648,7 +659,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val generatedFile = compilation.generatedExtensionsFileContaining("LegacyOptionClass")
 
@@ -690,7 +703,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         val normalizedGeneratedFile = compilation.generatedExtensionsFileContaining("NormalizedTargetClass")
         val invalidGeneratedFile = compilation.generatedExtensionsFileContaining("InvalidTargetClass")
@@ -796,7 +811,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         // The one-line escape hatch out of the new default.
         compilation.generatedExtensionsFileContaining("OptedInClass")?.exists() shouldBe true
@@ -850,7 +867,9 @@ class LoggerProcessorTest {
                 inheritClassPath = true
             }
 
-        compilation.compile()
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         // Four classes across three source files, but only two packages.
         val generatedFiles = compilation.generatedExtensionsFiles()
