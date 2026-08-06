@@ -13,6 +13,7 @@ import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.jupiter.api.Test
 
@@ -872,9 +873,12 @@ class LoggerProcessorTest {
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
         // Four classes across three source files, but only two packages.
+        // The name carries a module discriminator, so match the base rather than the whole name.
         val generatedFiles = compilation.generatedExtensionsFiles()
-        generatedFiles.map { it.name } shouldBe
-            listOf("KotlinLoggingExtensions.kt", "KotlinLoggingExtensions.kt")
+        generatedFiles.size shouldBe 2
+        generatedFiles.forEach { file ->
+            file.name shouldStartWith LoggerProcessor.GENERATED_FILE_NAME
+        }
 
         val serviceFile = compilation.generatedExtensionsFileContaining("OrderService")
         val serviceContent = serviceFile?.readText() ?: ""
@@ -1004,9 +1008,24 @@ class LoggerProcessorTest {
         val result = compilation.compile()
 
         result.exitCode shouldBe KotlinCompilation.ExitCode.OK
-        compilation.generatedExtensionsFileContaining("FirstRoundClass")?.name shouldBe
-            "KotlinLoggingExtensions.kt"
-        compilation.generatedExtensionsFileContaining("LateClass")?.name shouldBe
-            "KotlinLoggingExtensions2.kt"
+
+        // The later round is numbered on top of the discriminated base name, not instead of it.
+        val firstRoundName = compilation.generatedExtensionsFileContaining("FirstRoundClass")?.name
+        val lateRoundName = compilation.generatedExtensionsFileContaining("LateClass")?.name
+
+        firstRoundName shouldStartWith LoggerProcessor.GENERATED_FILE_NAME
+        lateRoundName shouldBe firstRoundName?.removeSuffix(".kt") + "2.kt"
+    }
+
+    @Test
+    fun `should derive a file name discriminator that separates source sets`() {
+        // Gradle reports 'group:project' for main and 'group:project_test' for the test compilation,
+        // which is the only signal KSP exposes that tells the two compilations apart.
+        LoggerProcessor.discriminatorFor("io.github.doljae:workload") shouldBe "_workload"
+        LoggerProcessor.discriminatorFor("io.github.doljae:workload_test") shouldBe "_workload_test"
+
+        // Anything not legal in an identifier has to go, or the generated file will not compile.
+        LoggerProcessor.discriminatorFor("my-app.jvm") shouldBe "_my_app_jvm"
+        LoggerProcessor.discriminatorFor("") shouldBe ""
     }
 }

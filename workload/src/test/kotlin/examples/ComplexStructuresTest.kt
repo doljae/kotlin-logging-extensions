@@ -107,4 +107,13 @@ class ComplexStructuresTest {
         // No extension exists for it — the point is that its file still compiles.
         usePrivateWorker() shouldBe "no generated log here"
     }
+
+    @Test
+    fun `Test source classes get their own logger without shadowing main`() {
+        // Both source sets generate a file for package `examples`. If they shared a file name they
+        // would compile to the same JVM class, and the test copy would shadow main's at runtime —
+        // every assertion above would fail with NoSuchMethodError while still compiling cleanly.
+        log.name shouldBe "examples.ComplexStructuresTest"
+        SingletonService.log.name shouldBe "examples.SingletonService"
+    }
 }

@@ -1,5 +1,6 @@
 package io.github.doljae.kotlinlogging.extensions
 
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
@@ -30,7 +31,16 @@ class LoggerProcessor(
      */
     private val writtenFilesPerPackage = mutableMapOf<String, Int>()
 
+    /**
+     * Distinguishes this compilation's generated file from the one another source set produces for
+     * the same package. Set on every [process] call, before any file is written.
+     */
+    private var moduleDiscriminator: String = ""
+
+    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        moduleDiscriminator = discriminatorFor(resolver.getModuleName().asString())
+
         val classes =
             resolver
                 .getNewFiles()
@@ -203,8 +213,8 @@ class LoggerProcessor(
             }.trimEnd()
 
         val writeCount = writtenFilesPerPackage.merge(packageName, 1, Int::plus)!!
-        val fileName =
-            if (writeCount == 1) GENERATED_FILE_NAME else "$GENERATED_FILE_NAME$writeCount"
+        val baseName = "$GENERATED_FILE_NAME$moduleDiscriminator"
+        val fileName = if (writeCount == 1) baseName else "$baseName$writeCount"
 
         codeGenerator
             .createNewFile(
@@ -299,8 +309,28 @@ class LoggerProcessor(
         public const val LEGACY_PACKAGE_PREFIXES_OPTION_KEY: String =
             "kotlinloggingextensions.autoGeneratePackagePrefixes"
 
-        /** Base name of the per-package generated file. */
+        /** Base name of the per-package generated file, before the module discriminator. */
         public const val GENERATED_FILE_NAME: String = "KotlinLoggingExtensions"
+
+        /**
+         * Turns a KSP module name into a file-name suffix that separates this compilation's output
+         * from every other source set's.
+         *
+         * A file holding top-level declarations compiles to a JVM class named after the file, so two
+         * source sets that share a package and a file name produce the same class twice. The test
+         * compilation's copy then shadows the main one on the runtime classpath and every `log` in
+         * main throws `NoSuchMethodError` — at runtime only, because compilation sees main's classes
+         * on the classpath and resolves fine.
+         *
+         * The module name is the only thing KSP exposes that differs between source sets: Gradle
+         * reports `group:project` for main and `group:project_test` for the test compilation. Only the
+         * part after the last `:` is used, and anything not legal in an identifier is replaced.
+         */
+        internal fun discriminatorFor(moduleName: String): String {
+            val withoutGroup = moduleName.substringAfterLast(':')
+            val sanitized = withoutGroup.map { character -> if (character.isLetterOrDigit()) character else '_' }.joinToString("")
+            return if (sanitized.isEmpty()) "" else "_$sanitized"
+        }
         private const val LOGGER_GENERATION_ANNOTATION = "io.github.doljae.kotlinlogging.extensions.AutoLog"
 
         // Ref: https://kotlinlang.org/docs/keyword-reference.html
