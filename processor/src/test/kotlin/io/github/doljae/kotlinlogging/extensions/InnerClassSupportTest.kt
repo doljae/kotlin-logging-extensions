@@ -40,10 +40,8 @@ class InnerClassSupportTest {
         val result = compilation.compile()
         // result.exitCode shouldBe KotlinCompilation.ExitCode.OK
 
-        // We expect a file for Nested class with unique name
-        val files = compilation.kspSourcesDir.walkTopDown().toList()
-        val generatedFile = files.find { it.name == "Outer_NestedKotlinLoggingExtensions.kt" }
-        
+        val generatedFile = compilation.generatedExtensionsFileContaining("Outer.Nested")
+
         generatedFile?.exists() shouldBe true
         
         val content = generatedFile?.readText() ?: ""
@@ -80,10 +78,7 @@ class InnerClassSupportTest {
 
         compilation.compile()
 
-        val generatedFile =
-            compilation.kspSourcesDir.walkTopDown().find {
-                it.name == "Outer_NestedKotlinLoggingExtensions.kt"
-            }
+        val generatedFile = compilation.generatedExtensionsFileContaining("<T, U> Outer<T>.Nested<U>")
 
         generatedFile?.exists() shouldBe true
         val content = generatedFile?.readText() ?: ""
