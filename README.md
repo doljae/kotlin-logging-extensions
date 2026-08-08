@@ -54,7 +54,7 @@ repositories {
 }
 
 dependencies {
-    ksp("io.github.doljae:kotlin-logging-extensions:2.4.0")
+    ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("ch.qos.logback:logback-classic:1.6.0") // Logger implementation required
 }
@@ -123,14 +123,14 @@ ksp {
 
 ```kotlin
 dependencies {
-    compileOnly("io.github.doljae:kotlin-logging-extensions:2.4.0") // for @AutoLog
+    compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0") // for @Log
 }
 ```
 
 ```kotlin
-import io.github.doljae.kotlinlogging.extensions.AutoLog
+import io.github.doljae.kotlinlogging.extensions.Log
 
-@AutoLog
+@Log
 class OrderProcessor {
     fun processOrder(id: String) {
         log.info { "Processing order: $id" }
@@ -138,8 +138,12 @@ class OrderProcessor {
 }
 ```
 
-`@AutoLog` also works in `PackageScan` mode, where a class gets a logger if **either** condition
+`@Log` also works in `PackageScan` mode, where a class gets a logger if **either** condition
 matches. Mode values are case/`_`/`-` insensitive: `All` (default), `PackageScan`, `AnnotationOnly`.
+
+> **Only the annotations artifact belongs on the compile classpath.** The processor is wired in
+> through `ksp(...)` and never needs to be visible to your compiler — putting it in `compileOnly`
+> narrows which Kotlin versions can build against it.
 
 ## ✨ Features
 
@@ -152,12 +156,32 @@ matches. Mode values are case/`_`/`-` insensitive: `All` (default), `PackageScan
 
 ## 📋 Version Compatibility
 
-**Choose the library version whose `Kotlin` column matches your project's Kotlin version.**
+### Requirements
 
-Since [KSP 2.3.0](https://github.com/google/ksp/releases/tag/2.3.0), the KSP version is no longer tied to the Kotlin
-compiler version — KSP2 is a standalone tool built on the stable compiler APIs rather than a compiler plugin. This is
-why a single KSP version (`2.3.10`) serves both the Kotlin 2.3.x and 2.4.x lines. Pick the library release built for
-your Kotlin line; use the KSP version shown next to it.
+| | |
+|---|---|
+| **JDK** | 17 or later |
+| **Kotlin** | 2.3+ (built and tested against 2.4.10) |
+| **KSP** | 2.3.10+ |
+| **kotlin-logging** | 5.0.0+ |
+
+**From `3.0.0` the library version no longer mirrors your Kotlin version.** Releases follow plain
+SemVer, so the number describes the size of the change in *this library* — a major bump means
+breaking changes here, not a new Kotlin line. Since
+[KSP 2.3.0](https://github.com/google/ksp/releases/tag/2.3.0) KSP2 is a standalone tool built on the
+stable compiler APIs rather than a compiler plugin, so one build of this processor serves a range of
+Kotlin versions and there is nothing left for the version string to track.
+
+> The exact lower bound on Kotlin is still being measured
+> ([#152](https://github.com/doljae/kotlin-logging-extensions/issues/152)); this table will state a
+> verified range once CI enforces one. Until then, `2.3+` is what has actually been exercised —
+> older versions may well work.
+
+Versions before `3.0.0` did pin one release per Kotlin version. That table is kept below for anyone
+still on them.
+
+<details>
+<summary>Compatibility table for 2.x and earlier</summary>
 
 | Library        | Kotlin   | KSP            |
 |----------------|----------|----------------|
@@ -176,23 +200,37 @@ your Kotlin line; use the KSP version shown next to it.
 | `2.2.0-0.0.2`  | `2.2.0`  | `2.2.0-2.0.2`  |
 | `2.1.21-0.0.1` | `2.1.21` | `2.1.21-2.0.2` |
 
-### How to Use
+</details>
 
-1. **Check your Kotlin version** in `build.gradle.kts`
-2. **Pick the library version whose `Kotlin` column matches your line** from the table above
-3. **Use the KSP version** shown next to it
+### Upgrading to 3.0.0
+
+`3.0.0` is a breaking release. Three things changed:
+
+1. **`@AutoLog` is now `@Log`.** `@AutoLog` still works and still generates, but is deprecated and
+   will be removed in a later major release. It is a real annotation rather than a `typealias` on
+   purpose — KSP does not expand aliases when matching annotations, so an alias would silently
+   generate nothing.
+2. **The annotation moved to its own artifact.** Replace
+   `compileOnly("io.github.doljae:kotlin-logging-extensions:…")` with
+   `compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0")`. The `ksp(...)`
+   coordinate is unchanged. If you are on the default `All` mode you use no annotation at all and can
+   drop the `compileOnly` line entirely.
+3. **Generation is project-wide by default.** Every eligible class gets a `log` extension without any
+   annotation. Use `kotlinloggingextensions.mode` to narrow it — see
+   [Scoping Generation](#scoping-generation).
 
 ```kotlin
-// For Kotlin 2.4.x projects:
 plugins {
     kotlin("jvm") version "2.4.10"
     id("com.google.devtools.ksp") version "2.3.10"
 }
 
 dependencies {
-    compileOnly("io.github.doljae:kotlin-logging-extensions:2.4.0")
-    ksp("io.github.doljae:kotlin-logging-extensions:2.4.0")
+    ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4") // 5.0.0+
+
+    // Only needed for AnnotationOnly / PackageScan modes, where you write @Log yourself.
+    compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0")
 }
 ```
 
@@ -218,10 +256,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.github.doljae:kotlin-logging-extensions:2.4.0")
-    ksp("io.github.doljae:kotlin-logging-extensions:2.4.0")
+    ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("ch.qos.logback:logback-classic:1.6.0")
+
+    // Only needed if you write @Log yourself (AnnotationOnly / PackageScan modes).
+    compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0")
 }
 ```
 

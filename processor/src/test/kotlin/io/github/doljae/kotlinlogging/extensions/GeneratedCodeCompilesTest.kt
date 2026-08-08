@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
  * The rest of the suite reads the generated source as a string, which cannot catch a receiver the
  * generated file is not allowed to name. That gap only became dangerous once project-wide generation
  * became the default: every class in a project is now a receiver, including ones that used to need an
- * explicit `@AutoLog` before the processor would touch them.
+ * explicit `@Log` before the processor would touch them.
  */
 @OptIn(ExperimentalCompilerApi::class)
 class GeneratedCodeCompilesTest {

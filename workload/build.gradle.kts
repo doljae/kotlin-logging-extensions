@@ -22,8 +22,10 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("ch.qos.logback:logback-classic:1.6.1")
 
-    // Access AutoLog annotation in source code
-    compileOnly(project(":processor"))
+    // Access the @Log annotation in source code. Only the annotations artifact belongs on the compile
+    // classpath — the processor goes through ksp(...) below and never needs to be visible to the
+    // consumer's compiler.
+    compileOnly(project(":annotations"))
 
     // kotlin-logging-extensions (using project dependency for development)
     ksp(project(":processor"))
@@ -35,7 +37,8 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(21)
+    // Matches the published artifacts so the workload exercises what consumers actually resolve.
+    jvmToolchain(17)
 
     // Register KSP generated directories as source roots for IntelliJ visibility
     sourceSets.main {

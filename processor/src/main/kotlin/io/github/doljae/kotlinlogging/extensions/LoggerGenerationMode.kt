@@ -4,10 +4,10 @@ enum class LoggerGenerationMode {
     /** Every class gets a `log` extension. The default when nothing is configured. */
     ALL,
 
-    /** Only classes annotated with `@AutoLog`. */
+    /** Only classes annotated with `@Log`. */
     ANNOTATION_ONLY,
 
-    /** Only classes in the configured package targets, plus any annotated with `@AutoLog`. */
+    /** Only classes in the configured package targets, plus any annotated with `@Log`. */
     PACKAGE_SCAN,
     ;
 
