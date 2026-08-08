@@ -667,6 +667,12 @@ class LoggerProcessorTest {
         val generatedFile = compilation.generatedExtensionsFileContaining("LegacyOptionClass")
 
         generatedFile?.exists() shouldBe true
+
+        // The warning is a migration signal, not a removal — generation above must keep working. The
+        // message carries the ready-to-paste replacement, including the `.*` suffix the new option
+        // requires, so asserting the exact string is the point of this check.
+        result.messages shouldContain "kotlinloggingextensions.autoGeneratePackagePrefixes is deprecated"
+        result.messages shouldContain "kotlinloggingextensions.targets=com.example.legacy.*"
     }
 
     @Test

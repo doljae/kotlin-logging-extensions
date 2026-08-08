@@ -3,9 +3,9 @@
 [![CI](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/doljae/kotlin-logging-extensions/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.doljae/kotlin-logging-extensions.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.doljae/kotlin-logging-extensions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.4.10-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.0+-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![kotlin-logging](https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg)](https://github.com/oshai/kotlin-logging)
-[![KSP](https://img.shields.io/badge/KSP-2.3.10-purple.svg)](https://github.com/google/ksp)
+[![KSP](https://img.shields.io/badge/KSP-KSP1%20%7C%20KSP2-purple.svg)](https://github.com/google/ksp)
 
 **Elegant [kotlin-logging](https://github.com/oshai/kotlin-logging) extensions for zero-boilerplate logger generation in
 Kotlin classes using [KSP](https://github.com/google/ksp)**
@@ -228,6 +228,15 @@ still on them.
 3. **Generation is project-wide by default.** Every eligible class gets a `log` extension without any
    annotation. Use `kotlinloggingextensions.mode` to narrow it — see
    [Scoping Generation](#scoping-generation).
+
+`3.0.0` also starts warning about one option it has not yet removed:
+
+4. **`kotlinloggingextensions.autoGeneratePackagePrefixes` is deprecated.** It still works. Replace it
+   with `kotlinloggingextensions.targets`, appending `.*` to each entry
+   (`com.example` → `com.example.*`); the build log prints the exact replacement value. It is removed
+   in the next major release, and removal is worth acting on early: with no targets configured, mode
+   resolution falls through to `All`, so a build that silently loses this option starts generating a
+   logger for *every* class instead of failing.
 
 ```kotlin
 plugins {
