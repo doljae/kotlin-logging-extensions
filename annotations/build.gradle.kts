@@ -12,6 +12,28 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    // compileOnly, so it is not published. See the `withDependencies` block below.
+    compileOnly(kotlin("stdlib"))
+}
+
+// This artifact publishes ZERO dependencies on purpose.
+//
+// The Kotlin plugin adds kotlin-stdlib to `implementation`, which lands in the POM and the Gradle
+// Module Metadata as a compile-scope dependency at whatever version built this project. A consumer
+// on an older Kotlin then hits Gradle's "highest version wins" conflict resolution, gets our newer
+// stdlib on its *compile* classpath, and fails with "Module was compiled with an incompatible
+// version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.0.0" —
+// measured on a Kotlin 2.0.21 consumer, see issue #152.
+//
+// Dropping it is safe: @Log and @AutoLog are SOURCE-retention annotation classes with no members,
+// so nothing of ours needs the stdlib at runtime, and any Kotlin consumer already has one.
+configurations.named("implementation").configure {
+    withDependencies {
+        removeIf { it.group == "org.jetbrains.kotlin" && it.name == "kotlin-stdlib" }
+    }
+}
+
 kotlin {
     // Deliberately lower than the processor's. This artifact is the only one that lands on a
     // consumer's *compile* classpath, so its floor decides which Kotlin versions can use the library

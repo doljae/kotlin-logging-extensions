@@ -161,8 +161,8 @@ matches. Mode values are case/`_`/`-` insensitive: `All` (default), `PackageScan
 | | |
 |---|---|
 | **JDK** | 17 or later |
-| **Kotlin** | 2.3+ (built and tested against 2.4.10) |
-| **KSP** | 2.3.10+ |
+| **Kotlin** | 2.0+ |
+| **KSP** | matching your Kotlin version (KSP1 or KSP2) |
 | **kotlin-logging** | 5.0.0+ |
 
 **From `3.0.0` the library version no longer mirrors your Kotlin version.** Releases follow plain
@@ -172,10 +172,20 @@ breaking changes here, not a new Kotlin line. Since
 stable compiler APIs rather than a compiler plugin, so one build of this processor serves a range of
 Kotlin versions and there is nothing left for the version string to track.
 
-> The exact lower bound on Kotlin is still being measured
-> ([#152](https://github.com/doljae/kotlin-logging-extensions/issues/152)); this table will state a
-> verified range once CI enforces one. Until then, `2.3+` is what has actually been exercised —
-> older versions may well work.
+The range below is measured, not assumed — each row is a standalone consumer project built against
+the published `3.0.0` artifacts and run, asserting the generated `log` resolves and is named after
+its class ([#152](https://github.com/doljae/kotlin-logging-extensions/issues/152)):
+
+| Kotlin | KSP | Gradle |
+|---|---|---|
+| `2.0.21` | `2.0.21-1.0.28` | 8.8 |
+| `2.1.21` | `2.1.21-2.0.2` | 8.11.1 |
+| `2.2.21` | `2.2.21-2.0.4` | 8.14.3 |
+| `2.3.21` | `2.3.10` | 9.0.0 |
+| `2.4.10` | `2.3.11` | 9.6.1 |
+
+Kotlin `2.0` is the floor because that is the metadata version the annotations artifact is compiled
+against, not because anything below it was found to break.
 
 Versions before `3.0.0` did pin one release per Kotlin version. That table is kept below for anyone
 still on them.
