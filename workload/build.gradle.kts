@@ -27,6 +27,7 @@ dependencies {
 
     // kotlin-logging-extensions (using project dependency for development)
     ksp(project(":processor"))
+    kspTest(project(":processor"))
 }
 
 tasks.test {
