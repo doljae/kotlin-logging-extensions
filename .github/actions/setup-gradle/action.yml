@@ -2,8 +2,14 @@ name: 'Setup Gradle'
 description: 'Standardized JDK and Gradle setup for this project'
 inputs:
   java-version:
-    description: 'JDK version to use'
-    default: '21'
+    description: >
+      JDK versions to install, newest last — Gradle runs on the last one and auto-detects the rest as
+      toolchains. 17 must stay installed: the published modules request a 17 toolchain so that
+      org.gradle.jvm.version in their metadata does not lock out JDK 17 consumers (see issue #152).
+      Relying on whichever JDKs a runner image happens to ship is not stable enough for that.
+    default: |
+      17
+      21
   cache:
     description: 'Whether to enable caching'
     default: 'gradle'
