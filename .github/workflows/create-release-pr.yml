@@ -52,74 +52,45 @@ jobs:
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         
-        # Show current latest version for reference
+        # The library version is plain SemVer and deliberately says nothing about which Kotlin
+        # versions the artifact supports — see issue #152. Earlier revisions of this step derived a
+        # suggestion from `kotlin("jvm") version` in build.gradle.kts, which both encoded a
+        # compatibility claim the artifact no longer makes and made a major bump unsuggestable.
+        # Supported Kotlin versions are documented in the README and enforced by CI, not by the
+        # version string.
         LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$' | head -1)
         if [ -n "$LATEST_TAG" ]; then
           LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
           echo "📋 Current latest version: ${LATEST_VERSION}"
-          
-          # Get current Kotlin version from build.gradle.kts
-          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-          echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
-          
           echo "💡 Suggested next versions:"
-          
-          # Check if latest version is SemVer (X.Y.Z) or KSP style (X.Y.Z-A.B.C)
+
           if [[ $LATEST_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            # Current style is SemVer (e.g., 2.3.0)
             MAJOR=$(echo "$LATEST_VERSION" | cut -d'.' -f1)
             MINOR=$(echo "$LATEST_VERSION" | cut -d'.' -f2)
             PATCH=$(echo "$LATEST_VERSION" | cut -d'.' -f3)
-            
-            NEXT_PATCH="${MAJOR}.${MINOR}.$((PATCH + 1))"
-            # If migrating to new Kotlin version (e.g. 2.4.x), start at 2.4.0
-            NEXT_KOTLIN_START="${BUILD_KOTLIN_VERSION%.*}.0" 
-            
-            echo "   📦 Next Patch: ${NEXT_PATCH}"
-            if [[ ! "$NEXT_KOTLIN_START" == "$MAJOR.$MINOR.0" ]]; then
-                 echo "   🚀 New Kotlin Version: ${NEXT_KOTLIN_START} (if applicable)"
-            fi
-            
+
+            echo "   🩹 Patch (bug fixes):        ${MAJOR}.${MINOR}.$((PATCH + 1))"
+            echo "   📦 Minor (new features):     ${MAJOR}.$((MINOR + 1)).0"
+            echo "   🚀 Major (breaking changes): $((MAJOR + 1)).0.0"
           else
-            # Current style is Old KSP style (e.g., 2.2.20-1.0.0)
-            echo "   ⚠️  Detected Old Version Style."
-            
-            # Suggest converting to New SemVer Style
-            # e.g., Kotlin 2.3.20 -> Suggest 2.3.0
-            KOTLIN_MAJOR_MINOR=$(echo "$BUILD_KOTLIN_VERSION" | cut -d'.' -f1,2)
-            NEW_STYLE_START="${KOTLIN_MAJOR_MINOR}.0"
-            
-            echo "   🚀 Switch to New Style: ${NEW_STYLE_START}"
-            
-            # Also suggest old style increment for compatibility
-            CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
-            LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
-            LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
-            LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
-            CURRENT_KOTLIN_PART=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
-            
-            NEXT_OLD_PATCH="${CURRENT_KOTLIN_PART}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
-            echo "   📦 Old Style Patch: ${NEXT_OLD_PATCH}"
+            # Pre-2.3.0 tags used the abandoned <kotlin>-<lib> scheme (e.g. 2.2.20-0.0.5).
+            echo "   ⚠️  Latest tag uses the retired <kotlin>-<lib> scheme."
+            echo "   🚀 Releases now use plain SemVer; pick the next version by change severity."
           fi
           echo ""
         else
           echo "📋 No previous releases found - this will be the first release!"
-          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-          echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
-          
-          # Suggest SemVer style for first release
-          KOTLIN_MAJOR_MINOR=$(echo "$BUILD_KOTLIN_VERSION" | cut -d'.' -f1,2)
-          echo "💡 Suggested first version: ${KOTLIN_MAJOR_MINOR}.0"
+          echo "💡 Suggested first version: 1.0.0"
           echo ""
         fi
-        
+
         # Validate input version format (Allow both old KSP format and new SemVer format)
         if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
           echo "❌ Error: Version validation failed."
           echo "   Input version: ${VERSION}"
           echo "   Expected formats:"
-          echo "     1. SemVer (New): KOTLIN_MAJOR.KOTLIN_MINOR.PATCH (e.g., 2.3.0, 2.3.1)"
-          echo "     2. KSP format (Old): KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.20-0.0.5)"
+          echo "     1. SemVer (current): MAJOR.MINOR.PATCH (e.g., 3.0.0, 3.0.1)"
+          echo "     2. KSP format (retired): KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.20-0.0.5)"
           if [ -n "$LATEST_TAG" ]; then
             echo "   Use one of the suggested versions above or follow the same pattern"
           fi

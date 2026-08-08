@@ -26,9 +26,9 @@ class LoggerProcessorTest {
                 "SimpleClass.kt",
                 """
                 package com.example
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class SimpleClass {
                     fun doSomething() {
                         // log should be available here after compilation
@@ -64,9 +64,9 @@ class LoggerProcessorTest {
                 "NestedPackageClass.kt",
                 """
                 package com.example.deeply.nested
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class DeepClass
                 """.trimIndent(),
             )
@@ -98,9 +98,9 @@ class LoggerProcessorTest {
                 "GenericClass.kt",
                 """
                 package com.example
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class GenericClass<T>(private val value: T)
                 """.trimIndent(),
             )
@@ -132,11 +132,11 @@ class LoggerProcessorTest {
                 "MultipleClasses.kt",
                 """
                 package com.example
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class ClassA
-                @AutoLog
+                @Log
                 class ClassB
                 """.trimIndent(),
             )
@@ -170,9 +170,9 @@ class LoggerProcessorTest {
                 "ReservedKeywordClass.kt",
                 """
                 package com.example.`fun`
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class ReservedClass
                 """.trimIndent(),
             )
@@ -238,11 +238,11 @@ class LoggerProcessorTest {
                 "ClassWithLogProperty.kt",
                 """
                 package com.example
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
                 import io.github.oshai.kotlinlogging.KLogger
                 import io.github.oshai.kotlinlogging.KotlinLogging
 
-                @AutoLog
+                @Log
                 class ClassWithLogProperty {
                     val log: KLogger = KotlinLogging.logger("custom")
                 }
@@ -274,11 +274,11 @@ class LoggerProcessorTest {
                 "ClassWithCompanionLogProperty.kt",
                 """
                 package com.example
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
                 import io.github.oshai.kotlinlogging.KLogger
                 import io.github.oshai.kotlinlogging.KotlinLogging
 
-                @AutoLog
+                @Log
                 class ClassWithCompanionLogProperty {
                     companion object {
                         val log: KLogger = KotlinLogging.logger("companion-custom")
@@ -384,9 +384,9 @@ class LoggerProcessorTest {
                 "AnnotatedOutsidePackageClass.kt",
                 """
                 package com.example.outside
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class AnnotatedOutsidePackageClass
                 """.trimIndent(),
             )
@@ -667,6 +667,12 @@ class LoggerProcessorTest {
         val generatedFile = compilation.generatedExtensionsFileContaining("LegacyOptionClass")
 
         generatedFile?.exists() shouldBe true
+
+        // The warning is a migration signal, not a removal — generation above must keep working. The
+        // message carries the ready-to-paste replacement, including the `.*` suffix the new option
+        // requires, so asserting the exact string is the point of this check.
+        result.messages shouldContain "kotlinloggingextensions.autoGeneratePackagePrefixes is deprecated"
+        result.messages shouldContain "kotlinloggingextensions.targets=com.example.legacy.*"
     }
 
     @Test
@@ -775,7 +781,7 @@ class LoggerProcessorTest {
 
         val result = compilation.compile()
 
-        // No @AutoLog, no mode, no targets — adding the processor is enough.
+        // No @Log, no mode, no targets — adding the processor is enough.
         compilation.generatedExtensionsFileContaining("PlainClass")?.exists() shouldBe true
         compilation.generatedExtensionsFileContaining("DataClass")?.exists() shouldBe true
         compilation.generatedExtensionsFileContaining("InternalClass")?.readText() shouldContain
@@ -785,15 +791,15 @@ class LoggerProcessorTest {
     }
 
     @Test
-    fun `should still honour AutoLog when annotation only mode is configured`() {
+    fun `should still honour Log when annotation only mode is configured`() {
         val source =
             SourceFile.kotlin(
                 "MixedClasses.kt",
                 """
                 package com.example.mixed
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class OptedInClass
                 class PlainClass
                 """.trimIndent(),
@@ -821,6 +827,47 @@ class LoggerProcessorTest {
         compilation.generatedExtensionsFileContaining("PlainClass") shouldBe null
     }
 
+    /**
+     * `@AutoLog` was the annotation name in v2.3.1–v2.4.0, so code written against those versions must
+     * keep generating after the rename in 3.0.0. AnnotationOnly mode is the only mode where this can
+     * fail — under the default ALL mode every class gets a logger and a missed annotation is invisible.
+     */
+    @Test
+    fun `should still honour the deprecated AutoLog annotation`() {
+        val source =
+            SourceFile.kotlin(
+                "LegacyAnnotated.kt",
+                """
+                package com.example.legacy
+                import io.github.doljae.kotlinlogging.extensions.AutoLog
+
+                @AutoLog
+                class LegacyOptedInClass
+                class PlainClass
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "AnnotationOnly",
+                    )
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+
+        compilation.generatedExtensionsFileContaining("LegacyOptedInClass")?.exists() shouldBe true
+        compilation.generatedExtensionsFileContaining("PlainClass") shouldBe null
+    }
+
     @Test
     fun `should emit one file per package regardless of how many classes it holds`() {
         val sources =
@@ -829,11 +876,11 @@ class LoggerProcessorTest {
                     "ServiceClasses.kt",
                     """
                     package com.example.service
-                    import io.github.doljae.kotlinlogging.extensions.AutoLog
+                    import io.github.doljae.kotlinlogging.extensions.Log
 
-                    @AutoLog
+                    @Log
                     class OrderService
-                    @AutoLog
+                    @Log
                     class PaymentService
                     """.trimIndent(),
                 ),
@@ -841,9 +888,9 @@ class LoggerProcessorTest {
                     "UserService.kt",
                     """
                     package com.example.service
-                    import io.github.doljae.kotlinlogging.extensions.AutoLog
+                    import io.github.doljae.kotlinlogging.extensions.Log
 
-                    @AutoLog
+                    @Log
                     class UserService
                     """.trimIndent(),
                 ),
@@ -851,9 +898,9 @@ class LoggerProcessorTest {
                     "OrderRepository.kt",
                     """
                     package com.example.repository
-                    import io.github.doljae.kotlinlogging.extensions.AutoLog
+                    import io.github.doljae.kotlinlogging.extensions.Log
 
-                    @AutoLog
+                    @Log
                     class OrderRepository
                     """.trimIndent(),
                 ),
@@ -906,12 +953,12 @@ class LoggerProcessorTest {
                 "ShadowedClass.kt",
                 """
                 package com.example
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
                 import io.github.oshai.kotlinlogging.KotlinLogging
 
                 val log = KotlinLogging.logger("TOP_LEVEL")
 
-                @AutoLog
+                @Log
                 class ShadowedClass
                 """.trimIndent(),
             )
@@ -942,9 +989,9 @@ class LoggerProcessorTest {
                 "UnshadowedClass.kt",
                 """
                 package com.example
-                import io.github.doljae.kotlinlogging.extensions.AutoLog
+                import io.github.doljae.kotlinlogging.extensions.Log
 
-                @AutoLog
+                @Log
                 class UnshadowedClass
                 """.trimIndent(),
             )
