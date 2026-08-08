@@ -34,6 +34,49 @@ configurations.named("implementation").configure {
     }
 }
 
+// Guards the block above. Worth a dedicated task because no other check we have can see this
+// failure: it lives in published metadata rather than in generated code, so the processor's unit
+// tests cannot reach it, and the consumer matrix only catches it in annotation mode — the default
+// mode puts nothing of ours on a consumer's compile classpath, so it stays green either way.
+//
+// The dependency is also added *implicitly* by the Kotlin plugin, so it can come back without
+// anyone writing a dependency line. See issue #156.
+val verifyPublishedMetadataHasNoDependencies =
+    tasks.register("verifyPublishedMetadataHasNoDependencies") {
+        description = "Fails if the published POM or Gradle Module Metadata declares any dependency."
+        group = "verification"
+
+        val pomFile = layout.buildDirectory.file("publications/maven/pom-default.xml")
+        val moduleFile = layout.buildDirectory.file("publications/maven/module.json")
+
+        dependsOn("generatePomFileForMavenPublication", "generateMetadataFileForMavenPublication")
+        inputs.file(pomFile)
+        inputs.file(moduleFile)
+
+        doLast {
+            val explanation =
+                "The annotations artifact must publish no dependencies. Anything declared here lands " +
+                    "on every consumer's compile classpath, and Gradle resolves version conflicts by " +
+                    "taking the highest, so our Kotlin version wins over an older consumer's and breaks " +
+                    "it at compile time (issue #152). If this fired after a routine change, the Kotlin " +
+                    "plugin's implicit kotlin-stdlib dependency is the likely cause — declare it " +
+                    "compileOnly rather than removing this check."
+
+            // Both formats are checked: the POM serves Maven consumers, the module metadata serves
+            // Gradle ones, and Gradle prefers the latter. A dependency can appear in either.
+            check(!pomFile.get().asFile.readText().contains("<dependency>")) {
+                "Published POM declares a dependency.\n\n$explanation"
+            }
+            check(!moduleFile.get().asFile.readText().contains("\"dependencies\":")) {
+                "Published Gradle Module Metadata declares a dependency.\n\n$explanation"
+            }
+        }
+    }
+
+tasks.named("check") {
+    dependsOn(verifyPublishedMetadataHasNoDependencies)
+}
+
 kotlin {
     // Deliberately lower than the processor's. This artifact is the only one that lands on a
     // consumer's *compile* classpath, so its floor decides which Kotlin versions can use the library
