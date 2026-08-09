@@ -222,49 +222,42 @@ jobs:
         # README.md updates
         print("🔄 Updating README.md...")
         readme_replacements = [
-            # Badge updates
-            (r'https://img\.shields\.io/badge/kotlin-[0-9]+\.[0-9]+\.[0-9]+-blue\.svg', f'https://img.shields.io/badge/kotlin-{KOTLIN_VERSION}-blue.svg'),
+            # Badges: only the kotlin-logging one carries a version this script owns. The Kotlin and
+            # KSP badges deliberately no longer name a version (they read "2.0+" and "KSP1 | KSP2"),
+            # because the artifact supports a measured range rather than the version that built it —
+            # see issue #152. Regexes for them were kept here after the badges changed shape and
+            # silently matched nothing; removed rather than left as dead patterns.
             (r'https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg', 'https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg'),
-            (r'https://img\.shields\.io/badge/KSP-[0-9]+\.[0-9]+\.[0-9]+(--[0-9]+\.[0-9]+\.[0-9]+)?-purple\.svg', f'https://img.shields.io/badge/KSP-{KSP_VERSION.replace("-", "--")}-purple.svg'),
-            
-            # Dependency examples
+
+            # Dependency examples. Both published coordinates need their own pattern: the processor
+            # one requires "kotlin-logging-extensions:" with the colon immediately after, so it does
+            # NOT match "kotlin-logging-extensions-annotations:". Without the second line the README
+            # would keep pointing at the previous release's annotations artifact.
             (r'io\.github\.doljae:kotlin-logging-extensions:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions:{VERSION}'),
+            (r'io\.github\.doljae:kotlin-logging-extensions-annotations:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions-annotations:{VERSION}'),
             (r'kotlin\("jvm"\) version "[0-9]+\.[0-9]+\.[0-9]+"', f'kotlin("jvm") version "{KOTLIN_VERSION}"'),
             (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
-            
-            # Version compatibility section
-            # Refers to the Kotlin minor line (e.g. 2.3.x), not the exact build version
-            (r'// For Kotlin [0-9]+\.[0-9]+\.(x|[0-9]+) projects:', f'// For Kotlin {".".join(KOTLIN_VERSION.split(".")[:2])}.x projects:'),
-            
+
             # kotlin-logging version
             (r'io\.github\.oshai:kotlin-logging-jvm:[0-9]+\.[0-9]+\.[0-9]+', f'io.github.oshai:kotlin-logging-jvm:{KOTLIN_LOGGING_VERSION}'),
-            
+
             # logback version
             (r'ch\.qos\.logback:logback-classic:[0-9]+\.[0-9]+\.[0-9]+', f'ch.qos.logback:logback-classic:{LOGBACK_VERSION}'),
         ]
-        
+
         update_file('README.md', readme_replacements)
-        
-        # Add new version to compatibility table if not exists
-        try:
-            with open('README.md', 'r', encoding='utf-8') as f:
-                readme_content = f.read()
-            
-            if f"| `{VERSION}` |" not in readme_content:
-                # Find separator line and add new row after it
-                pattern = r'(\|---------+\|--------+\|-----+\|)'
-                replacement = f'\\1\n| `{VERSION}` | `{KOTLIN_VERSION}` | `{KSP_VERSION}` |'
-                updated_content = re.sub(pattern, replacement, readme_content)
-                
-                if updated_content != readme_content:
-                    with open('README.md', 'w', encoding='utf-8') as f:
-                        f.write(updated_content)
-                    print(f"✅ Added new version row: {VERSION}")
-                else:
-                    print(f"ℹ️  Version {VERSION} already exists in compatibility table")
-        except Exception as e:
-            print(f"❌ Error updating compatibility table: {e}")
-        
+
+        # No compatibility-table row is added any more.
+        #
+        # This step used to insert "| `<version>` | `<kotlin>` | `<ksp>` |" after the first markdown
+        # separator it found. The library version no longer tracks the Kotlin version (issue #152),
+        # so that row asserts a claim the artifact does not make. Worse, the only separator in the
+        # README still matching its pattern is the one inside the collapsed, explicitly historical
+        # table — so the row would have landed there and revived the retired scheme.
+        #
+        # Supported Kotlin versions are a measured range documented in the README's requirements
+        # section and verified by the consumer matrix, not something derived from a release version.
+
         # Update issue templates - use simpler approach for placeholders
         templates = [
             ('bug_report.yml', [
