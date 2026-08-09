@@ -13,28 +13,26 @@ repositories {
 }
 
 dependencies {
-    // compileOnly, so it is not published. See the `withDependencies` block below.
+    // This one line is what makes the artifact publish ZERO dependencies. Two effects, both needed:
+    //
+    //  1. Declaring a stdlib explicitly stops the Kotlin plugin from adding its own. Left to itself
+    //     it adds kotlin-stdlib to `api` — not `implementation` — so it reaches the POM as
+    //     <scope>compile</scope> and the Gradle Module Metadata's `apiElements` (java-api) variant,
+    //     which is exactly what a consumer's compile classpath resolves.
+    //  2. compileOnly dependencies are not published at all.
+    //
+    // Why that matters: a published dependency lands on every consumer's compile classpath, and
+    // Gradle resolves version conflicts by taking the highest, so our Kotlin version wins over an
+    // older consumer's. A Kotlin 2.0.21 consumer got our stdlib 2.4.10 and failed with "Module was
+    // compiled with an incompatible version of Kotlin. The binary version of its metadata is 2.4.0,
+    // expected version is 2.0.0" — see issue #152.
+    //
+    // Dropping the stdlib is safe: @Log and @AutoLog are SOURCE-retention annotation classes with no
+    // members, so nothing of ours needs it at runtime, and any Kotlin consumer already has one.
     compileOnly(kotlin("stdlib"))
 }
 
-// This artifact publishes ZERO dependencies on purpose.
-//
-// The Kotlin plugin adds kotlin-stdlib to `implementation`, which lands in the POM and the Gradle
-// Module Metadata as a compile-scope dependency at whatever version built this project. A consumer
-// on an older Kotlin then hits Gradle's "highest version wins" conflict resolution, gets our newer
-// stdlib on its *compile* classpath, and fails with "Module was compiled with an incompatible
-// version of Kotlin. The binary version of its metadata is 2.4.0, expected version is 2.0.0" —
-// measured on a Kotlin 2.0.21 consumer, see issue #152.
-//
-// Dropping it is safe: @Log and @AutoLog are SOURCE-retention annotation classes with no members,
-// so nothing of ours needs the stdlib at runtime, and any Kotlin consumer already has one.
-configurations.named("implementation").configure {
-    withDependencies {
-        removeIf { it.group == "org.jetbrains.kotlin" && it.name == "kotlin-stdlib" }
-    }
-}
-
-// Guards the block above. Worth a dedicated task because no other check we have can see this
+// Guards the property above. Worth a dedicated task because no other check we have can see this
 // failure: it lives in published metadata rather than in generated code, so the processor's unit
 // tests cannot reach it, and the consumer matrix only catches it in annotation mode — the default
 // mode puts nothing of ours on a consumer's compile classpath, so it stays green either way.
