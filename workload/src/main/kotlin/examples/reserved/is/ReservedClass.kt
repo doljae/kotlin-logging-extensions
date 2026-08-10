@@ -1,8 +1,8 @@
 package examples.reserved.`is`
 
-import io.github.doljae.kotlinlogging.extensions.AutoLog
+import io.github.doljae.kotlinlogging.extensions.Log
 
-@AutoLog
+@Log
 class ReservedClass {
     fun doSomething() {
         log.info { "Reserved class logging" }

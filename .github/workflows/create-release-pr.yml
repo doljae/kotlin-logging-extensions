@@ -52,74 +52,45 @@ jobs:
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         
-        # Show current latest version for reference
+        # The library version is plain SemVer and deliberately says nothing about which Kotlin
+        # versions the artifact supports — see issue #152. Earlier revisions of this step derived a
+        # suggestion from `kotlin("jvm") version` in build.gradle.kts, which both encoded a
+        # compatibility claim the artifact no longer makes and made a major bump unsuggestable.
+        # Supported Kotlin versions are documented in the README and enforced by CI, not by the
+        # version string.
         LATEST_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$' | head -1)
         if [ -n "$LATEST_TAG" ]; then
           LATEST_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
           echo "📋 Current latest version: ${LATEST_VERSION}"
-          
-          # Get current Kotlin version from build.gradle.kts
-          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-          echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
-          
           echo "💡 Suggested next versions:"
-          
-          # Check if latest version is SemVer (X.Y.Z) or KSP style (X.Y.Z-A.B.C)
+
           if [[ $LATEST_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            # Current style is SemVer (e.g., 2.3.0)
             MAJOR=$(echo "$LATEST_VERSION" | cut -d'.' -f1)
             MINOR=$(echo "$LATEST_VERSION" | cut -d'.' -f2)
             PATCH=$(echo "$LATEST_VERSION" | cut -d'.' -f3)
-            
-            NEXT_PATCH="${MAJOR}.${MINOR}.$((PATCH + 1))"
-            # If migrating to new Kotlin version (e.g. 2.4.x), start at 2.4.0
-            NEXT_KOTLIN_START="${BUILD_KOTLIN_VERSION%.*}.0" 
-            
-            echo "   📦 Next Patch: ${NEXT_PATCH}"
-            if [[ ! "$NEXT_KOTLIN_START" == "$MAJOR.$MINOR.0" ]]; then
-                 echo "   🚀 New Kotlin Version: ${NEXT_KOTLIN_START} (if applicable)"
-            fi
-            
+
+            echo "   🩹 Patch (bug fixes):        ${MAJOR}.${MINOR}.$((PATCH + 1))"
+            echo "   📦 Minor (new features):     ${MAJOR}.$((MINOR + 1)).0"
+            echo "   🚀 Major (breaking changes): $((MAJOR + 1)).0.0"
           else
-            # Current style is Old KSP style (e.g., 2.2.20-1.0.0)
-            echo "   ⚠️  Detected Old Version Style."
-            
-            # Suggest converting to New SemVer Style
-            # e.g., Kotlin 2.3.20 -> Suggest 2.3.0
-            KOTLIN_MAJOR_MINOR=$(echo "$BUILD_KOTLIN_VERSION" | cut -d'.' -f1,2)
-            NEW_STYLE_START="${KOTLIN_MAJOR_MINOR}.0"
-            
-            echo "   🚀 Switch to New Style: ${NEW_STYLE_START}"
-            
-            # Also suggest old style increment for compatibility
-            CURRENT_LIB=$(echo "$LATEST_VERSION" | cut -d'-' -f2)
-            LIB_MAJOR=$(echo "$CURRENT_LIB" | cut -d'.' -f1)
-            LIB_MINOR=$(echo "$CURRENT_LIB" | cut -d'.' -f2)
-            LIB_PATCH=$(echo "$CURRENT_LIB" | cut -d'.' -f3)
-            CURRENT_KOTLIN_PART=$(echo "$LATEST_VERSION" | cut -d'-' -f1)
-            
-            NEXT_OLD_PATCH="${CURRENT_KOTLIN_PART}-${LIB_MAJOR}.${LIB_MINOR}.$((LIB_PATCH + 1))"
-            echo "   📦 Old Style Patch: ${NEXT_OLD_PATCH}"
+            # Pre-2.3.0 tags used the abandoned <kotlin>-<lib> scheme (e.g. 2.2.20-0.0.5).
+            echo "   ⚠️  Latest tag uses the retired <kotlin>-<lib> scheme."
+            echo "   🚀 Releases now use plain SemVer; pick the next version by change severity."
           fi
           echo ""
         else
           echo "📋 No previous releases found - this will be the first release!"
-          BUILD_KOTLIN_VERSION=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
-          echo "🔧 Current build.gradle.kts Kotlin version: ${BUILD_KOTLIN_VERSION}"
-          
-          # Suggest SemVer style for first release
-          KOTLIN_MAJOR_MINOR=$(echo "$BUILD_KOTLIN_VERSION" | cut -d'.' -f1,2)
-          echo "💡 Suggested first version: ${KOTLIN_MAJOR_MINOR}.0"
+          echo "💡 Suggested first version: 1.0.0"
           echo ""
         fi
-        
+
         # Validate input version format (Allow both old KSP format and new SemVer format)
         if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?$ ]]; then
           echo "❌ Error: Version validation failed."
           echo "   Input version: ${VERSION}"
           echo "   Expected formats:"
-          echo "     1. SemVer (New): KOTLIN_MAJOR.KOTLIN_MINOR.PATCH (e.g., 2.3.0, 2.3.1)"
-          echo "     2. KSP format (Old): KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.20-0.0.5)"
+          echo "     1. SemVer (current): MAJOR.MINOR.PATCH (e.g., 3.0.0, 3.0.1)"
+          echo "     2. KSP format (retired): KOTLIN_VERSION-LIB_VERSION (e.g., 2.2.20-0.0.5)"
           if [ -n "$LATEST_TAG" ]; then
             echo "   Use one of the suggested versions above or follow the same pattern"
           fi
@@ -251,49 +222,42 @@ jobs:
         # README.md updates
         print("🔄 Updating README.md...")
         readme_replacements = [
-            # Badge updates
-            (r'https://img\.shields\.io/badge/kotlin-[0-9]+\.[0-9]+\.[0-9]+-blue\.svg', f'https://img.shields.io/badge/kotlin-{KOTLIN_VERSION}-blue.svg'),
+            # Badges: only the kotlin-logging one carries a version this script owns. The Kotlin and
+            # KSP badges deliberately no longer name a version (they read "2.0+" and "KSP1 | KSP2"),
+            # because the artifact supports a measured range rather than the version that built it —
+            # see issue #152. Regexes for them were kept here after the badges changed shape and
+            # silently matched nothing; removed rather than left as dead patterns.
             (r'https://img\.shields\.io/badge/kotlin--logging-[^-]*-green\.svg', 'https://img.shields.io/badge/kotlin--logging-5.0.0+-green.svg'),
-            (r'https://img\.shields\.io/badge/KSP-[0-9]+\.[0-9]+\.[0-9]+(--[0-9]+\.[0-9]+\.[0-9]+)?-purple\.svg', f'https://img.shields.io/badge/KSP-{KSP_VERSION.replace("-", "--")}-purple.svg'),
-            
-            # Dependency examples
+
+            # Dependency examples. Both published coordinates need their own pattern: the processor
+            # one requires "kotlin-logging-extensions:" with the colon immediately after, so it does
+            # NOT match "kotlin-logging-extensions-annotations:". Without the second line the README
+            # would keep pointing at the previous release's annotations artifact.
             (r'io\.github\.doljae:kotlin-logging-extensions:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions:{VERSION}'),
+            (r'io\.github\.doljae:kotlin-logging-extensions-annotations:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions-annotations:{VERSION}'),
             (r'kotlin\("jvm"\) version "[0-9]+\.[0-9]+\.[0-9]+"', f'kotlin("jvm") version "{KOTLIN_VERSION}"'),
             (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
-            
-            # Version compatibility section
-            # Refers to the Kotlin minor line (e.g. 2.3.x), not the exact build version
-            (r'// For Kotlin [0-9]+\.[0-9]+\.(x|[0-9]+) projects:', f'// For Kotlin {".".join(KOTLIN_VERSION.split(".")[:2])}.x projects:'),
-            
+
             # kotlin-logging version
             (r'io\.github\.oshai:kotlin-logging-jvm:[0-9]+\.[0-9]+\.[0-9]+', f'io.github.oshai:kotlin-logging-jvm:{KOTLIN_LOGGING_VERSION}'),
-            
+
             # logback version
             (r'ch\.qos\.logback:logback-classic:[0-9]+\.[0-9]+\.[0-9]+', f'ch.qos.logback:logback-classic:{LOGBACK_VERSION}'),
         ]
-        
+
         update_file('README.md', readme_replacements)
-        
-        # Add new version to compatibility table if not exists
-        try:
-            with open('README.md', 'r', encoding='utf-8') as f:
-                readme_content = f.read()
-            
-            if f"| `{VERSION}` |" not in readme_content:
-                # Find separator line and add new row after it
-                pattern = r'(\|---------+\|--------+\|-----+\|)'
-                replacement = f'\\1\n| `{VERSION}` | `{KOTLIN_VERSION}` | `{KSP_VERSION}` |'
-                updated_content = re.sub(pattern, replacement, readme_content)
-                
-                if updated_content != readme_content:
-                    with open('README.md', 'w', encoding='utf-8') as f:
-                        f.write(updated_content)
-                    print(f"✅ Added new version row: {VERSION}")
-                else:
-                    print(f"ℹ️  Version {VERSION} already exists in compatibility table")
-        except Exception as e:
-            print(f"❌ Error updating compatibility table: {e}")
-        
+
+        # No compatibility-table row is added any more.
+        #
+        # This step used to insert "| `<version>` | `<kotlin>` | `<ksp>` |" after the first markdown
+        # separator it found. The library version no longer tracks the Kotlin version (issue #152),
+        # so that row asserts a claim the artifact does not make. Worse, the only separator in the
+        # README still matching its pattern is the one inside the collapsed, explicitly historical
+        # table — so the row would have landed there and revived the retired scheme.
+        #
+        # Supported Kotlin versions are a measured range documented in the README's requirements
+        # section and verified by the consumer matrix, not something derived from a release version.
+
         # Update issue templates - use simpler approach for placeholders
         templates = [
             ('bug_report.yml', [

@@ -14,7 +14,7 @@ class LoggerProcessorProvider : SymbolProcessorProvider {
         if (generationMode == LoggerGenerationMode.PACKAGE_SCAN && packageScanTargetPatterns.isEmpty()) {
             environment.logger.warn(
                 "Package scan mode is enabled but no valid targets were configured. " +
-                    "Only classes annotated with @AutoLog will get log extensions.",
+                    "Only classes annotated with @Log will get log extensions.",
             )
         }
 
@@ -72,9 +72,23 @@ class LoggerProcessorProvider : SymbolProcessorProvider {
                 }
 
         // Backward compatibility for previously introduced option.
+        val legacyOptionValues = options[LoggerProcessor.LEGACY_PACKAGE_PREFIXES_OPTION_KEY].toOptionValues()
+
+        // Warned about rather than removed outright, even though 3.0.0 is a major release. Removing it
+        // would not break a build: with no targets left, mode resolution falls through to ALL and the
+        // project silently starts generating a logger for every class. A silent behaviour change is a
+        // worse outcome than a hard error, so users get a release to migrate first.
+        if (legacyOptionValues.isNotEmpty()) {
+            logger.warn(
+                "${LoggerProcessor.LEGACY_PACKAGE_PREFIXES_OPTION_KEY} is deprecated and will be removed in the " +
+                    "next major release. Replace it with " +
+                    "${LoggerProcessor.PACKAGE_SCAN_TARGETS_OPTION_KEY}=" +
+                    legacyOptionValues.joinToString(",") { "${it.trimEnd('.')}.*" },
+            )
+        }
+
         val legacyPackageTargets =
-            options[LoggerProcessor.LEGACY_PACKAGE_PREFIXES_OPTION_KEY]
-                .toOptionValues()
+            legacyOptionValues
                 .map { legacyPrefix -> legacyPrefix.trimEnd('.') }
                 .mapNotNull { legacyPrefix ->
                     normalizePackageTargetPattern(

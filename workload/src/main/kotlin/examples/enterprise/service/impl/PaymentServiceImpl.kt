@@ -2,7 +2,7 @@
 
 package examples.enterprise.service.impl
 
-import io.github.doljae.kotlinlogging.extensions.AutoLog
+import io.github.doljae.kotlinlogging.extensions.Log
 
 /**
  * Example demonstrating that kotlin-logging-extensions works seamlessly
@@ -13,7 +13,7 @@ import io.github.doljae.kotlinlogging.extensions.AutoLog
  * The auto-generated logger will use the fully qualified class name:
  * "examples.enterprise.service.impl.PaymentServiceImpl"
  */
-@AutoLog
+@Log
 class PaymentServiceImpl {
 
     fun processPayment(amount: Double, paymentMethod: String): PaymentResult {

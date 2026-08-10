@@ -80,7 +80,7 @@ class LoggerProcessor(
 
     private fun KSClassDeclaration.hasLoggerGenerationAnnotation(): Boolean {
         return annotations.any { annotation ->
-            annotation.annotationType.resolve().declaration.qualifiedName?.asString() == LOGGER_GENERATION_ANNOTATION
+            annotation.annotationType.resolve().declaration.qualifiedName?.asString() in LOGGER_GENERATION_ANNOTATIONS
         }
     }
 
@@ -331,7 +331,20 @@ class LoggerProcessor(
             val sanitized = withoutGroup.map { character -> if (character.isLetterOrDigit()) character else '_' }.joinToString("")
             return if (sanitized.isEmpty()) "" else "_$sanitized"
         }
-        private const val LOGGER_GENERATION_ANNOTATION = "io.github.doljae.kotlinlogging.extensions.AutoLog"
+        /**
+         * Matched by qualified name only, so the processor needs no compile dependency on the
+         * annotations artifact.
+         *
+         * `AutoLog` is the pre-3.0.0 name and stays here for as long as its deprecation lasts. It has
+         * to be a genuine annotation class on the consumer's side rather than a `typealias` — KSP
+         * reports an aliased annotation under the alias's own name, so a shim would resolve to
+         * something that is not in this set and generate nothing, silently.
+         */
+        private val LOGGER_GENERATION_ANNOTATIONS =
+            setOf(
+                "io.github.doljae.kotlinlogging.extensions.Log",
+                "io.github.doljae.kotlinlogging.extensions.AutoLog",
+            )
 
         // Ref: https://kotlinlang.org/docs/keyword-reference.html
         private val hardKeywords =

@@ -2,7 +2,7 @@
 
 package examples
 
-import io.github.doljae.kotlinlogging.extensions.AutoLog
+import io.github.doljae.kotlinlogging.extensions.Log
 
 /**
  * Demonstrates the usage of the auto-generated `log` property in various
@@ -18,7 +18,7 @@ import io.github.doljae.kotlinlogging.extensions.AutoLog
 /**
  * 1. Singleton Object
  */
-@AutoLog
+@Log
 object SingletonService {
     fun doSomething() {
         log.info { "Logging from SingletonService (object)" }
@@ -28,13 +28,13 @@ object SingletonService {
 /**
  * 2. Class with Companion Object
  */
-@AutoLog
+@Log
 class ClassWithCompanion {
     fun instanceMethod() {
         log.info { "Logging from ClassWithCompanion instance" }
     }
 
-    @AutoLog
+    @Log
     companion object {
         fun staticMethod() {
             log.info { "Logging from ClassWithCompanion companion object" }
@@ -45,20 +45,20 @@ class ClassWithCompanion {
 /**
  * 3. Class with Inner Class
  */
-@AutoLog
+@Log
 class OuterClass {
     fun outerMethod() {
         log.info { "Logging from OuterClass" }
     }
 
-    @AutoLog
+    @Log
     class SimpleInnerClass {
         fun innerMethod() {
             log.info { "Logging from InnerClass" }
         }
     }
 
-    @AutoLog
+    @Log
     inner class InnerClass {
         fun innerMethod() {
             log.info { "Logging from InnerClass" }
@@ -71,21 +71,21 @@ class OuterClass {
 /**
  * 4. Sealed Class Hierarchy
  */
-@AutoLog
+@Log
 sealed class BaseOperation {
     fun logBase() {
         log.info { "Logging from BaseOperation (sealed class)" }
     }
 }
 
-@AutoLog
+@Log
 class AddOperation(val value: Int) : BaseOperation() {
     fun perform() {
         log.info { "Logging from AddOperation: adding $value" }
     }
 }
 
-@AutoLog
+@Log
 object ResetOperation : BaseOperation() {
     fun perform() {
         log.info { "Logging from ResetOperation (object extending sealed)" }
@@ -95,7 +95,7 @@ object ResetOperation : BaseOperation() {
 /**
  * 5. Enum Class
  */
-@AutoLog
+@Log
 enum class ProcessingState {
     IDLE,
     RUNNING,
@@ -109,7 +109,7 @@ enum class ProcessingState {
 /**
  * 6. Abstract Class
  */
-@AutoLog
+@Log
 abstract class AbstractWorker {
     fun commonWork() {
         log.info { "Logging from AbstractWorker common logic" }
@@ -118,7 +118,7 @@ abstract class AbstractWorker {
     abstract fun specificWork()
 }
 
-@AutoLog
+@Log
 class ConcreteWorker : AbstractWorker() {
     override fun specificWork() {
         log.info { "Logging from ConcreteWorker specific logic" }
@@ -130,7 +130,7 @@ class ConcreteWorker : AbstractWorker() {
  *
  * The generated receiver is star-projected, so the bound below never has to be restated.
  */
-@AutoLog
+@Log
 class BoundedCache<K : Any, V : Comparable<V>> {
     private val entries = mutableMapOf<K, V>()
 
@@ -143,16 +143,16 @@ class BoundedCache<K : Any, V : Comparable<V>> {
 /**
  * 8. Generic Outer With Nested And Inner Classes
  */
-@AutoLog
+@Log
 class GenericHolder<T : Any> {
-    @AutoLog
+    @Log
     class Nested<U : Any> {
         fun work() {
             log.info { "Logging from GenericHolder.Nested" }
         }
     }
 
-    @AutoLog
+    @Log
     inner class Inner {
         fun work() {
             log.info { "Logging from GenericHolder.Inner" }
@@ -165,7 +165,7 @@ class GenericHolder<T : Any> {
  *
  * Nothing is generated: the extension would live in another file, which cannot name a private class.
  */
-@AutoLog
+@Log
 private class PrivateWorker {
     fun work(): String = "no generated log here"
 }

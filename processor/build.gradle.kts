@@ -19,6 +19,10 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("com.google.devtools.ksp:symbol-processing-api:2.3.11")
 
+    // Test-only on purpose. The processor matches @Log and @AutoLog by qualified name, so it needs no
+    // compile dependency on them — but the tests compile sources that reference the annotations.
+    testImplementation(project(":annotations"))
+
     // kotlin-logging dependency for generated code compatibility
     compileOnly("io.github.oshai:kotlin-logging-jvm:8.0.4")
 
@@ -32,7 +36,11 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(21)
+    // 17, not 21: the toolchain decides the `org.gradle.jvm.version` attribute published in Gradle
+    // Module Metadata, and a consumer on a lower JDK fails at dependency *resolution* — before any
+    // compilation, with an error that says nothing about Kotlin. Lowering `compilerOptions.jvmTarget`
+    // alone does not fix that; the attribute follows the toolchain. See issue #152.
+    jvmToolchain(17)
 }
 
 // https://vanniktech.github.io/gradle-maven-publish-plugin/central/
