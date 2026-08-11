@@ -46,7 +46,7 @@ Add to your `build.gradle.kts`:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.4.10"
-    id("com.google.devtools.ksp") version "2.3.10"
+    id("com.google.devtools.ksp") version "2.3.11"
 }
 
 repositories {
@@ -56,7 +56,7 @@ repositories {
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
-    implementation("ch.qos.logback:logback-classic:1.6.0") // Logger implementation required
+    implementation("ch.qos.logback:logback-classic:1.6.1") // Logger implementation required
 }
 ```
 
@@ -241,7 +241,7 @@ still on them.
 ```kotlin
 plugins {
     kotlin("jvm") version "2.4.10"
-    id("com.google.devtools.ksp") version "2.3.10"
+    id("com.google.devtools.ksp") version "2.3.11"
 }
 
 dependencies {
@@ -267,7 +267,7 @@ or [Log4j2](https://logging.apache.org/log4j/2.x/).
 ```kotlin
 plugins {
     kotlin("jvm") version "2.4.10"
-    id("com.google.devtools.ksp") version "2.3.10"
+    id("com.google.devtools.ksp") version "2.3.11"
 }
 
 repositories {
@@ -277,7 +277,7 @@ repositories {
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
-    implementation("ch.qos.logback:logback-classic:1.6.0")
+    implementation("ch.qos.logback:logback-classic:1.6.1")
 
     // Only needed if you write @Log yourself (AnnotationOnly / PackageScan modes).
     compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0")
