@@ -15,7 +15,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.kotest:kotest-assertions-core:6.2.3")
+    testImplementation("io.kotest:kotest-assertions-core:6.2.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
