@@ -60,6 +60,14 @@ dependencies {
 }
 ```
 
+Each source set is processed separately, so add `kspTest(...)` as well if your test classes use `log`:
+
+```kotlin
+dependencies {
+    kspTest("io.github.doljae:kotlin-logging-extensions:3.0.0")
+}
+```
+
 **Step 2: Use `log`**
 
 Nothing to annotate, nothing to configure:
@@ -182,7 +190,7 @@ its class ([#152](https://github.com/doljae/kotlin-logging-extensions/issues/152
 | `2.1.21` | `2.1.21-2.0.2` | 8.11.1 |
 | `2.2.21` | `2.2.21-2.0.4` | 8.14.3 |
 | `2.3.21` | `2.3.10` | 9.0.0 |
-| `2.4.10` | `2.3.11` | 9.6.1 |
+| `2.4.10` | `2.3.11` | 9.7.0 |
 
 Kotlin `2.0` is the floor because that is the metadata version the annotations artifact is compiled
 against, not because anything below it was found to break.
