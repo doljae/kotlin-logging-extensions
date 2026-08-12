@@ -15,12 +15,12 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.kotest:kotest-assertions-core:6.2.3")
+    testImplementation("io.kotest:kotest-assertions-core:6.2.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
-    implementation("ch.qos.logback:logback-classic:1.6.1")
+    implementation("ch.qos.logback:logback-classic:1.6.2")
 
     // Access the @Log annotation in source code. Only the annotations artifact belongs on the compile
     // classpath — the processor goes through ksp(...) below and never needs to be visible to the
