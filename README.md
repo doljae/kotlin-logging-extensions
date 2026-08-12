@@ -60,6 +60,14 @@ dependencies {
 }
 ```
 
+Each source set is processed separately, so add `kspTest(...)` as well if your test classes use `log`:
+
+```kotlin
+dependencies {
+    kspTest("io.github.doljae:kotlin-logging-extensions:3.0.0")
+}
+```
+
 **Step 2: Use `log`**
 
 Nothing to annotate, nothing to configure:

@@ -7,11 +7,10 @@ on:
       - 2.1.x
       - 2.2.x
       - 2.3.x
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.github/workflows/**'
+    # No paths-ignore: a release PR that only rewrites version references in
+    # README and the issue templates touches nothing else, and every such path
+    # was ignored here — so v3.0.0 landed on main and never released. The
+    # commit-message check below is the real gate; it costs ~10s on other pushes.
   workflow_dispatch:
     inputs:
       force:
