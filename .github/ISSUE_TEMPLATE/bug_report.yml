@@ -8,7 +8,8 @@ body:
       value: |
         Thank you for taking the time to report a bug! Please fill out this form to help us understand and reproduce the issue.
 
-        **⚠️ Important**: This library is highly dependent on Kotlin and KSP versions. Please ensure you're using the correct versions before reporting.
+        **⚠️ Important**: From `3.0.0` the library supports a range of Kotlin versions (JDK 17+, Kotlin 2.0+, KSP matching your Kotlin version). Please check the
+        [compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility) before reporting.
 
   - type: checkboxes
     id: prerequisites
@@ -18,7 +19,7 @@ body:
       options:
         - label: I have searched existing issues to make sure this is not a duplicate
           required: true
-        - label: I am using the exact Kotlin and KSP versions specified in the documentation
+        - label: I am on JDK 17+, Kotlin 2.0+, and a KSP version matching my Kotlin version
           required: true
         - label: I have tried building with a clean Gradle build (`./gradlew clean build`)
           required: true
@@ -113,8 +114,11 @@ body:
 
         dependencies {
             ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
-            implementation("io.github.doljae:kotlin-logging-extensions:3.0.0")
-            implementation("io.github.oshai:kotlin-logging-jvm:7.0.7")
+            kspTest("io.github.doljae:kotlin-logging-extensions:3.0.0") // if test classes use `log`
+            implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
+
+            // Only for AnnotationOnly / PackageScan modes, where you write @Log yourself.
+            compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0")
         }
     validations:
       required: false
