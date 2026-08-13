@@ -2,26 +2,38 @@
 
 ## Supported Versions
 
-We release patches for security vulnerabilities. Which versions are eligible for receiving such patches depends on the CVSS v3.0 Rating:
+Security fixes land on the current minor line. Older lines are not backported — this is a
+single-maintainer project, and pretending otherwise would be a promise it cannot keep.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.0.x   | :white_check_mark: |
+| `3.x`   | :white_check_mark: |
+| `< 3.0` | :x:                |
+
+Releases follow plain SemVer from `3.0.0`; the version no longer tracks your Kotlin version. See the
+[compatibility table](README.md#-version-compatibility) for the Kotlin, KSP and JDK range a release
+supports.
 
 ## Reporting a Vulnerability
-
-If you discover a security vulnerability, we would like to know about it so we can take steps to address it as quickly as possible.
 
 **Please do NOT report security vulnerabilities through public GitHub issues.**
 
 ### How to Report
 
-1. **Email**: Send an email to [seok9211@naver.com](mailto:seok9211@naver.com) with the subject line "Security Vulnerability Report"
-2. **Include**: 
-   - Description of the vulnerability
-   - Steps to reproduce the issue
-   - Potential impact
-   - Any suggested fixes (if available)
+**Preferred — GitHub private vulnerability reporting**: open the repository's
+[Security tab](https://github.com/doljae/kotlin-logging-extensions/security) and choose *Report a
+vulnerability*. The report stays private, the discussion stays attached to the repository, and a fix
+can be published as a GitHub Security Advisory with a CVE.
+
+**Alternative — email**: [seok9211@naver.com](mailto:seok9211@naver.com), subject line
+"Security Vulnerability Report".
+
+Either way, please include:
+
+- Description of the vulnerability
+- Steps to reproduce the issue
+- Potential impact
+- Any suggested fixes (if available)
 
 ### What to Expect
 
@@ -43,16 +55,28 @@ When using kotlin-logging-extensions:
 
 ## Security Features
 
-- **No runtime dependencies**: The processor only runs at compile time
-- **Minimal code generation**: Only generates simple logger property extensions
-- **No network access**: The processor doesn't make external connections
-- **No file system access**: Beyond standard KSP operations for code generation
+- **Nothing we publish reaches your application's runtime**: the processor is applied through
+  `ksp(...)`, so it and its dependencies live on the KSP classpath and run only during compilation
+- **Minimal code generation**: only simple logger property extensions
+- **No network access**: the processor doesn't make external connections
+- **No file system access**: beyond standard KSP operations for code generation
 
 ## Dependencies
 
-This project uses minimal dependencies to reduce the attack surface:
+Two artifacts are published, and what each one declares is checked rather than asserted:
 
-- Kotlin Symbol Processing (KSP) API - for compile-time code generation
-- kotlin-logging - for runtime logging functionality
+| Artifact | Declared dependencies |
+|---|---|
+| `kotlin-logging-extensions` (the processor) | `com.google.devtools.ksp:symbol-processing-api`, `org.jetbrains.kotlin:kotlin-stdlib` |
+| `kotlin-logging-extensions-annotations` | none |
 
-We regularly monitor our dependencies for known vulnerabilities and update them promptly when security patches are available. 
+The annotations artifact is the only one that lands on your **compile** classpath, and it publishes
+zero dependencies — enforced on every build by `verifyPublishedMetadataHasNoDependencies`, which
+fails the build if a dependency ever appears in the POM or Gradle module metadata (#156).
+
+kotlin-logging itself is **not** a dependency of either artifact. The processor declares it
+`compileOnly` and the generated code references it, so the version on your classpath is the one you
+chose.
+
+We regularly monitor our dependencies for known vulnerabilities and update them promptly when
+security patches are available.
