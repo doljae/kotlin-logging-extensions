@@ -1,0 +1,81 @@
+name: PR Triage
+
+# Two things GitHub cannot do on its own:
+#
+#  1. Copy a linked issue's labels onto the PR. There is no native issue -> PR label inheritance,
+#     and actions/labeler works off changed paths, which is a different question.
+#  2. Put the maintainer on their own PR. CODEOWNERS already requests review from @doljae on every
+#     PR he did not write; the API rejects the self-request case outright
+#     ("Review cannot be requested from pull request author", HTTP 422). An assignee is the
+#     equivalent that GitHub does allow, so self-authored PRs get that instead.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, ready_for_review]
+
+permissions:
+  issues: read
+  pull-requests: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+
+    steps:
+    # No checkout on purpose. pull_request_target runs with a write token in the base repo's
+    # context, so running any code from the head branch would hand that token to the PR author.
+    # This job only calls the API, and the PR body reaches the shell as an environment variable
+    # rather than through ${{ }} interpolation, which would let a crafted body inject commands.
+    - name: Mirror linked issue labels, and set reviewer or assignee
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+        AUTHOR: ${{ github.event.pull_request.user.login }}
+        BODY: ${{ github.event.pull_request.body }}
+        MAINTAINER: doljae
+      run: |
+        set -euo pipefail
+
+        # GitHub's own closing keywords, same set it uses to link a PR to an issue.
+        issues=$(
+          printf '%s' "$BODY" \
+            | grep -oiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]+#[0-9]+' \
+            | grep -oE '[0-9]+' \
+            | sort -u
+        ) || true
+
+        if [ -z "$issues" ]; then
+          echo "No closing keyword in the PR body — no labels to mirror."
+        else
+          echo "Linked issues: $(echo "$issues" | tr '\n' ' ')"
+          # /issues/N answers for pull requests too, so a "Closes #<pr>" typo degrades to a no-op
+          # instead of failing the job.
+          labels=$(
+            for n in $issues; do
+              gh api "repos/${GH_REPO}/issues/${n}" --jq '.labels[].name' 2>/dev/null || true
+            done | sort -u
+          )
+
+          if [ -z "$labels" ]; then
+            echo "Linked issues carry no labels."
+          else
+            # One call per label: label names contain spaces ("good first issue"), and read -r
+            # keeps them intact where word splitting would not.
+            while IFS= read -r label; do
+              [ -n "$label" ] || continue
+              echo "Adding label: $label"
+              gh pr edit "$PR" --add-label "$label"
+            done <<< "$labels"
+          fi
+        fi
+
+        if [ "$AUTHOR" = "$MAINTAINER" ]; then
+          gh pr edit "$PR" --add-assignee "$MAINTAINER"
+        else
+          # Usually redundant — CODEOWNERS has already requested review by the time this runs —
+          # and it must not fail the job when the reviewer is present or the author lacks the
+          # permission to be requested.
+          gh pr edit "$PR" --add-reviewer "$MAINTAINER" \
+            || echo "Could not request review from ${MAINTAINER} (already requested, or not permitted)."
+        fi
