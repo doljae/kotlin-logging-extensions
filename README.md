@@ -102,9 +102,10 @@ That's it! The logger is generated using the fully qualified class name as the l
 ### Scoping Generation
 
 By default every class gets a `log` extension. If you want to narrow that, set a mode in
-`build.gradle.kts`.
+`build.gradle.kts`. A mode picks a **starting set** of classes; subclasses of anything in that set
+come along, for the reason described under [Subclasses](#subclasses) below.
 
-**Limit to specific packages** — `PackageScan`:
+**Start from specific packages** — `PackageScan`:
 
 ```kotlin
 ksp {
@@ -121,7 +122,7 @@ Target rules:
 - Invalid target entries are ignored with a warning
 - If `kotlinloggingextensions.targets` is set without `mode`, package scanning is enabled automatically when at least one valid target exists
 
-**Limit to explicitly marked classes** — `AnnotationOnly`:
+**Start from classes you mark** — `AnnotationOnly`:
 
 ```kotlin
 ksp {
@@ -149,6 +150,23 @@ class OrderProcessor {
 `@Log` also works in `PackageScan` mode, where a class gets a logger if **either** condition
 matches. Mode values are case/`_`/`-` insensitive: `All` (default), `PackageScan`, `AnnotationOnly`.
 
+#### Subclasses
+
+**A subclass of a selected class is selected too**, transitively, in both modes — even when it is
+unannotated or lives outside every scanned package.
+
+This is not the modes being generous. A Kotlin extension accepts subtypes, so `log` inside a
+subclass resolves to the superclass's extension whether or not this library generates anything for
+it. There is no "the subclass has no `log`" outcome to choose; the only choice is between the
+subclass logging under **its own** name and logging under its **superclass's** name, silently. It
+gets its own.
+
+The practical consequence is that marking a widely-extended base class or interface pulls its whole
+hierarchy in. If you want a narrower generated surface, mark leaf classes rather than base ones.
+
+The superclass has to be in the same compilation. A superclass from a **dependency** is matched only
+by `PackageScan`, because `@Log` is `SOURCE`-retained and is not in the published class file.
+
 > **Only the annotations artifact belongs on the compile classpath.** The processor is wired in
 > through `ksp(...)` and never needs to be visible to your compiler — putting it in `compileOnly`
 > narrows which Kotlin versions can build against it.
@@ -156,7 +174,7 @@ matches. Mode values are case/`_`/`-` insensitive: `All` (default), `PackageScan
 ## ✨ Features
 
 - **🔧 Zero Boilerplate**: No logger declarations, no annotations, no configuration — just use `log.info { }`
-- **🎚️ Scope It When You Want To**: Narrow generation to specific packages (`PackageScan`) or to explicitly marked classes (`AnnotationOnly`)
+- **🎚️ Scope It When You Want To**: Narrow generation to specific packages (`PackageScan`) or to classes you mark (`AnnotationOnly`), with their subclasses
 - **⚡ Compile-time Generation**: Uses KSP for compile-time safety with zero runtime overhead
 - **📦 Package-aware Naming**: Logger names automatically match fully qualified class names
 - **🏗️ kotlin-logging Integration**: Works seamlessly with the standard kotlin-logging library
