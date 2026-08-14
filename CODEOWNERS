@@ -1,12 +1,12 @@
 # One owner, every file.
 #
 # The per-path rules that used to follow this line all named @doljae as well, so none of them ever
-# changed the outcome — and the list had gone stale without anyone noticing: it pointed at
+# changed the outcome, and the list had gone stale without anyone noticing: it pointed at
 # /.github/CODEOWNERS, a path that does not exist (this file lives at the repo root), and never
 # gained /annotations/ when that module was added in #155. A list that can rot unnoticed is a list
 # that was not doing anything.
 #
-# GitHub never requests review from a PR's own author, so this fires on PRs from others — Renovate,
-# outside contributors. Self-authored PRs get @doljae as assignee instead, via
+# GitHub never requests review from a PR's own author, so this fires on PRs from others (Renovate,
+# outside contributors). Self-authored PRs get @doljae as assignee instead, via
 # .github/workflows/pr-triage.yml.
 * @doljae

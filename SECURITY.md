@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Security fixes land on the current minor line. Older lines are not backported — this is a
+Security fixes land on the current minor line. Older lines are not backported: this is a
 single-maintainer project, and pretending otherwise would be a promise it cannot keep.
 
 | Version | Supported          |
@@ -20,12 +20,12 @@ supports.
 
 ### How to Report
 
-**Preferred — GitHub private vulnerability reporting**: open the repository's
+**Preferred: GitHub private vulnerability reporting**: open the repository's
 [Security tab](https://github.com/doljae/kotlin-logging-extensions/security) and choose *Report a
 vulnerability*. The report stays private, the discussion stays attached to the repository, and a fix
 can be published as a GitHub Security Advisory with a CVE.
 
-**Alternative — email**: [seok9211@naver.com](mailto:seok9211@naver.com), subject line
+**Alternative: email**: [seok9211@naver.com](mailto:seok9211@naver.com), subject line
 "Security Vulnerability Report".
 
 Either way, please include:
@@ -71,7 +71,7 @@ Two artifacts are published, and what each one declares is checked rather than a
 | `kotlin-logging-extensions-annotations` | none |
 
 The annotations artifact is the only one that lands on your **compile** classpath, and it publishes
-zero dependencies — enforced on every build by `verifyPublishedMetadataHasNoDependencies`, which
+zero dependencies, enforced on every build by `verifyPublishedMetadataHasNoDependencies`, which
 fails the build if a dependency ever appears in the POM or Gradle module metadata (#156).
 
 kotlin-logging itself is **not** a dependency of either artifact. The processor declares it
