@@ -20,12 +20,12 @@ supports.
 
 ### How to Report
 
-**Preferred: GitHub private vulnerability reporting**: open the repository's
+**Preferred, GitHub private vulnerability reporting.** Open the repository's
 [Security tab](https://github.com/doljae/kotlin-logging-extensions/security) and choose *Report a
 vulnerability*. The report stays private, the discussion stays attached to the repository, and a fix
 can be published as a GitHub Security Advisory with a CVE.
 
-**Alternative: email**: [seok9211@naver.com](mailto:seok9211@naver.com), subject line
+**Alternative, email.** [seok9211@naver.com](mailto:seok9211@naver.com), subject line
 "Security Vulnerability Report".
 
 Either way, please include:
