@@ -46,7 +46,7 @@ jobs:
         ) || true
 
         if [ -z "$issues" ]; then
-          echo "No closing keyword in the PR body — no labels to mirror."
+          echo "No closing keyword in the PR body, so there are no labels to mirror."
         else
           echo "Linked issues: $(echo "$issues" | tr '\n' ' ')"
           # /issues/N answers for pull requests too, so a "Closes #<pr>" typo degrades to a no-op
@@ -73,7 +73,7 @@ jobs:
         if [ "$AUTHOR" = "$MAINTAINER" ]; then
           gh pr edit "$PR" --add-assignee "$MAINTAINER"
         else
-          # Usually redundant — CODEOWNERS has already requested review by the time this runs —
+          # Usually redundant, since CODEOWNERS has already requested review by the time this runs,
           # and it must not fail the job when the reviewer is present or the author lacks the
           # permission to be requested.
           gh pr edit "$PR" --add-reviewer "$MAINTAINER" \
