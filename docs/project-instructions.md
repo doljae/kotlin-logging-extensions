@@ -32,8 +32,9 @@ Always use the Gradle wrapper (`./gradlew`), never a system-installed Gradle.
 - `annotations` is the only artifact on a consumer's compile classpath: it publishes zero
   dependencies (enforced by a `check` task) and targets Kotlin language/API 2.0. Adding a dependency
   or raising that floor is a breaking change for consumers.
-- Both modules use `jvmToolchain(17)`. The toolchain sets `org.gradle.jvm.version` in the published
-  module metadata, so raising it breaks resolution on JDK 17 consumers (issue #152).
+- Every module uses `jvmToolchain(17)`. For the two published ones the toolchain sets
+  `org.gradle.jvm.version` in the module metadata, so raising it breaks resolution on JDK 17
+  consumers (issue #152).
 - The processor matches `@Log`/`@AutoLog` by qualified name and must not depend on `:annotations`
   outside tests. A `typealias` shim is not usable, because KSP reports aliases under their own name.
 - Generation is project-wide (`All`) by default; `kotlinloggingextensions.mode` /
