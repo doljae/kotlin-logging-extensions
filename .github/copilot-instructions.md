@@ -28,7 +28,7 @@ project-wide by default; `kotlinloggingextensions.mode` narrows it to `PackageSc
 - `build.gradle.kts`: Build configuration. Do not suggest Groovy syntax for Gradle.
 
 ## Dependencies
-- JDK: 17 (`jvmToolchain(17)`; do not raise it — it is published as `org.gradle.jvm.version`)
+- JDK: 17 (`jvmToolchain(17)`; do not raise it, since it is published as `org.gradle.jvm.version`)
 - Kotlin: 2.x
 - KSP: 2.x
 - Kotlin Logging: `io.github.oshai:kotlin-logging-jvm` 5.0.0+

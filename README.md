@@ -100,7 +100,7 @@ This will generate the `log` property and resolve any compilation errors in your
 That's it! The logger is generated using the fully qualified class name as the logger name.
 
 Output lands in `build/generated/ksp/<source set>/kotlin`, one file per package named
-`KotlinLoggingExtensions_<module>.kt` — the module suffix is what keeps `main` and `test` from
+`KotlinLoggingExtensions_<module>.kt`. The module suffix is what keeps `main` and `test` from
 colliding when they share a package.
 
 ### Scoping Generation

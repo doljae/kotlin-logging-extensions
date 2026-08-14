@@ -10,7 +10,7 @@ body:
         
         **⚠️ Version Compatibility**: Please check the
         [compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility)
-        first — the feature you want may already exist on a newer version.
+        first: the feature you want may already exist on a newer version.
 
   - type: checkboxes
     id: prerequisites

@@ -9,7 +9,7 @@ body:
         This template is specifically for version compatibility issues between Kotlin, KSP, and kotlin-logging-extensions.
 
         **Requirements from `3.0.0`**: JDK 17+, Kotlin 2.0+, a KSP version matching your Kotlin version, kotlin-logging 5.0.0+.
-        The library version no longer mirrors your Kotlin version — see the
+        The library version no longer mirrors your Kotlin version. See the
         [verified compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility).
 
   - type: input

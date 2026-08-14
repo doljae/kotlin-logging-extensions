@@ -35,7 +35,7 @@ Always use the Gradle wrapper (`./gradlew`), never a system-installed Gradle.
 - Both modules use `jvmToolchain(17)`. The toolchain sets `org.gradle.jvm.version` in the published
   module metadata, so raising it breaks resolution on JDK 17 consumers (issue #152).
 - The processor matches `@Log`/`@AutoLog` by qualified name and must not depend on `:annotations`
-  outside tests. A `typealias` shim is not usable — KSP reports aliases under their own name.
+  outside tests. A `typealias` shim is not usable, because KSP reports aliases under their own name.
 - Generation is project-wide (`All`) by default; `kotlinloggingextensions.mode` /
   `.targets` narrow it. One file per package per source set:
   `KotlinLoggingExtensions_<module>.kt`.

@@ -10,7 +10,7 @@ body:
         
         **Before asking**: Please check the [documentation](https://github.com/doljae/kotlin-logging-extensions/blob/main/README.md) and [existing issues](https://github.com/doljae/kotlin-logging-extensions/issues) first.
         
-        **⚠️ Version Compatibility**: If you're experiencing issues, check that you're on JDK 17+, Kotlin 2.0+, and a KSP version matching your Kotlin version — see the
+        **⚠️ Version Compatibility**: If you're experiencing issues, check that you're on JDK 17+, Kotlin 2.0+, and a KSP version matching your Kotlin version. See the
         [compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility).
 
   - type: checkboxes
