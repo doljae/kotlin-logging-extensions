@@ -89,7 +89,7 @@ check_github_cli() {
 
 # Function to suggest next version
 # Plain SemVer since 3.0.0: the library version no longer tracks the Kotlin version (issue #152),
-# so nothing here is derived from build.gradle.kts any more — same reasoning as create-release-pr.yml.
+# so nothing here is derived from build.gradle.kts any more (same reasoning as create-release-pr.yml).
 suggest_next_version() {
     local latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
 
