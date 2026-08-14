@@ -88,14 +88,15 @@ check_github_cli() {
 }
 
 # Function to suggest next version
+# Plain SemVer since 3.0.0: the library version no longer tracks the Kotlin version (issue #152),
+# so nothing here is derived from build.gradle.kts any more (same reasoning as create-release-pr.yml).
 suggest_next_version() {
     local latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
-    local build_kotlin=$(grep 'kotlin("jvm") version' build.gradle.kts | sed 's/.*version "\([^"]*\)".*/\1/')
 
     if [[ -z $latest_tag ]]; then
         echo
         print_info "No SemVer releases found"
-        print_info "Suggested first version: ${build_kotlin%.*}.0"
+        print_info "Suggested first version: 1.0.0"
         echo
         return
     fi
@@ -110,14 +111,11 @@ suggest_next_version() {
 
     echo
     print_info "Current latest version: $version"
-    print_info "build.gradle.kts Kotlin version: $build_kotlin"
     print_info ""
     print_info "Suggestions:"
-    print_info "  Patch (deps, fixes): $major.$minor.$((patch + 1))"
-    # A Kotlin minor-line bump starts a new library minor line, e.g. Kotlin 2.4.x -> 2.4.0
-    if [[ "${build_kotlin%.*}" != "$major.$minor" ]]; then
-        print_info "  Kotlin ${build_kotlin} line: ${build_kotlin%.*}.0"
-    fi
+    print_info "  Patch (deps, fixes):        $major.$minor.$((patch + 1))"
+    print_info "  Minor (new features):       $major.$((minor + 1)).0"
+    print_info "  Major (breaking changes):   $((major + 1)).0.0"
     echo
 }
 
@@ -163,7 +161,7 @@ main() {
     suggest_next_version
     
     # Get version from user
-    read -p "Enter version for release PR (e.g., 2.1.21-0.0.1): " version
+    read -p "Enter version for release PR (e.g., 3.1.0): " version
     
     if [[ -z $version ]]; then
         print_error "Version is required."
