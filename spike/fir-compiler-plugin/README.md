@@ -18,8 +18,8 @@ limitation while keeping everything else working?
 declare its own `log` by hand — which is the exact workaround the README recommends today.**
 See #172 for the full write-up.
 
-There are two plugin variants here. Read `variant-override/` second; it supersedes the
-first on the point that matters most.
+There are three plugin variants here, each superseding the last: `src/main/kotlin/` →
+`variant-override/` → `variant-modes/`. Read them in that order.
 
 ## What it does
 
@@ -112,6 +112,81 @@ and it fixes the logger name plus A. `B` and `E` survive in both, and they are t
 matter: `private val log = KotlinLogging.logger { }` inside a subclass stops compiling, because
 an override may not narrow visibility below the generated `public` member it overrides. Adding
 the accessor overload of `transformStatus` does not help — Kotlin has no `private override`.
+
+## `variant-modes/` — `AnnotationOnly` and `PackageScan`
+
+`variant-override/` generates `log` in every class, so it only answers the `All`-mode
+question. `variant-modes/Plugin.kt` adds the processor's two scoping modes through a
+`CommandLineProcessor`, which is the plugin's equivalent of `ksp { arg(...) }`:
+
+```
+-P plugin:proto.log:mode=AnnotationOnly
+-P plugin:proto.log:mode=PackageScan -P plugin:proto.log:targets=scanned.*
+```
+
+Testdata: `testdata/07-modes/`.
+
+### Partial selection has the same inheritance defect, and needs the same rule
+
+The generated `log` is a **member**, so a subclass of a selected class inherits it. If the
+subclass is not itself selected, it has no `log` of its own and logs under its superclass's
+name — the same defect the extension-based processor has for the same reason. Selecting by
+mode alone is not enough:
+
+| | selected by mode only | `getsLog` also returns true when `superLog == OPEN` |
+| --- | --- | --- |
+| `Base().who()` (`@Log` on `Base`) | `annmode.Base` | `annmode.Base` |
+| `Sub().mine()` (no annotation) | ❌ `annmode.Base` | ✅ `annmode.Sub` |
+| `Plain` (no annotation, no supertype) | no `log` | no `log` |
+| `ScannedBase().who()` (`targets=scanned.*`) | `scanned.ScannedBase` | `scanned.ScannedBase` |
+| `OutsideSub().mine()` (package `manual`) | ❌ `scanned.ScannedBase` | ✅ `manual.OutsideSub` |
+| `OutsideOnly` (package `manual`) | no `log` | no `log` |
+
+One clause in `getsLog` covers it — a class that *inherits* a `log` gets one, whether or not
+the mode picks it:
+
+```kotlin
+return selectedByMode(classSymbol) || inherited == SuperLog.OPEN
+```
+
+### Where the plugin beats KSP: a superclass in a dependency
+
+`@Log` is `@Retention(SOURCE)`, so it is not in a published class file. KSP cannot see it and
+cannot recognise a superclass from a dependency as a target — under `AnnotationOnly` that case
+is structurally out of reach.
+
+The plugin does not need the annotation to survive: a dependency compiled with the plugin
+carries a real `open val log: KLogger` **member**, and that member is the signal. Measured on
+`testdata/07-modes/cross-module/`, both modules compiled with `mode=AnnotationOnly` and no
+annotation anywhere in `mod-b`:
+
+```
+Sub().who()         = appb.Sub
+Sub().mine()        = appb.Sub
+Unrelated has log   = false
+```
+
+### What the modes do *not* buy you
+
+`B`/`E` above — `private val log` in a subclass — still hard-fail, and scoping is not an escape
+hatch. The failure is caused by the *superclass* being selected, so narrowing the mode down to
+just `Base` still breaks `Sub`; the only way out is not applying the plugin to that hierarchy at
+all. Re-measured under `mode=AnnotationOnly`, the `06-subclass-own-log` results are unchanged.
+
+### A semantic divergence worth knowing
+
+A member is virtual; an extension is resolved statically. So for a log statement written in
+`Base`'s own body and called on a `Sub` instance, the two designs disagree — measured, not
+assumed:
+
+| call | KSP extension | plugin member |
+| --- | --- | --- |
+| `Base().who()` | `Base` | `Base` |
+| `Sub().who()` | `Base` | **`Sub`** |
+| `Sub().mine()` | `Sub` | `Sub` |
+
+Both answers have an slf4j idiom behind them (`getLogger(Base::class.java)` vs
+`getLogger(javaClass)`), so neither is wrong — but they are not the same library.
 
 ## Notes for anyone repeating this
 
