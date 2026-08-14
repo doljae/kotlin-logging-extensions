@@ -48,8 +48,9 @@ body:
     validations:
       required: true
 
-  # Keep this input last: create-release-pr.yml rewrites `placeholder:` lines in this file by
-  # position (1=library, 2=Kotlin, 3=KSP, 4=kotlin-logging), so any new input must sit after them.
+  # Keep this input below the four above it. create-release-pr.yml rewrites the quoted e.g.
+  # placeholders in this file by position (1=library, 2=Kotlin, 3=KSP, 4=kotlin-logging), so a new
+  # input inserted among them would be handed a version string it should not have.
   - type: input
     id: jdk-version
     attributes:
