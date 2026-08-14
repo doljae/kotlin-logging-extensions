@@ -56,7 +56,7 @@ repositories {
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
-    implementation("ch.qos.logback:logback-classic:1.6.1") // Logger implementation required
+    implementation("ch.qos.logback:logback-classic:1.6.2") // Logger implementation required
 }
 ```
 
@@ -98,6 +98,10 @@ After writing your code, run KSP to generate the logger extensions:
 This will generate the `log` property and resolve any compilation errors in your IDE.
 
 That's it! The logger is generated using the fully qualified class name as the logger name.
+
+Output lands in `build/generated/ksp/<source set>/kotlin`, one file per package named
+`KotlinLoggingExtensions_<module>.kt`. The module suffix is what keeps `main` and `test` from
+colliding when they share a package.
 
 ### Scoping Generation
 
@@ -285,7 +289,7 @@ repositories {
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
-    implementation("ch.qos.logback:logback-classic:1.6.1")
+    implementation("ch.qos.logback:logback-classic:1.6.2")
 
     // Only needed if you write @Log yourself (AnnotationOnly / PackageScan modes).
     compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0")

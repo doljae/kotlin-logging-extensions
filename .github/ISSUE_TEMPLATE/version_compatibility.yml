@@ -7,8 +7,10 @@ body:
     attributes:
       value: |
         This template is specifically for version compatibility issues between Kotlin, KSP, and kotlin-logging-extensions.
-        
-        **Required versions**: Kotlin `2.1.21`, KSP `2.1.21-2.0.2`
+
+        **Requirements from `3.0.0`**: JDK 17+, Kotlin 2.0+, a KSP version matching your Kotlin version, kotlin-logging 5.0.0+.
+        The library version no longer mirrors your Kotlin version. See the
+        [verified compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility).
 
   - type: input
     id: library-version
@@ -46,6 +48,18 @@ body:
     validations:
       required: true
 
+  # Keep this input below the four above it. create-release-pr.yml rewrites the quoted e.g.
+  # placeholders in this file by position (1=library, 2=Kotlin, 3=KSP, 4=kotlin-logging), so a new
+  # input inserted among them would be handed a version string it should not have.
+  - type: input
+    id: jdk-version
+    attributes:
+      label: Your JDK Version
+      description: Which JDK is Gradle running on? (`./gradlew -version`)
+      placeholder: "e.g., 17"
+    validations:
+      required: true
+
   - type: textarea
     id: error-message
     attributes:
@@ -77,8 +91,8 @@ body:
       description: Check all that you've attempted
       options:
         - label: Clean build (`./gradlew clean build`)
-        - label: Upgrading Kotlin to the required version (2.1.21)
-        - label: Upgrading KSP to the required version (2.1.21-2.0.2)
+        - label: Building on JDK 17 or later
+        - label: Matching my KSP version to my Kotlin version
         - label: Clearing Gradle cache
         - label: Invalidating IDE caches and restarting
 
