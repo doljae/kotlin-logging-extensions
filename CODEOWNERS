@@ -1,20 +1,12 @@
-# Global ownership - all files require review from the project maintainer
+# One owner, every file.
+#
+# The per-path rules that used to follow this line all named @doljae as well, so none of them ever
+# changed the outcome, and the list had gone stale without anyone noticing: it pointed at
+# /.github/CODEOWNERS, a path that does not exist (this file lives at the repo root), and never
+# gained /annotations/ when that module was added in #155. A list that can rot unnoticed is a list
+# that was not doing anything.
+#
+# GitHub never requests review from a PR's own author, so this fires on PRs from others (Renovate,
+# outside contributors). Self-authored PRs get @doljae as assignee instead, via
+# .github/workflows/pr-triage.yml.
 * @doljae
-
-# Critical files that always require careful review
-/.github/workflows/ @doljae
-/gradle/ @doljae
-/build.gradle.kts @doljae
-/settings.gradle.kts @doljae
-/gradle.properties @doljae
-
-# Release and deployment related files
-/scripts/ @doljae
-/.github/CODEOWNERS @doljae
-
-# Security related files
-/SECURITY.md @doljae
-/.github/ISSUE_TEMPLATE/ @doljae
-
-# Core processor implementation
-/processor/src/main/kotlin/ @doljae 
