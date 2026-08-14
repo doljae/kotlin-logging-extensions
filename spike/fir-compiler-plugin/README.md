@@ -14,8 +14,12 @@ file in a different file cannot name a `private` top-level class.
 A compiler plugin has no such limit — it edits the class itself. So: does that remove the
 limitation while keeping everything else working?
 
-**Short answer: it removes the limitation and breaks two things that matter more.**
+**Short answer: it removes the limitation, and the cost is that a subclass can no longer
+declare its own `log` by hand — which is the exact workaround the README recommends today.**
 See #172 for the full write-up.
+
+There are two plugin variants here. Read `variant-override/` second; it supersedes the
+first on the point that matters most.
 
 ## What it does
 
@@ -55,12 +59,59 @@ java -cp "out:$CP:$KOTLIN_LIB/kotlin-stdlib.jar" app.ConsumerKt
 | --- | --- |
 | `01-visibility.kt` | ✅ the win — `private`, `protected` nested and local classes all get a working logger |
 | `02-hard-cases.kt` | ✅ interface, enum, object, data class, user-declared `log`, companion `log` — each of these crashed at first, all fixed |
-| `03-inheritance.kt` | ❌ `Sub` logs as `inh.Base`; KSP gives `inh.Sub` |
+| `03-inheritance.kt` | ❌ `Sub` logs as `inh.Base`; KSP gives `inh.Sub`. **Fixed by `variant-override/`** |
 | `04-user-extension.kt` | ❌ a user-written `Service.log` extension is silently overridden, no warning |
 | `05-top-level-log.kt` | ⚠️ a top-level `log` is unconditionally shadowed inside classes, which changes what `warnIfTopLevelLogIsShadowed()` would have to say |
 | `cross-module/` | ❌→✅ `IncompatibleClassChangeError` when a subclass in another module inherits a plugin-generated `log`; fixed, but the logger is still named after the superclass |
+| `06-subclass-own-log/` | the six shapes of "a subclass writes its own `log`", used to compare the two variants below |
 
 Run `03` and `04` with and without `-Xplugin=` to see the difference.
+
+## `variant-override/` — keeping per-class logger names
+
+`src/main/kotlin/proto/Plugin.kt` generates `log` only in the root of a hierarchy, because a
+Kotlin property is `final` and generating one in a subclass would be a final-method override
+(`IncompatibleClassChangeError`). That is why `03-inheritance.kt` logs `inh.Base` from `Sub`.
+
+`variant-override/Plugin.kt` generates one in *every* class instead, `open` in the root and
+`override` in each subclass — something only a compiler plugin can do, since it controls the
+generated declaration's status directly:
+
+```kotlin
+createMemberProperty(owner, LogKey, LOG_NAME, KLOGGER_ID.constructClassLikeType(),
+    isVal = true, hasBackingField = false) {
+    modality = Modality.OPEN
+    status { isOverride = superLog(owner) == SuperLog.OPEN }
+}
+```
+
+It works: `inh.Sub` logs as `inh.Sub`, and a subclass in a consuming module logs under its own
+name. Two things had to be added to make it safe:
+
+- **`superLog()` refuses to override a supertype `log` that is not a `KLogger`.** Without the
+  return-type check the plugin silently replaced `Framework.log: String` with a logger, and the
+  compiler accepted the invalid override (`06-subclass-own-log/C.kt`).
+- **`LogStatusTransformer`** rewrites a user's own `log` in a subclass to `public override`, so
+  a hand-written logger is not rejected with "hides member of supertype" (`A.kt`).
+
+Measured on `06-subclass-own-log/`, both variants:
+
+| Case | `src/main/kotlin/` | `variant-override/` |
+| --- | --- | --- |
+| inheritance (`03`) | ❌ `Sub` logs as `inh.Base` | ✅ `inh.Sub` |
+| `A` subclass `val log` (public `KLogger`) | ❌ hides member of supertype | ✅ `USER.SUB` kept |
+| `B` subclass `private val log` (`KLogger`) | ❌ hides member of supertype | ❌ cannot weaken access privilege |
+| `C` framework `open val log: String` | ✅ | ✅ (after the return-type check) |
+| `D` subclass `override val log: String` | ❌ (correct — type is not a subtype) | ❌ (same) |
+| `E` subclass `private val log` (slf4j) | ❌ hides member of supertype | ❌ cannot weaken access privilege |
+| `F` `ArrayList` / `RuntimeException` subclass | ✅ | ✅ |
+| user-written `log` extension (`04`) | ❌ silently overridden | ❌ silently overridden |
+
+So `variant-override/` is a strict improvement — A/B/E already failed under the first variant,
+and it fixes the logger name plus A. `B` and `E` survive in both, and they are the ones that
+matter: `private val log = KotlinLogging.logger { }` inside a subclass stops compiling, because
+an override may not narrow visibility below the generated `public` member it overrides. Adding
+the accessor overload of `transformStatus` does not help — Kotlin has no `private override`.
 
 ## Notes for anyone repeating this
 
