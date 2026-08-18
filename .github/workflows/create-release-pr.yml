@@ -421,28 +421,23 @@ jobs:
               
               echo "  Categorizing: $COMMIT_MSG"
               
-                             # Categorize commits
-               if [[ "$COMMIT_MSG" == fix\(deps\):* ]] || [[ "$COMMIT_MSG" == fix\(dep\):* ]] || 
-                  ([[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]]) && 
-                  ([[ "$COMMIT_MSG" == *update* ]] || [[ "$COMMIT_MSG" == *upgrade* ]] || [[ "$COMMIT_MSG" == *bump* ]]) && 
-                  ([[ "$COMMIT_MSG" == *dependency* ]] || [[ "$COMMIT_MSG" == *dependencies* ]] || [[ "$COMMIT_MSG" == *deps* ]] || 
-                   [[ "$COMMIT_MSG" == *version* ]] || [[ "$COMMIT_MSG" == *kotlin* ]] || [[ "$COMMIT_MSG" == *ksp* ]] || [[ "$COMMIT_MSG" == *gradle* ]]); then
-                 # Version & Dependency updates (check this first)
-                 VERSION_DEPS="${VERSION_DEPS}- ${COMMIT_MSG}"$'\n'
-                 echo "    → Dependencies & Versions"
-               elif [[ "$COMMIT_MSG" == feat:* ]] || [[ "$COMMIT_MSG" == fix:* ]] || [[ "$COMMIT_MSG" == perf:* ]] || [[ "$COMMIT_MSG" == refactor:* ]]; then
-                 # Features & Fixes
-                 FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
-                 echo "    → Features & Fixes"
-               elif [[ "$COMMIT_MSG" == docs:* ]] || [[ "$COMMIT_MSG" == chore:* ]] || [[ "$COMMIT_MSG" == ci:* ]] || [[ "$COMMIT_MSG" == style:* ]] || [[ "$COMMIT_MSG" == test:* ]]; then
-                 # Documentation & Maintenance
-                 DOCS_MAINTENANCE="${DOCS_MAINTENANCE}- ${COMMIT_MSG}"$'\n'
-                 echo "    → Documentation & Maintenance"
-               else
-                 # Uncategorized - put in Features & Fixes as default
-                 FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
-                 echo "    → Features & Fixes (default)"
-               fi
+              # scripts/categorize-commit.sh parses the Conventional Commit type and scope, so
+              # a scoped subject lands in the same section as its unscoped form. Run
+              # `scripts/categorize-commit.sh --self-test` after changing the rules; CI runs it too.
+              case "$(./scripts/categorize-commit.sh "$COMMIT_MSG")" in
+                deps)
+                  VERSION_DEPS="${VERSION_DEPS}- ${COMMIT_MSG}"$'\n'
+                  echo "    → Dependencies & Versions"
+                  ;;
+                docs)
+                  DOCS_MAINTENANCE="${DOCS_MAINTENANCE}- ${COMMIT_MSG}"$'\n'
+                  echo "    → Documentation & Maintenance"
+                  ;;
+                *)
+                  FEATURES_FIXES="${FEATURES_FIXES}- ${COMMIT_MSG}"$'\n'
+                  echo "    → Features & Fixes"
+                  ;;
+              esac
             fi
           done <<< "$ALL_COMMITS"
           

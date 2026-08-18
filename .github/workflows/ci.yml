@@ -48,6 +48,9 @@ jobs:
       with:
         ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
       
+    - name: Check release-notes categorization
+      run: ./scripts/categorize-commit.sh --self-test
+
     - name: Setup Gradle
       uses: ./.github/actions/setup-gradle
       
