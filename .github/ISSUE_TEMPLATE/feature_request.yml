@@ -6,99 +6,32 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
-        
-        **⚠️ Version Compatibility**: Please check the
-        [compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility)
-        first: the feature you want may already exist on a newer version.
-
-  - type: checkboxes
-    id: prerequisites
-    attributes:
-      label: Prerequisites
-      description: Please confirm you have completed these steps
-      options:
-        - label: I have searched existing issues to make sure this is not a duplicate
-          required: true
-        - label: I have reviewed the documentation to confirm this feature doesn't already exist
-          required: true
+        Check the [README](https://github.com/doljae/kotlin-logging-extensions#readme) first: what you
+        want may already exist, possibly behind a generation mode.
 
   - type: textarea
     id: problem
     attributes:
-      label: Problem Description
-      description: What problem does this feature solve? What use case are you trying to address?
-      placeholder: "I'm frustrated when... I need to... It would be helpful if..."
+      label: Problem
+      description: What is awkward or impossible today, and in what situation you hit it.
+      placeholder: |
+        Generation is all-or-nothing per module, so I cannot exclude generated DTOs
+        without also excluding the services next to them.
     validations:
       required: true
 
   - type: textarea
     id: solution
     attributes:
-      label: Proposed Solution
-      description: Describe the solution you'd like to see
-      placeholder: "I would like to see... This feature should work by... It could be implemented as..."
+      label: Proposed solution
+      description: What should happen instead. Configuration or code examples are welcome.
     validations:
       required: true
 
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternative Solutions
-      description: Have you considered any alternative solutions or workarounds?
-      placeholder: "I've tried... Another approach could be... Currently I work around this by..."
+      label: Alternatives and context
+      description: Workarounds you are on now, other approaches you considered and rejected.
     validations:
       required: false
-
-  - type: textarea
-    id: examples
-    attributes:
-      label: Code Examples
-      description: Provide examples of how you envision this feature being used
-      render: kotlin
-      placeholder: |
-        // Current way (if applicable)
-        class MyService {
-            private val log = KotlinLogging.logger {}
-            // ...
-        }
-        
-        // Proposed way
-        class MyService {
-            // Feature would work like this...
-            // ...
-        }
-    validations:
-      required: false
-
-  - type: dropdown
-    id: priority
-    attributes:
-      label: Priority
-      description: How important is this feature to you?
-      options:
-        - Low - Nice to have
-        - Medium - Would improve my workflow
-        - High - Important for my use case
-        - Critical - Blocking my work
-    validations:
-      required: true
-
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: Additional Context
-      description: Any other context, screenshots, or relevant information
-      placeholder: Add any other context about the feature request here...
-    validations:
-      required: false
-
-  - type: checkboxes
-    id: contribution
-    attributes:
-      label: Contribution
-      description: Would you be interested in contributing to this feature?
-      options:
-        - label: I would be willing to submit a PR to implement this feature
-        - label: I would be available to help test this feature
-        - label: I can provide more detailed requirements if needed 

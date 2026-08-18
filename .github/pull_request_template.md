@@ -1,28 +1,13 @@
 ## Motivation
 
-<!-- Why is this change needed? -->
+<!-- Why is this change needed? What is broken or missing without it? -->
 
-Closes #(issue number)
+Closes #
 
 ## Modification
 
-<!-- What was changed? -->
-
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Refactoring
-- [ ] Other: 
+<!-- What changed, and any decision a reviewer should know about. -->
 
 ## Result
 
-<!-- How was it tested/verified? -->
-
-- [ ] Tests added/updated
-- [ ] Manual testing completed  
-- [ ] `./gradlew test` passes
-- [ ] `./gradlew ktlintCheck` passes
-
-## Additional Notes
-
-<!-- Any additional context --> 
+<!-- How was it verified? Note anything the build does not cover. -->

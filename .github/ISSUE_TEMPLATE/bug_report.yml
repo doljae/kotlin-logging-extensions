@@ -6,107 +6,45 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for taking the time to report a bug! Please fill out this form to help us understand and reproduce the issue.
+        Requirements: JDK 17+, Kotlin 2.0+, a KSP version matching your Kotlin version, kotlin-logging 5.0.0+.
+        See the [compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility)
+        before reporting.
 
-        **⚠️ Important**: From `3.0.0` the library supports a range of Kotlin versions (JDK 17+, Kotlin 2.0+, KSP matching your Kotlin version). Please check the
-        [compatibility table](https://github.com/doljae/kotlin-logging-extensions#-version-compatibility) before reporting.
-
-  - type: checkboxes
-    id: prerequisites
+  - type: textarea
+    id: environment
     attributes:
-      label: Prerequisites
-      description: Please confirm you have completed these steps
-      options:
-        - label: I have searched existing issues to make sure this is not a duplicate
-          required: true
-        - label: I am on JDK 17+, Kotlin 2.0+, and a KSP version matching my Kotlin version
-          required: true
-        - label: I have tried building with a clean Gradle build (`./gradlew clean build`)
-          required: true
-
-  - type: input
-    id: version
-    attributes:
-      label: Library Version
-      description: Which version of kotlin-logging-extensions are you using?
-      placeholder: "e.g., 3.0.0"
-    validations:
-      required: true
-
-  - type: input
-    id: kotlin-version
-    attributes:
-      label: Kotlin Version
-      description: Which Kotlin version are you using?
-      placeholder: "e.g., 2.4.10"
-    validations:
-      required: true
-
-  - type: input
-    id: ksp-version
-    attributes:
-      label: KSP Version
-      description: Which KSP version are you using?
-      placeholder: "e.g., 2.3.11"
-    validations:
-      required: true
-
-  - type: input
-    id: kotlin-logging-version
-    attributes:
-      label: kotlin-logging Version
-      description: Which kotlin-logging dependency are you using?
-      placeholder: "e.g., io.github.oshai:kotlin-logging-jvm:8.0.4"
+      label: Environment
+      description: Replace the values below with yours.
+      value: |
+        - kotlin-logging-extensions: 3.0.0
+        - Kotlin: 2.4.10
+        - KSP: 2.3.11
+        - kotlin-logging: io.github.oshai:kotlin-logging-jvm:8.0.4
+        - JDK: 17
+        - Generation mode: All (default)
     validations:
       required: true
 
   - type: textarea
     id: description
     attributes:
-      label: Bug Description
-      description: A clear and concise description of what the bug is
-      placeholder: Describe what happened and what you expected to happen
+      label: What happened
+      description: What you expected, and what happened instead.
+      placeholder: |
+        Expected: `log` resolves in every class of the module.
+        Actual: compilation fails with "Unresolved reference: log" in classes under `com.example.internal`.
     validations:
       required: true
 
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: Detailed steps to reproduce the behavior
-      placeholder: |
-        1. Create a class with...
-        2. Add dependency...
-        3. Run build...
-        4. See error...
-    validations:
-      required: true
-
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected Behavior
-      description: What you expected to happen
-      placeholder: The log property should be automatically generated and available for use
-    validations:
-      required: true
-
-  - type: textarea
-    id: actual
-    attributes:
-      label: Actual Behavior
-      description: What actually happened
-      placeholder: 'Compilation fails with error "Unresolved reference: log"'
-    validations:
-      required: true
-
-  - type: textarea
-    id: build-config
-    attributes:
-      label: Build Configuration
-      description: Your relevant build.gradle.kts configuration
+      label: How to reproduce
+      description: >
+        The smallest build configuration and source that shows it, or a link to a repository.
+        Note that `kspTest(...)` is needed separately if the failure is in test sources.
       render: kotlin
-      placeholder: |
+      value: |
         plugins {
             kotlin("jvm") version "2.4.10"
             id("com.google.devtools.ksp") version "2.3.11"
@@ -114,30 +52,31 @@ body:
 
         dependencies {
             ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
-            kspTest("io.github.doljae:kotlin-logging-extensions:3.0.0") // if test classes use `log`
             implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
+        }
 
-            // Only for AnnotationOnly / PackageScan modes, where you write @Log yourself.
-            compileOnly("io.github.doljae:kotlin-logging-extensions-annotations:3.0.0")
+        // Source that fails
+        class MyService {
+            fun doWork() = log.info { "..." }
         }
     validations:
-      required: false
+      required: true
 
   - type: textarea
-    id: error-logs
+    id: build-output
     attributes:
-      label: Error Logs
-      description: Any relevant error messages or stack traces
+      label: Build output
+      description: The error and stack trace, if there is one.
       render: text
-      placeholder: Paste error logs here...
     validations:
       required: false
 
-  - type: textarea
-    id: additional-context
+  - type: checkboxes
+    id: prerequisites
     attributes:
-      label: Additional Context
-      description: Any other context about the problem
-      placeholder: Add any other context, screenshots, or relevant information
-    validations:
-      required: false
+      label: Before submitting
+      options:
+        - label: I searched existing issues for a duplicate
+          required: true
+        - label: I reproduced this on a clean build (`./gradlew clean build`)
+          required: true
