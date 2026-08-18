@@ -70,7 +70,8 @@ dependencies {
 
 **Step 2: Use `log`**
 
-Nothing to annotate, nothing to configure:
+Nothing to annotate, nothing to configure. Every class in a processed source set already has a
+`log`, so just call it:
 
 ```kotlin
 class OrderProcessor {
@@ -87,21 +88,37 @@ class OrderProcessor {
 }
 ```
 
-**Step 3: Generate Logger Code**
+**Step 3: Build as usual**
 
-After writing your code, run KSP to generate the logger extensions:
+```bash
+./gradlew build
+```
+
+KSP runs ahead of the Kotlin compiler within the same build, so the extensions are generated and the
+code that uses them is compiled in one pass. There is no separate generation step to run first, and
+no point at which your code is written but the extension is missing.
+
+That's it! The logger is named after the fully qualified class name.
+
+### How Generation Is Decided
+
+The processor never looks at where you call `log`. On every build it walks the *class declarations*
+in the source set and writes a `log` extension for each class that qualifies, whether or not that
+class logs anything. A class that already declares its own `log` (on the class or on its companion)
+is skipped, so a hand-written logger always wins.
+
+Output lands in `build/generated/ksp/<source set>/kotlin`, one file per package named
+`KotlinLoggingExtensions_<module>.kt`. The module suffix is what keeps `main` and `test` from
+colliding when they share a package. To regenerate without a full build, run the KSP tasks directly:
 
 ```bash
 ./gradlew kspKotlin kspTestKotlin
 ```
 
-This will generate the `log` property and resolve any compilation errors in your IDE.
-
-That's it! The logger is generated using the fully qualified class name as the logger name.
-
-Output lands in `build/generated/ksp/<source set>/kotlin`, one file per package named
-`KotlinLoggingExtensions_<module>.kt`. The module suffix is what keeps `main` and `test` from
-colliding when they share a package.
+Your IDE is the one place where the ordering is visible: it cannot resolve `log` until a build has
+produced the generated sources and it has indexed them. That is an indexing lag, not a missing
+generation step, and it is covered under
+[Troubleshooting & IDE Support](#-troubleshooting--ide-support).
 
 ### Scoping Generation
 
