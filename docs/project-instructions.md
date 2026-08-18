@@ -26,10 +26,13 @@ Two conventions above are load-bearing, not cosmetic:
 
 - `pr-triage.yml` parses the PR body for GitHub's closing keywords and mirrors the linked issue's
   labels onto the PR. A body without `Closes #<number>` produces an unlabeled PR.
-- `create-release-pr.yml` groups release notes by commit subject prefix: `feat:`, `fix:`, `perf:`,
-  `refactor:` become "Features & Fixes", and `docs:`, `chore:`, `ci:`, `style:`, `test:` become
-  "Documentation & Maintenance". The patterns are unscoped, so anything else, a scoped
-  `docs(readme):` included, falls through to a default that files it under "Features & Fixes".
+- `create-release-pr.yml` groups release notes by commit subject, through
+  [`scripts/categorize-commit.sh`](../scripts/categorize-commit.sh): `feat`, `fix`, `perf`,
+  `refactor` become "Features & Fixes", `docs`, `chore`, `ci`, `style`, `test` become
+  "Documentation & Maintenance", and a `deps` scope becomes "Dependencies & Versions". A scope does
+  not change the section, but a subject that is not a Conventional Commit has no type to read and
+  defaults to "Features & Fixes". Run `scripts/categorize-commit.sh --self-test` after changing
+  those rules; CI runs it on every PR.
 
 Issue and PR bodies are where the reasoning behind a change is recorded, so state the mechanism and
 the evidence, not just what changed.
