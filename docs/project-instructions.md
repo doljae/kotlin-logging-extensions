@@ -2,6 +2,38 @@
 
 KSP plugin that generates `kotlin-logging` `log` extensions at compile time.
 
+## Contribution Workflow
+
+Every change follows this order, and no step is skipped, not even for a one-line documentation fix:
+
+1. **Open an issue** stating the problem and the proposed change.
+2. **Branch off `main`** as `<type>/<slug>`, where `<type>` is the Conventional Commit type of the
+   work (`docs/quick-start-generation-model`, `fix/inherited-logger-name-173`).
+3. **Commit on that branch**, one logical change per commit, subject in Conventional Commit form.
+4. **Open a PR** whose body links the issue with `Closes #<number>`.
+
+Never commit to `main` or edit its working tree directly.
+
+Use the forms this repository already configures, and fill them in rather than replacing them with
+free-form text:
+
+- Issues: the templates in [`.github/ISSUE_TEMPLATE/`](../.github/ISSUE_TEMPLATE). Blank issues are
+  enabled for work that fits none of them, but they get the same level of detail.
+- PRs: [`.github/pull_request_template.md`](../.github/pull_request_template.md). Keep its headings
+  and answer each one.
+
+Two conventions above are load-bearing, not cosmetic:
+
+- `pr-triage.yml` parses the PR body for GitHub's closing keywords and mirrors the linked issue's
+  labels onto the PR. A body without `Closes #<number>` produces an unlabeled PR.
+- `create-release-pr.yml` groups release notes by commit subject prefix: `feat:`, `fix:`, `perf:`,
+  `refactor:` become "Features & Fixes", and `docs:`, `chore:`, `ci:`, `style:`, `test:` become
+  "Documentation & Maintenance". The patterns are unscoped, so anything else, a scoped
+  `docs(readme):` included, falls through to a default that files it under "Features & Fixes".
+
+Issue and PR bodies are where the reasoning behind a change is recorded, so state the mechanism and
+the evidence, not just what changed.
+
 ## Modules
 
 | Module | Purpose |
