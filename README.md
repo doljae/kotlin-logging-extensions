@@ -68,10 +68,24 @@ dependencies {
 }
 ```
 
-**Step 2: Use `log`**
+**Step 2: Generate the extensions**
 
-Nothing to annotate, nothing to configure. Every class in a processed source set already has a
-`log`, so just call it:
+```bash
+./gradlew build
+```
+
+KSP runs ahead of the Kotlin compiler inside the same build, so `build` generates and compiles in one
+pass. To generate without a full build, run the KSP tasks directly:
+
+```bash
+./gradlew kspKotlin kspTestKotlin
+```
+
+Either way, once this finishes every class in a processed source set has a `log`.
+
+**Step 3: Use `log`**
+
+Nothing to annotate, nothing to configure. The extension is already there, so just call it:
 
 ```kotlin
 class OrderProcessor {
@@ -88,16 +102,6 @@ class OrderProcessor {
 }
 ```
 
-**Step 3: Build as usual**
-
-```bash
-./gradlew build
-```
-
-KSP runs ahead of the Kotlin compiler within the same build, so the extensions are generated and the
-code that uses them is compiled in one pass. There is no separate generation step to run first, and
-no point at which your code is written but the extension is missing.
-
 That's it! The logger is named after the fully qualified class name.
 
 ### How Generation Is Decided
@@ -109,15 +113,11 @@ is skipped, so a hand-written logger always wins.
 
 Output lands in `build/generated/ksp/<source set>/kotlin`, one file per package named
 `KotlinLoggingExtensions_<module>.kt`. The module suffix is what keeps `main` and `test` from
-colliding when they share a package. To regenerate without a full build, run the KSP tasks directly:
+colliding when they share a package.
 
-```bash
-./gradlew kspKotlin kspTestKotlin
-```
-
-Your IDE is the one place where the ordering is visible: it cannot resolve `log` until a build has
-produced the generated sources and it has indexed them. That is an indexing lag, not a missing
-generation step, and it is covered under
+A class you write *after* the last build has no extension yet, so run Step 2 again and your IDE will
+resolve `log` once it has indexed the new sources. That is an indexing lag, not a missing generation
+step, and it is covered under
 [Troubleshooting & IDE Support](#-troubleshooting--ide-support).
 
 ### Scoping Generation
