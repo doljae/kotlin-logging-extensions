@@ -258,33 +258,31 @@ jobs:
         # Supported Kotlin versions are a measured range documented in the README's requirements
         # section and verified by the consumer matrix, not something derived from a release version.
 
-        # Update issue templates - use simpler approach for placeholders
+        # Update issue templates.
+        #
+        # The Environment blocks are matched by their line prefix, never by position. This step used
+        # to rewrite `placeholder: "e.g., ..."` by occurrence index (1=library, 2=Kotlin, 3=KSP,
+        # 4=kotlin-logging), so inserting or reordering a field silently handed it a version string
+        # meant for another field, with nothing failing (issue #179).
+        environment_replacements = [
+            (r'(?m)^(\s*- kotlin-logging-extensions: ).*$', rf'\g<1>{VERSION}'),
+            (r'(?m)^(\s*- Kotlin: ).*$', rf'\g<1>{KOTLIN_VERSION}'),
+            (r'(?m)^(\s*- KSP: ).*$', rf'\g<1>{KSP_VERSION}'),
+            (r'(?m)^(\s*- kotlin-logging: ).*$', rf'\g<1>{KOTLIN_LOGGING_DEPENDENCY}'),
+        ]
+
         templates = [
-            ('bug_report.yml', [
-                # As in the README block above: the first pattern requires the colon immediately
-                # after the artifact id, so it does not match the -annotations coordinate.
+            # bug_report.yml also carries a reproduction sample, whose coordinates are matched the
+            # same way as the README ones above.
+            ('bug_report.yml', environment_replacements + [
                 (r'io\.github\.doljae:kotlin-logging-extensions:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions:{VERSION}'),
-                (r'io\.github\.doljae:kotlin-logging-extensions-annotations:[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?', f'io.github.doljae:kotlin-logging-extensions-annotations:{VERSION}'),
                 (r'kotlin\("jvm"\) version "[0-9]+\.[0-9]+\.[0-9]+"', f'kotlin("jvm") version "{KOTLIN_VERSION}"'),
                 (r'id\("com\.google\.devtools\.ksp"\) version "[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+\.[0-9]+\.[0-9]+)?"', f'id("com.google.devtools.ksp") version "{KSP_VERSION}"'),
-                (r'ch\.qos\.logback:logback-classic:[0-9]+\.[0-9]+\.[0-9]+', f'ch.qos.logback:logback-classic:{LOGBACK_VERSION}'),
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {VERSION}"', 1),  # First occurrence
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_VERSION}"', 2),  # Second occurrence
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KSP_VERSION}"', 3),  # Third occurrence
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_LOGGING_DEPENDENCY}"', 4),  # Fourth occurrence
+                (r'io\.github\.oshai:kotlin-logging-jvm:[0-9]+\.[0-9]+\.[0-9]+', f'io.github.oshai:kotlin-logging-jvm:{KOTLIN_LOGGING_VERSION}'),
             ]),
-            ('version_compatibility.yml', [
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {VERSION}"', 1),
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_VERSION}"', 2),
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KSP_VERSION}"', 3),
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_LOGGING_DEPENDENCY}"', 4),
-            ]),
-            ('question.yml', [
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {VERSION}"', 1),
-                (r'placeholder: "e\.g\., [^"]*"', f'placeholder: "e.g., {KOTLIN_LOGGING_DEPENDENCY}"', 2),
-            ]),
+            ('question.yml', environment_replacements),
         ]
-        
+
         for template_file, replacements in templates:
             print(f"🔄 Updating {template_file}...")
             update_file(f'.github/ISSUE_TEMPLATE/{template_file}', replacements)
@@ -304,9 +302,8 @@ jobs:
         # Log what was updated
         echo "📋 Updated files:"
         echo "  - README.md (badges + dependency examples + build script versions + version compatibility table)"
-        echo "  - .github/ISSUE_TEMPLATE/bug_report.yml (code blocks + placeholders)" 
-        echo "  - .github/ISSUE_TEMPLATE/version_compatibility.yml (placeholders)"
-        echo "  - .github/ISSUE_TEMPLATE/question.yml (placeholder)"
+        echo "  - .github/ISSUE_TEMPLATE/bug_report.yml (environment block + reproduction sample)"
+        echo "  - .github/ISSUE_TEMPLATE/question.yml (environment block)"
         echo "  - gradle.properties (project version)"
         echo ""
         echo "📌 Version updates applied:"
@@ -355,7 +352,7 @@ jobs:
           # Commit changes
           git commit -m "chore: update version references to $VERSION" \
             -m "- Update README.md badges, dependency examples, build script versions and version compatibility" \
-            -m "- Update issue template placeholders with build script versions:" \
+            -m "- Update issue template environment blocks with build script versions:" \
             -m "  * Library Version → $VERSION" \
             -m "  * Kotlin Version → $KOTLIN_VERSION" \
             -m "  * KSP Version → $KSP_VERSION" \
