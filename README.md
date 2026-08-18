@@ -56,7 +56,8 @@ repositories {
 dependencies {
     ksp("io.github.doljae:kotlin-logging-extensions:3.0.0")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
-    // Logger implementation. Skip this if your project already has one (Spring Boot ships Logback).
+    // Logger implementation. Skip this if your project already has one
+    // (e.g., Spring Boot ships Logback by default).
     implementation("ch.qos.logback:logback-classic:1.6.2")
 }
 ```
