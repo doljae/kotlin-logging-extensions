@@ -75,13 +75,11 @@ dependencies {
 ```
 
 KSP runs ahead of the Kotlin compiler inside the same build, so `build` generates and compiles in one
-pass. To generate without a full build, run the KSP tasks directly:
+pass. Run `./gradlew kspKotlin kspTestKotlin` instead if you only want the generated sources without
+a full build.
 
-```bash
-./gradlew kspKotlin kspTestKotlin
-```
-
-Either way, once this finishes every class in a processed source set has a `log`.
+Every class that already exists in a processed source set has a `log` once this finishes, so the call
+sites you write next resolve straight away.
 
 **Step 3: Use `log`**
 
