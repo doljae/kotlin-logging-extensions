@@ -68,9 +68,22 @@ dependencies {
 }
 ```
 
-**Step 2: Use `log`**
+**Step 2: Generate the extensions**
 
-Nothing to annotate, nothing to configure:
+```bash
+./gradlew build
+```
+
+KSP runs ahead of the Kotlin compiler inside the same build, so `build` generates and compiles in one
+pass. Run `./gradlew kspKotlin kspTestKotlin` instead if you only want the generated sources without
+a full build.
+
+Every class that already exists in a processed source set has a `log` once this finishes, so the call
+sites you write next resolve straight away.
+
+**Step 3: Use `log`**
+
+Nothing to annotate, nothing to configure. The extension is already there, so just call it:
 
 ```kotlin
 class OrderProcessor {
@@ -87,21 +100,23 @@ class OrderProcessor {
 }
 ```
 
-**Step 3: Generate Logger Code**
+That's it! The logger is named after the fully qualified class name.
 
-After writing your code, run KSP to generate the logger extensions:
+### How Generation Is Decided
 
-```bash
-./gradlew kspKotlin kspTestKotlin
-```
-
-This will generate the `log` property and resolve any compilation errors in your IDE.
-
-That's it! The logger is generated using the fully qualified class name as the logger name.
+The processor never looks at where you call `log`. On every build it walks the *class declarations*
+in the source set and writes a `log` extension for each class that qualifies, whether or not that
+class logs anything. A class that already declares its own `log` (on the class or on its companion)
+is skipped, so a hand-written logger always wins.
 
 Output lands in `build/generated/ksp/<source set>/kotlin`, one file per package named
 `KotlinLoggingExtensions_<module>.kt`. The module suffix is what keeps `main` and `test` from
 colliding when they share a package.
+
+A class you write *after* the last build has no extension yet, so run Step 2 again and your IDE will
+resolve `log` once it has indexed the new sources. That is an indexing lag, not a missing generation
+step, and it is covered under
+[Troubleshooting & IDE Support](#-troubleshooting--ide-support).
 
 ### Scoping Generation
 
