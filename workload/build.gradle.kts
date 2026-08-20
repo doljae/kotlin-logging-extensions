@@ -20,7 +20,7 @@ dependencies {
 
     // Kotlin logging dependencies
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
-    implementation("ch.qos.logback:logback-classic:1.6.2")
+    implementation("ch.qos.logback:logback-classic:1.6.3")
 
     // Access the @Log annotation in source code. Only the annotations artifact belongs on the compile
     // classpath — the processor goes through ksp(...) below and never needs to be visible to the
