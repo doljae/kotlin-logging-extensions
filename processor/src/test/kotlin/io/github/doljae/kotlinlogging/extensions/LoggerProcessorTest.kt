@@ -1065,6 +1065,138 @@ class LoggerProcessorTest {
     }
 
     @Test
+    fun `should generate log extension for a subclass of an annotated class`() {
+        // Without this, 'Sub' has no extension of its own, so 'log' resolves to the one generated for
+        // 'Base' — the subclass silently logs under its superclass's name.
+        val source =
+            SourceFile.kotlin(
+                "Hierarchy.kt",
+                """
+                package com.example
+                import io.github.doljae.kotlinlogging.extensions.Log
+
+                @Log
+                open class Base
+
+                class Sub : Base()
+
+                class Unrelated
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions = mutableMapOf(LoggerProcessor.GENERATION_MODE_OPTION_KEY to "AnnotationOnly")
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+
+        val generated = compilation.generatedExtensionsFileContaining("Base")?.readText()
+
+        generated shouldContain "KotlinLogging.logger(\"com.example.Base\")"
+        generated shouldContain "KotlinLogging.logger(\"com.example.Sub\")"
+        generated shouldNotContain "Unrelated"
+    }
+
+    @Test
+    fun `should generate log extension through a chain of unannotated subclasses`() {
+        val source =
+            SourceFile.kotlin(
+                "DeepHierarchy.kt",
+                """
+                package com.example
+                import io.github.doljae.kotlinlogging.extensions.Log
+
+                interface Marker
+
+                @Log
+                interface Contract
+
+                open class Middle : Marker, Contract
+
+                class Leaf : Middle()
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions = mutableMapOf(LoggerProcessor.GENERATION_MODE_OPTION_KEY to "AnnotationOnly")
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+
+        val generated = compilation.generatedExtensionsFileContaining("Contract")?.readText()
+
+        generated shouldContain "KotlinLogging.logger(\"com.example.Middle\")"
+        generated shouldContain "KotlinLogging.logger(\"com.example.Leaf\")"
+        // 'Marker' is a supertype of a target, not a subtype of one — nothing inherits from it.
+        generated shouldNotContain "Marker.log"
+    }
+
+    @Test
+    fun `should generate log extension for a subclass outside every scanned package`() {
+        val source =
+            SourceFile.kotlin(
+                "ScannedHierarchy.kt",
+                """
+                package com.example.auto
+
+                open class ScannedBase
+                """.trimIndent(),
+            )
+        val outside =
+            SourceFile.kotlin(
+                "OutsideHierarchy.kt",
+                """
+                package com.example.manual
+                import com.example.auto.ScannedBase
+
+                class OutsideSub : ScannedBase()
+
+                class OutsideOnly
+                """.trimIndent(),
+            )
+
+        val compilation =
+            KotlinCompilation().apply {
+                sources = listOf(source, outside)
+                configureKsp {
+                    symbolProcessorProviders += LoggerProcessorProvider()
+                }
+                kspProcessorOptions =
+                    mutableMapOf(
+                        LoggerProcessor.GENERATION_MODE_OPTION_KEY to "PackageScan",
+                        LoggerProcessor.PACKAGE_SCAN_TARGETS_OPTION_KEY to "com.example.auto.*",
+                    )
+                inheritClassPath = true
+            }
+
+        val result = compilation.compile()
+        result.exitCode shouldBe KotlinCompilation.ExitCode.OK
+
+        compilation.generatedExtensionsFileContaining("ScannedBase")?.readText() shouldContain
+            "KotlinLogging.logger(\"com.example.auto.ScannedBase\")"
+
+        val outsideGenerated = compilation.generatedExtensionsFileContaining("OutsideSub")?.readText()
+
+        outsideGenerated shouldContain "package com.example.manual"
+        outsideGenerated shouldContain "KotlinLogging.logger(\"com.example.manual.OutsideSub\")"
+        outsideGenerated shouldNotContain "OutsideOnly"
+    }
+
+    @Test
     fun `should derive a file name discriminator that separates source sets`() {
         // Gradle reports 'group:project' for main and 'group:project_test' for the test compilation,
         // which is the only signal KSP exposes that tells the two compilations apart.
