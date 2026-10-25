@@ -89,6 +89,40 @@ class LoggerProcessor(
             return true
         }
 
+        return isGenerationTarget()
+    }
+
+    /**
+     * True when this class is selected by the configured mode, or inherits from a class that is.
+     *
+     * An extension receiver accepts subtypes, so a `log` generated for a superclass also resolves
+     * inside its subclasses — under the *superclass's* name. [LoggerGenerationMode.ALL] never shows
+     * this, because the subclass has an extension of its own and the more specific receiver wins. In
+     * the other modes a subclass that is not itself selected would silently log under its
+     * superclass's name, which is the one thing this library exists to get right. So a subclass of a
+     * target is a target.
+     *
+     * That grants no logging the class did not already have — it only stops it reporting a name that
+     * is not its own.
+     *
+     * A superclass from a dependency cannot be recognised by annotation: [Log] is `SOURCE`-retained,
+     * so it is not in the class file. Only [LoggerGenerationMode.PACKAGE_SCAN] still matches those,
+     * by package name.
+     */
+    private fun KSClassDeclaration.isGenerationTarget(): Boolean {
+        if (isSelectedByMode()) {
+            return true
+        }
+
+        return superTypes.any { superTypeReference ->
+            val superType = superTypeReference.resolve().declaration as? KSClassDeclaration ?: return@any false
+            // Every class lists Any, so treating it as a target would select the whole module.
+            superType.qualifiedName?.asString() != ANY_QUALIFIED_NAME && superType.isGenerationTarget()
+        }
+    }
+
+    /** Whether the configured mode selects this class on its own, ignoring what it inherits from. */
+    private fun KSClassDeclaration.isSelectedByMode(): Boolean {
         if (hasLoggerGenerationAnnotation()) {
             return true
         }
@@ -345,6 +379,8 @@ class LoggerProcessor(
                 "io.github.doljae.kotlinlogging.extensions.Log",
                 "io.github.doljae.kotlinlogging.extensions.AutoLog",
             )
+
+        private const val ANY_QUALIFIED_NAME = "kotlin.Any"
 
         // Ref: https://kotlinlang.org/docs/keyword-reference.html
         private val hardKeywords =
