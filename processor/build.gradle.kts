@@ -17,7 +17,7 @@ dependencies {
     testImplementation("dev.zacsweers.kctfork:ksp:0.14.0")
     testImplementation("io.kotest:kotest-assertions-core:6.2.6")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.12")
+    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.13")
 
     // Test-only on purpose. The processor matches @Log and @AutoLog by qualified name, so it needs no
     // compile dependency on them — but the tests compile sources that reference the annotations.
