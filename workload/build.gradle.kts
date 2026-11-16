@@ -19,7 +19,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Kotlin logging dependencies
-    implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
+    implementation("io.github.oshai:kotlin-logging-jvm:8.0.7")
     implementation("ch.qos.logback:logback-classic:1.6.5")
 
     // Access the @Log annotation in source code. Only the annotations artifact belongs on the compile
